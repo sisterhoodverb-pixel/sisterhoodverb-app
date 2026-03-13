@@ -7,6 +7,283 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.memberstack.com/scripts/webcomponents/memberstack.js" data-memberstack-app="pk_715b7f282440a2747b11" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ── SUPABASE CONNECTION ──
+  const _supabase = window.supabase.createClient(
+    'https://cqiymqekdtewnorojlus.supabase.co',
+    'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
+  );
+
+  // ── AUTH STATE ──
+  let currentUser = null;
+
+  async function initAuth() {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      updateNavForUser(currentUser);
+      loadFeed();
+    }
+    _supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        currentUser = session.user;
+        updateNavForUser(currentUser);
+        loadFeed();
+      } else {
+        currentUser = null;
+        updateNavForGuest();
+      }
+    });
+  }
+
+  function updateNavForUser(user) {
+    const joinBtn = document.querySelector('.nav-cta');
+    if (joinBtn) {
+      joinBtn.textContent = 'My Account';
+      joinBtn.onclick = () => showView('profile', joinBtn);
+    }
+    // Show logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.style.display = 'block';
+  }
+
+  function updateNavForGuest() {
+    const joinBtn = document.querySelector('.nav-cta');
+    if (joinBtn) {
+      joinBtn.textContent = 'Join';
+      joinBtn.onclick = () => openModal();
+    }
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  }
+
+  async function signUp(email, password, name) {
+    const { data, error } = await _supabase.auth.signUp({ email, password });
+    if (error) { showToast('Error: ' + error.message); return; }
+    if (data.user) {
+      await _supabase.from('profiles').insert({
+        id: data.user.id,
+        name: name,
+        handle: '@' + email.split('@')[0],
+        membership_tier: 'free'
+      });
+      showToast('Welcome to the Sisterhood ✦');
+      closeAuthModal();
+    }
+  }
+
+  async function signIn(email, password) {
+    const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+    if (error) { showToast('Error: ' + error.message); return; }
+    showToast('Welcome back, sis ✦');
+    closeAuthModal();
+  }
+
+  async function signOut() {
+    await _supabase.auth.signOut();
+    showToast('See you soon, sis 🌿');
+    showView('home', document.querySelector('.nav-links a'));
+  }
+
+  // ── FEED ──
+  async function loadFeed() {
+    const { data: posts, error } = await _supabase
+      .from('posts')
+      .select('*, profiles(name)')
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (error || !posts || posts.length === 0) return;
+
+    const feed = document.getElementById('feed-posts');
+    // Keep sample posts if no real posts yet
+    if (posts.length === 0) return;
+
+    // Clear sample posts and show real ones
+    feed.innerHTML = '';
+    posts.forEach((post, i) => {
+      const name = post.profiles?.name || 'Sister';
+      const initial = name.charAt(0).toUpperCase();
+      const time = timeAgo(post.created_at);
+      const card = document.createElement('div');
+      card.className = 'feed-card';
+      card.style.animationDelay = (i * 0.1) + 's';
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="avatar" style="background:linear-gradient(135deg,var(--terra),var(--gold))">${initial}</div>
+          <div class="card-meta">
+            <div class="card-name">${name}</div>
+            <div class="card-time">${time}</div>
+          </div>
+          <span class="card-tag">${post.tag || 'Community'}</span>
+        </div>
+        <div class="card-body">${post.content}</div>
+        <div class="card-footer">
+          <button class="react-btn" onclick="toggleLike(this, '${post.id}')">🫂 <span>${post.likes || 0}</span></button>
+          <button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button>
+          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
+        </div>`;
+      feed.insertBefore(card, feed.firstChild);
+    });
+  }
+
+  async function savePost(content) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const { error } = await _supabase.from('posts').insert({
+      user_id: currentUser.id,
+      content: content,
+      tag: 'Community',
+      likes: 0
+    });
+    if (error) { showToast('Could not post — try again'); return; }
+    showToast('Shared with your sisters ✦');
+    loadFeed();
+  }
+
+  async function toggleLike(btn, postId) {
+    const span = btn.querySelector('span');
+    const liked = btn.classList.contains('liked');
+    const n = parseInt(span.textContent) || 0;
+    btn.classList.toggle('liked');
+    span.textContent = liked ? n - 1 : n + 1;
+    if (!liked && postId) {
+      await _supabase.from('posts').update({ likes: n + 1 }).eq('id', postId);
+    }
+  }
+
+  // ── CIRCLES ──
+  async function joinCircleDB(circleName, btn) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const joined = btn.classList.contains('joined');
+    if (!joined) {
+      await _supabase.from('circle_members').insert({
+        user_id: currentUser.id,
+        circle_name: circleName
+      });
+      btn.classList.add('joined');
+      btn.textContent = 'Joined ✦';
+      showToast('Joined ' + circleName + ' ✦');
+    } else {
+      await _supabase.from('circle_members')
+        .delete()
+        .eq('user_id', currentUser.id)
+        .eq('circle_name', circleName);
+      btn.classList.remove('joined');
+      btn.textContent = 'Join';
+      showToast('Left ' + circleName);
+    }
+  }
+
+  // ── EVENT REGISTRATION ──
+  async function registerEventDB(eventName, btn) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    await _supabase.from('event_registrations').insert({
+      user_id: currentUser.id,
+      event_name: eventName
+    });
+    btn.classList.add('registered');
+    btn.textContent = 'Registered ✦';
+    showToast('Registered for ' + eventName + ' ✦');
+  }
+
+  // ── PROFILE ──
+  async function loadProfile() {
+    if (!currentUser) return;
+    const { data: profile } = await _supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser.id)
+      .single();
+
+    if (profile) {
+      document.querySelector('.profile-name').textContent = profile.name || 'Sister';
+      document.querySelector('.profile-handle').textContent = profile.handle || '@sister';
+      if (profile.bio) document.querySelector('.profile-bio').textContent = profile.bio;
+      // Update form fields
+      document.querySelector('input[type="text"]').value = profile.name || '';
+      document.querySelector('input[type="email"]').value = currentUser.email || '';
+    }
+
+    // Load stats
+    const { count: circleCount } = await _supabase
+      .from('circle_members').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
+    const { count: eventCount } = await _supabase
+      .from('event_registrations').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
+    const { count: postCount } = await _supabase
+      .from('posts').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
+
+    const stats = document.querySelectorAll('.stat-num');
+    if (stats[0]) stats[0].textContent = circleCount || 0;
+    if (stats[1]) stats[1].textContent = eventCount || 0;
+    if (stats[2]) stats[2].textContent = postCount || 0;
+  }
+
+  async function saveProfile() {
+    if (!currentUser) return;
+    const name = document.querySelectorAll('.form-input')[0].value;
+    const bio = document.querySelectorAll('.form-input')[1].value;
+    const location = document.querySelectorAll('.form-input')[2].value;
+    await _supabase.from('profiles').update({ name, bio, location }).eq('id', currentUser.id);
+    showToast('Profile saved ✦');
+    loadProfile();
+  }
+
+  // ── HELPERS ──
+  function timeAgo(dateStr) {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff/60) + ' min ago';
+    if (diff < 86400) return Math.floor(diff/3600) + ' hours ago';
+    return Math.floor(diff/86400) + ' days ago';
+  }
+
+  // ── AUTH MODAL ──
+  function openAuthModal(mode = 'signup') {
+    closeModal();
+    const modal = document.getElementById('auth-modal');
+    modal.classList.add('open');
+    setAuthMode(mode);
+  }
+
+  function closeAuthModal() {
+    document.getElementById('auth-modal').classList.remove('open');
+  }
+
+  function setAuthMode(mode) {
+    const title = document.getElementById('auth-title');
+    const submitBtn = document.getElementById('auth-submit');
+    const nameGroup = document.getElementById('auth-name-group');
+    const switchBtn = document.getElementById('auth-switch');
+    if (mode === 'signup') {
+      title.textContent = 'Join the Sisterhood';
+      submitBtn.textContent = 'Create Account';
+      nameGroup.style.display = 'block';
+      switchBtn.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\')">Log in</a>';
+      submitBtn.onclick = () => {
+        const name = document.getElementById('auth-name').value;
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        signUp(email, password, name);
+      };
+    } else {
+      title.textContent = 'Welcome Back, Sis';
+      submitBtn.textContent = 'Log In';
+      nameGroup.style.display = 'none';
+      switchBtn.innerHTML = 'New here? <a href="#" onclick="setAuthMode(\'signup\')">Join the Sisterhood</a>';
+      submitBtn.onclick = () => {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        signIn(email, password);
+      };
+    }
+  }
+
+  // Init on load
+  window.addEventListener('load', initAuth);
+</script>
 <style>
   :root {
     --terra: #C4622D;
@@ -450,6 +727,23 @@
     .profile-info, .settings-form { padding: 0 16px; }
   }
 
+  /* ── AUTH MODAL ── */
+  .auth-modal { max-width: 420px; }
+  .auth-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+  .auth-sub { font-size: 0.85rem; color: var(--terra); margin-bottom: 24px; }
+  .auth-switch { text-align: center; font-size: 0.82rem; color: rgba(28,20,16,0.5); margin-top: 16px; }
+  .auth-switch a { color: var(--terra); text-decoration: none; font-weight: 600; }
+
+  /* ── LOGOUT BTN ── */
+  .logout-btn {
+    background: none; border: 1.5px solid rgba(196,98,45,0.3);
+    color: var(--terra); padding: 6px 14px; border-radius: 2px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+    font-weight: 500; cursor: pointer; display: none;
+    transition: all 0.2s;
+  }
+  .logout-btn:hover { background: var(--terra); color: white; }
+
   /* ── COMMUNITY AGREEMENTS MODAL ── */
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(28,20,16,0.7);
@@ -545,6 +839,29 @@
 </head>
 <body>
 
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal auth-modal">
+    <div class="auth-title" id="auth-title">Join the Sisterhood</div>
+    <div class="auth-sub">✦ A space to be seen, speak freely, and practice sisterhood</div>
+    <div class="form-group" id="auth-name-group">
+      <label class="form-label">Your Name</label>
+      <input class="form-input" type="text" id="auth-name" placeholder="What shall we call you?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="auth-email" placeholder="your@email.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="auth-password" placeholder="Create a strong password">
+    </div>
+    <button class="modal-agree-btn" id="auth-submit">Create Account</button>
+    <div class="auth-switch" id="auth-switch">Already a member? <a href="#" onclick="setAuthMode('login')">Log in</a></div>
+    <div class="modal-cancel"><button onclick="closeAuthModal()">Not right now</button></div>
+  </div>
+</div>
+
 <!-- COMMUNITY AGREEMENTS MODAL -->
 <div class="modal-overlay" id="agreements-modal">
   <div class="modal">
@@ -591,7 +908,7 @@
       <input type="checkbox" id="agree-check" onchange="toggleAgreeBtn()">
       <label for="agree-check">I have read and agree to the Sisterhood(verb) Community Agreements</label>
     </div>
-    <button class="modal-agree-btn" id="agree-btn" disabled data-ms-price:add="prc_sisterhoodverb-membership-nwue0o6o" onclick="closeModal()">I Agree — Join the Sisterhood</button>
+    <button class="modal-agree-btn" id="agree-btn" disabled onclick="closeModal(); openAuthModal('signup');">I Agree — Join the Sisterhood</button>
     <div class="modal-cancel"><button onclick="closeModal()">Not right now</button></div>
   </div>
 </div>
@@ -606,6 +923,7 @@
     <a href="#" onclick="showView('resources', this)">Resources</a>
     <a href="#" onclick="showView('profile', this)">Profile</a>
     <a href="#" class="nav-cta" onclick="openModal(); return false;">Join</a>
+    <button class="logout-btn" id="logout-btn" onclick="signOut()">Log Out</button>
   </div>
   <div class="hamburger" onclick="toggleMobile()">
     <span></span><span></span><span></span>
@@ -733,7 +1051,7 @@
         <div class="circle-desc">A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.</div>
         <div class="circle-meta">
           <span class="circle-members">48 sisters</span>
-          <button class="join-btn joined" onclick="toggleJoin(this)">Joined ✦</button>
+          <button class="join-btn joined" onclick="toggleJoin(this, 'Motherhood Speaks')">Joined ✦</button>
         </div>
       </div>
     </div>
@@ -746,8 +1064,7 @@
         <div class="circle-name">Writers Block? I Think Not!</div>
         <div class="circle-desc">A space for creative writers, poets, and scribes to stay connected to the craft and themselves. Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div>
         <div class="circle-meta">
-          <span class="circle-members">63 sisters</span>
-          <button class="join-btn" onclick="toggleJoin(this)">Join</button>
+          <button class="join-btn" onclick="toggleJoin(this, 'Writers Block? I Think Not!')">Join</button>
         </div>
       </div>
     </div>
@@ -760,8 +1077,7 @@
         <div class="circle-name">Burnout to Bloom</div>
         <div class="circle-desc">Are you an educator, community organizer, activist, or artist trying to exist in the world and keep your cup full? This space is for you to vent, seek advice, find community care, and share — so you can enjoy life and have something left for yourself. We get it. We got you.</div>
         <div class="circle-meta">
-          <span class="circle-members">35 sisters</span>
-          <button class="join-btn" onclick="toggleJoin(this)">Join</button>
+          <button class="join-btn" onclick="toggleJoin(this, 'Burnout to Bloom')">Join</button>
         </div>
       </div>
     </div>
@@ -774,8 +1090,7 @@
         <div class="circle-name">Speak Poet!</div>
         <div class="circle-desc">This is for the slam poets, performers, and spoken word artists looking for space to share your work, network, and connect with poets who get it. And trust us — we get it!</div>
         <div class="circle-meta">
-          <span class="circle-members">29 sisters</span>
-          <button class="join-btn" onclick="toggleJoin(this)">Join</button>
+          <button class="join-btn" onclick="toggleJoin(this, 'Speak Poet!')">Join</button>
         </div>
       </div>
     </div>
@@ -820,7 +1135,7 @@
             <span class="event-detail">💰 Members only</span>
           </div>
           <div class="event-desc">Week 2 of our Motherhood Speaks series. A space to share your wins, losses, resources, hopes, and fears with moms who get it.</div>
-          <button class="event-register" onclick="registerEvent(this)">RSVP</button>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
         </div>
       </div>
 
@@ -837,7 +1152,7 @@
             <span class="event-detail">💰 Members only</span>
           </div>
           <div class="event-desc">Week 3 of our Wednesday series. Come as you are, bring what you carry.</div>
-          <button class="event-register" onclick="registerEvent(this)">RSVP</button>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
         </div>
       </div>
 
@@ -854,7 +1169,7 @@
             <span class="event-detail">💰 Members only</span>
           </div>
           <div class="event-desc">Week 4 of our Wednesday series. We're going deeper — bring your whole self.</div>
-          <button class="event-register" onclick="registerEvent(this)">RSVP</button>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
         </div>
       </div>
 
@@ -871,7 +1186,7 @@
             <span class="event-detail">💰 Members only</span>
           </div>
           <div class="event-desc">The final Wednesday gathering of this series. We celebrate, reflect, and send each other off rooted and full.</div>
-          <button class="event-register" onclick="registerEvent(this)">RSVP</button>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
         </div>
       </div>
 
@@ -1079,7 +1394,7 @@
         <label class="form-label">Membership Plan</label>
         <input class="form-input" type="text" value="Founder Member ✦" readonly style="background:var(--cream);color:var(--terra);font-weight:600;">
       </div>
-      <button class="save-btn" onclick="showToast('Profile saved ✦')">Save Changes</button>
+      <button class="save-btn" onclick="saveProfile()">Save Changes</button>
     </div>
   </div>
 </div>
@@ -1135,25 +1450,37 @@
     toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
   }
 
-  function toggleLike(btn) {
+  function toggleLike(btn, postId) {
     btn.classList.toggle('liked');
     const span = btn.querySelector('span');
-    const n = parseInt(span.textContent);
+    const n = parseInt(span.textContent) || 0;
     span.textContent = btn.classList.contains('liked') ? n+1 : n-1;
     showToast(btn.classList.contains('liked') ? 'Loved ✦' : 'Removed');
+    if (postId) {
+      const newCount = btn.classList.contains('liked') ? n+1 : n-1;
+      _supabase.from('posts').update({ likes: newCount }).eq('id', postId);
+    }
   }
 
-  function toggleJoin(btn) {
-    const joined = btn.classList.contains('joined');
-    btn.classList.toggle('joined');
-    btn.textContent = joined ? 'Join' : 'Joined ✦';
-    showToast(joined ? 'Left circle' : 'Joined circle ✦');
+  function toggleJoin(btn, circleName) {
+    if (circleName) {
+      joinCircleDB(circleName, btn);
+    } else {
+      const joined = btn.classList.contains('joined');
+      btn.classList.toggle('joined');
+      btn.textContent = joined ? 'Join' : 'Joined ✦';
+      showToast(joined ? 'Left circle' : 'Joined circle ✦');
+    }
   }
 
-  function registerEvent(btn) {
-    btn.classList.add('registered');
-    btn.textContent = 'Registered ✦';
-    showToast('You\'re registered! Check your email ✦');
+  function registerEvent(btn, eventName) {
+    if (eventName) {
+      registerEventDB(eventName, btn);
+    } else {
+      btn.classList.add('registered');
+      btn.textContent = 'Registered ✦';
+      showToast('You\'re registered! Check your email ✦');
+    }
   }
 
   function filterRes(btn) {
@@ -1166,32 +1493,22 @@
     const ta = document.querySelector('.composer-input');
     const text = ta.value.trim();
     if (!text) { showToast('Write something first ✦'); return; }
-    const card = document.createElement('div');
-    card.className = 'feed-card';
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="avatar">T</div>
-        <div class="card-meta">
-          <div class="card-name">Tayllor Oyewole-Davis</div>
-          <div class="card-time">Just now</div>
-        </div>
-        <span class="card-tag">Community</span>
-      </div>
-      <div class="card-body">${text}</div>
-      <div class="card-footer">
-        <button class="react-btn" onclick="toggleLike(this)">🌿 <span>0</span></button>
-        <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>0 replies</span></button>
-        <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-      </div>`;
-    const feed = document.getElementById('feed-posts');
-    feed.insertBefore(card, feed.firstChild);
+    if (!currentUser) { openAuthModal('login'); return; }
+    savePost(text);
     ta.value = '';
-    showToast('Shared with your sisters ✦');
   }
 
   function toggleMobile() {
     showToast('Mobile menu — use bottom nav');
   }
+
+  // Load profile when profile view is shown
+  const _origShowView = showView;
+  function showViewWithProfile(name, el) {
+    showView(name, el);
+    if (name === 'profile') loadProfile();
+  }
+
 </script>
 </body>
 </html>
