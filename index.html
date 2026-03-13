@@ -102,7 +102,7 @@
   }
   .hero-title em { color: var(--gold); font-style: italic; }
   .hero-sub {
-    color: rgba(245,239,230,0.6); font-size: 0.95rem;
+    color: rgba(245,239,230,0.85); font-size: 0.95rem;
     max-width: 480px; line-height: 1.7;
   }
   .hero-accent {
@@ -450,7 +450,52 @@
     .profile-info, .settings-form { padding: 0 16px; }
   }
 
-  /* ── TOAST ── */
+  /* ── COMMUNITY AGREEMENTS MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(28,20,16,0.7);
+    z-index: 500; display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--warm-white); border-radius: 6px;
+    max-width: 560px; width: 100%; max-height: 85vh;
+    overflow-y: auto; padding: 40px;
+    box-shadow: 0 20px 60px rgba(28,20,16,0.3);
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem; font-weight: 700;
+    margin-bottom: 6px; color: var(--deep);
+  }
+  .modal-sub { font-size: 0.85rem; color: var(--terra); margin-bottom: 24px; letter-spacing: 0.04em; }
+  .agreement-item {
+    display: flex; gap: 14px; margin-bottom: 18px;
+    padding-bottom: 18px; border-bottom: 1px solid rgba(196,98,45,0.1);
+  }
+  .agreement-item:last-of-type { border-bottom: none; }
+  .agreement-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--terra); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+  }
+  .agreement-text strong { display: block; font-size: 0.9rem; margin-bottom: 4px; color: var(--deep); }
+  .agreement-text p { font-size: 0.82rem; color: rgba(28,20,16,0.65); line-height: 1.6; }
+  .modal-check { display: flex; gap: 10px; align-items: flex-start; margin: 24px 0 20px; }
+  .modal-check input { margin-top: 3px; accent-color: var(--terra); width: 16px; height: 16px; }
+  .modal-check label { font-size: 0.85rem; color: var(--deep); line-height: 1.5; cursor: pointer; }
+  .modal-agree-btn {
+    width: 100%; padding: 14px; background: var(--terra); color: white;
+    border: none; font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; transition: background 0.2s;
+  }
+  .modal-agree-btn:hover { background: #a8501f; }
+  .modal-agree-btn:disabled { background: rgba(196,98,45,0.3); cursor: not-allowed; }
+  .modal-cancel { text-align: center; margin-top: 12px; }
+  .modal-cancel button { background: none; border: none; color: rgba(28,20,16,0.45); font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
   .toast {
     position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
     background: var(--deep); color: var(--cream);
@@ -500,6 +545,57 @@
 </head>
 <body>
 
+<!-- COMMUNITY AGREEMENTS MODAL -->
+<div class="modal-overlay" id="agreements-modal">
+  <div class="modal">
+    <div class="modal-title">Community Agreements</div>
+    <div class="modal-sub">Before you join, please read and agree to our community agreements ✦</div>
+
+    <div class="agreement-item">
+      <div class="agreement-num">1</div>
+      <div class="agreement-text">
+        <strong>We show up with honesty and care</strong>
+        <p>This is a space for real talk — not performance. We bring our full selves and hold space for others to do the same.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">2</div>
+      <div class="agreement-text">
+        <strong>What's shared here, stays here</strong>
+        <p>Confidentiality is sacred. Stories shared in this community are not yours to repeat outside of it.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">3</div>
+      <div class="agreement-text">
+        <strong>We do not give unsolicited advice</strong>
+        <p>We listen to understand, not to fix. Ask before offering advice or feedback.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">4</div>
+      <div class="agreement-text">
+        <strong>We honor all identities and lived experiences</strong>
+        <p>This is an affirming space. Bigotry, discrimination, or harm of any kind will not be tolerated.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">5</div>
+      <div class="agreement-text">
+        <strong>We practice community care</strong>
+        <p>We look out for each other. If something feels off, we speak up — with love, not judgment.</p>
+      </div>
+    </div>
+
+    <div class="modal-check">
+      <input type="checkbox" id="agree-check" onchange="toggleAgreeBtn()">
+      <label for="agree-check">I have read and agree to the Sisterhood(verb) Community Agreements</label>
+    </div>
+    <button class="modal-agree-btn" id="agree-btn" disabled data-ms-price:add="prc_sisterhoodverb-membership-nwue0o6o" onclick="closeModal()">I Agree — Join the Sisterhood</button>
+    <div class="modal-cancel"><button onclick="closeModal()">Not right now</button></div>
+  </div>
+</div>
+
 <!-- NAV -->
 <nav>
   <div class="nav-logo">Sisterhood<span>(verb)</span></div>
@@ -509,7 +605,7 @@
     <a href="#" onclick="showView('events', this)">Events</a>
     <a href="#" onclick="showView('resources', this)">Resources</a>
     <a href="#" onclick="showView('profile', this)">Profile</a>
-    <a href="#" class="nav-cta" data-ms-price:add="prc_sisterhoodverb-membership-nwue0o6o">Join</a>
+    <a href="#" class="nav-cta" onclick="openModal(); return false;">Join</a>
   </div>
   <div class="hamburger" onclick="toggleMobile()">
     <span></span><span></span><span></span>
@@ -522,8 +618,8 @@
 <!-- ════ HOME ════ -->
 <div class="view active" id="view-home">
   <div class="home-hero">
-    <div class="hero-greeting">Good morning, Sister ✦</div>
-    <h1 class="hero-title">Welcome back to <em>your</em> community</h1>
+    <div class="hero-greeting">Welcome home, Sister ✦</div>
+    <h1 class="hero-title">Welcome home, <em>sis</em></h1>
     <p class="hero-sub">A space to be seen, speak freely, and practice sisterhood — not just talk about it.</p>
     <div class="hero-accent"></div>
   </div>
@@ -533,7 +629,7 @@
       <strong>Upgrade to Full Member</strong>
       <span>Unlock all Circles, workshop recordings, and 1:1 mentorship access</span>
     </div>
-    <button class="membership-cta" data-ms-price:add="prc_sisterhoodverb-membership-nwue0o6o">Explore Plans</button>
+    <button class="membership-cta" onclick="openModal()">Explore Plans</button>
   </div>
 
   <div class="feed-section">
@@ -555,8 +651,8 @@
     </div>
 
     <div class="quote-card">
-      <p class="quote-text">Sisterhood is not proximity. It's practice. It's the daily act of showing up — for yourself and each other.</p>
-      <div class="quote-author">— Tayllor Johnson, Founder</div>
+      <p class="quote-text">Sisterhood(verb): loving yourself and your kin with ancestral abundance.</p>
+      <div class="quote-author">— Tayllor Oyewole-Davis, Founder</div>
     </div>
 
     <div id="feed-posts">
@@ -573,7 +669,7 @@
           Just finished the <strong>Motherhood Speaks</strong> workshop and I am undone in the best way. I didn't realize how much I'd been carrying silently until I finally had a room — even a virtual one — where I was allowed to put it down.
         </div>
         <div class="card-footer">
-          <button class="react-btn" onclick="toggleLike(this)">🌿 <span>14</span></button>
+          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>14</span></button>
           <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>3 replies</span></button>
           <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
         </div>
@@ -592,7 +688,7 @@
           Sharing my writing prompt response from Circle this week — "Write the letter your 13-year-old self needed to receive." I've never cried so hard or felt so free at the same time. Thank you for this space. 🌺
         </div>
         <div class="card-footer">
-          <button class="react-btn" onclick="toggleLike(this)">🌿 <span>27</span></button>
+          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>27</span></button>
           <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>8 replies</span></button>
           <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
         </div>
@@ -611,7 +707,7 @@
           Reminder to us all: rest is <strong>resistance</strong>. You don't have to earn your stillness. You are allowed to pause without producing. That's the whole point of this sisterhood — we hold each other in the becoming, not just the doing.
         </div>
         <div class="card-footer">
-          <button class="react-btn" onclick="toggleLike(this)">🌿 <span>42</span></button>
+          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>42</span></button>
           <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>12 replies</span></button>
           <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
         </div>
@@ -634,7 +730,7 @@
       </div>
       <div class="circle-body">
         <div class="circle-name">Motherhood Speaks</div>
-        <div class="circle-desc">A brave space for mothers to process, grieve, celebrate, and speak the unspoken truths of motherhood through storytelling.</div>
+        <div class="circle-desc">A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.</div>
         <div class="circle-meta">
           <span class="circle-members">48 sisters</span>
           <button class="join-btn joined" onclick="toggleJoin(this)">Joined ✦</button>
@@ -647,8 +743,8 @@
         <span class="circle-icon">✍🏾</span>
       </div>
       <div class="circle-body">
-        <div class="circle-name">Write to Heal</div>
-        <div class="circle-desc">Weekly prompts, accountability, and community for women using creative writing as a wellness practice and truth-telling tool.</div>
+        <div class="circle-name">Writers Block? I Think Not!</div>
+        <div class="circle-desc">A space for creative writers, poets, and scribes to stay connected to the craft and themselves. Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div>
         <div class="circle-meta">
           <span class="circle-members">63 sisters</span>
           <button class="join-btn" onclick="toggleJoin(this)">Join</button>
@@ -662,7 +758,7 @@
       </div>
       <div class="circle-body">
         <div class="circle-name">Burnout to Bloom</div>
-        <div class="circle-desc">For educators, artists, and organizers navigating depletion. Rooted in community care, boundaries, and sustainable creative practice.</div>
+        <div class="circle-desc">Are you an educator, community organizer, activist, or artist trying to exist in the world and keep your cup full? This space is for you to vent, seek advice, find community care, and share — so you can enjoy life and have something left for yourself. We get it. We got you.</div>
         <div class="circle-meta">
           <span class="circle-members">35 sisters</span>
           <button class="join-btn" onclick="toggleJoin(this)">Join</button>
@@ -672,27 +768,13 @@
 
     <div class="circle-card">
       <div class="circle-banner" style="background: linear-gradient(135deg, #1C1410, #3d2b1f);">
-        <span class="circle-icon">🎭</span>
+        <span class="circle-icon">🎤</span>
       </div>
       <div class="circle-body">
-        <div class="circle-name">Spoken & Seen</div>
-        <div class="circle-desc">Performance, spoken word, and arts-based storytelling for women reclaiming their voice and visibility through the stage.</div>
+        <div class="circle-name">Speak Poet!</div>
+        <div class="circle-desc">This is for the slam poets, performers, and spoken word artists looking for space to share your work, network, and connect with poets who get it. And trust us — we get it!</div>
         <div class="circle-meta">
           <span class="circle-members">29 sisters</span>
-          <button class="join-btn" onclick="toggleJoin(this)">Join</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="circle-card">
-      <div class="circle-banner" style="background: linear-gradient(135deg, #F5EFE6, #e8d5c0);">
-        <span class="circle-icon">🌍</span>
-      </div>
-      <div class="circle-body">
-        <div class="circle-name">Roots & Routes</div>
-        <div class="circle-desc">Exploring cultural identity, ancestry, and diasporic belonging through creative dialogue, storytelling, and shared memory.</div>
-        <div class="circle-meta">
-          <span class="circle-members">41 sisters</span>
           <button class="join-btn" onclick="toggleJoin(this)">Join</button>
         </div>
       </div>
@@ -723,24 +805,7 @@
   </div>
   <div class="events-layout">
     <div class="events-main">
-      <div class="section-label">This Month</div>
-
-      <div class="event-card">
-        <div class="event-date">
-          <span class="date-month">Mar</span>
-          <span class="date-day">11</span>
-        </div>
-        <div class="event-info">
-          <div class="event-title">Motherhood Speaks — Session 1</div>
-          <div class="event-meta">
-            <span class="event-detail">🕕 6:00 PM – 8:00 PM PT</span>
-            <span class="event-detail">📍 Virtual (Zoom)</span>
-            <span class="event-detail">💰 $197 / series</span>
-          </div>
-          <div class="event-desc">The first gathering of our 4-week storytelling series for mothers. Come to speak, listen, and be witnessed.</div>
-          <button class="event-register registered" onclick="showToast('You\'re registered ✦')">Registered ✦</button>
-        </div>
-      </div>
+      <div class="section-label">Upcoming</div>
 
       <div class="event-card">
         <div class="event-date">
@@ -748,14 +813,14 @@
           <span class="date-day">18</span>
         </div>
         <div class="event-info">
-          <div class="event-title">Write to Heal: Open Circle</div>
+          <div class="event-title">Motherhood Speaks — Session 2</div>
           <div class="event-meta">
-            <span class="event-detail">🕖 7:00 PM PT</span>
-            <span class="event-detail">📍 Virtual</span>
-            <span class="event-detail">💰 Free for members</span>
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
+            <span class="event-detail">💰 Members only</span>
           </div>
-          <div class="event-desc">A free-write session with guided prompts, sharing, and community witnessing. All members welcome.</div>
-          <button class="event-register" onclick="registerEvent(this)">Register Free</button>
+          <div class="event-desc">Week 2 of our Motherhood Speaks series. A space to share your wins, losses, resources, hopes, and fears with moms who get it.</div>
+          <button class="event-register" onclick="registerEvent(this)">RSVP</button>
         </div>
       </div>
 
@@ -765,31 +830,64 @@
           <span class="date-day">25</span>
         </div>
         <div class="event-info">
-          <div class="event-title">Burnout to Bloom: Spring Reset</div>
+          <div class="event-title">Motherhood Speaks — Session 3</div>
           <div class="event-meta">
-            <span class="event-detail">🕔 4:00 PM PT</span>
-            <span class="event-detail">📍 Los Angeles, CA</span>
-            <span class="event-detail">💰 $45 / in-person</span>
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
+            <span class="event-detail">💰 Members only</span>
           </div>
-          <div class="event-desc">A half-day in-person gathering for rest, reflection, and reconnection. Limited to 20 sisters.</div>
-          <button class="event-register" onclick="registerEvent(this)">Reserve Spot</button>
+          <div class="event-desc">Week 3 of our Wednesday series. Come as you are, bring what you carry.</div>
+          <button class="event-register" onclick="registerEvent(this)">RSVP</button>
         </div>
       </div>
 
       <div class="event-card">
         <div class="event-date">
           <span class="date-month">Apr</span>
-          <span class="date-day">5</span>
+          <span class="date-day">1</span>
         </div>
         <div class="event-info">
-          <div class="event-title">Roots & Routes: Story Share</div>
+          <div class="event-title">Motherhood Speaks — Session 4</div>
           <div class="event-meta">
-            <span class="event-detail">🕖 6:30 PM PT</span>
-            <span class="event-detail">📍 Virtual</span>
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
             <span class="event-detail">💰 Members only</span>
           </div>
-          <div class="event-desc">Sisters share 3-minute stories about a cultural memory, object, or ancestor that shaped who they are.</div>
+          <div class="event-desc">Week 4 of our Wednesday series. We're going deeper — bring your whole self.</div>
           <button class="event-register" onclick="registerEvent(this)">RSVP</button>
+        </div>
+      </div>
+
+      <div class="event-card">
+        <div class="event-date">
+          <span class="date-month">Apr</span>
+          <span class="date-day">8</span>
+        </div>
+        <div class="event-info">
+          <div class="event-title">Motherhood Speaks — Session 5 (Finale)</div>
+          <div class="event-meta">
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
+            <span class="event-detail">💰 Members only</span>
+          </div>
+          <div class="event-desc">The final Wednesday gathering of this series. We celebrate, reflect, and send each other off rooted and full.</div>
+          <button class="event-register" onclick="registerEvent(this)">RSVP</button>
+        </div>
+      </div>
+
+      <div class="event-card">
+        <div class="event-date">
+          <span class="date-month">Sum</span>
+          <span class="date-day" style="font-size:1.1rem;">2026</span>
+        </div>
+        <div class="event-info">
+          <div class="event-title">Sisterhood Speaks — Launching Summer 2026 🌸</div>
+          <div class="event-meta">
+            <span class="event-detail">📍 TBD</span>
+            <span class="event-detail">💰 Stay tuned</span>
+          </div>
+          <div class="event-desc">Something big is coming. Sisterhood Speaks is launching Summer 2026 — join the community now to be the first to know.</div>
+          <button class="event-register" onclick="showToast('Stay tuned — announcements coming soon ✦')">Notify Me</button>
         </div>
       </div>
     </div>
@@ -844,11 +942,11 @@
           <span class="resource-type" style="color:var(--terra);">Workshop</span>
         </div>
         <div class="resource-body">
-          <div class="resource-title">Motherhood Speaks: Session 3 Recording</div>
-          <div class="resource-desc">Full recording of our most-attended session. Theme: the grief nobody prepares you for.</div>
+          <div class="resource-title">Motherhood Speaks Session Recording</div>
+          <div class="resource-desc">Full session recording coming soon for members who can't make it live.</div>
           <div class="resource-footer">
-            <span class="resource-author">by Tayllor Johnson</span>
-            <span class="resource-access" onclick="showToast('Playing recording...')">Watch →</span>
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
@@ -859,11 +957,11 @@
           <span class="resource-type" style="color:var(--sage);">Prompts</span>
         </div>
         <div class="resource-body">
-          <div class="resource-title">52 Healing Writing Prompts</div>
-          <div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and emotional processing.</div>
+          <div class="resource-title">52 Healing Prompts</div>
+          <div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and creative healing.</div>
           <div class="resource-footer">
             <span class="resource-author">Sisterhood(verb)</span>
-            <span class="resource-access" onclick="showToast('Downloading PDF...')">Download →</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
@@ -874,11 +972,11 @@
           <span class="resource-type" style="color:var(--gold);">Audio</span>
         </div>
         <div class="resource-body">
-          <div class="resource-title">Rest as Resistance: A Guided Meditation</div>
-          <div class="resource-desc">A 12-minute grounding practice for women navigating burnout and over-functioning.</div>
+          <div class="resource-title">River Meditation (Guided Meditation)</div>
+          <div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div>
           <div class="resource-footer">
-            <span class="resource-author">by Tayllor Johnson</span>
-            <span class="resource-access" onclick="showToast('Opening audio...')">Listen →</span>
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
@@ -893,7 +991,7 @@
           <div class="resource-desc">Curated books on collective healing, Black feminist thought, creative practice, and care work.</div>
           <div class="resource-footer">
             <span class="resource-author">Sisterhood(verb)</span>
-            <span class="resource-access" onclick="showToast('Opening list...')">View →</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
@@ -904,26 +1002,26 @@
           <span class="resource-type" style="color:#6B3FA0;">Guide</span>
         </div>
         <div class="resource-body">
-          <div class="resource-title">Facilitator's Guide: Arts-Based Dialogue</div>
-          <div class="resource-desc">A step-by-step facilitation framework for running creative community dialogues in schools and orgs.</div>
+          <div class="resource-title">What They Don't Tell You About Building Community</div>
+          <div class="resource-desc">A raw, honest guide to the real work of building connected, resilient communities from the inside out.</div>
           <div class="resource-footer">
-            <span class="resource-author">by Tayllor Johnson</span>
-            <span class="resource-access" onclick="showToast('Members only — upgrade to access')">Unlock →</span>
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
 
       <div class="resource-card">
         <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">
-          🌺
+          🎤
           <span class="resource-type" style="color:var(--terra);">Workshop</span>
         </div>
         <div class="resource-body">
-          <div class="resource-title">Spoken & Seen: Performance Prep Workshop</div>
-          <div class="resource-desc">Full 90-minute workshop on finding your voice, telling your story, and performing with presence.</div>
+          <div class="resource-title">Poetry Workshop Recording</div>
+          <div class="resource-desc">Full workshop recording for spoken word artists and poets ready to deepen their practice and find their stage voice.</div>
           <div class="resource-footer">
-            <span class="resource-author">by Tayllor Johnson</span>
-            <span class="resource-access" onclick="showToast('Playing recording...')">Watch →</span>
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
@@ -941,7 +1039,7 @@
     </div>
   </div>
   <div class="profile-info">
-    <div class="profile-name">Tayllor Johnson</div>
+    <div class="profile-name">Tayllor Oyewole-Davis</div>
     <div class="profile-handle">@sisterhoodverb · Founder & Facilitator</div>
     <div class="profile-bio">Poet, writer, mother, educator, sister. Using creativity and community to hold space for women to be, explore, embrace, and celebrate themselves.</div>
     <div class="profile-stats">
@@ -963,7 +1061,7 @@
     <div class="settings-form" style="padding:0;">
       <div class="form-group">
         <label class="form-label">Display Name</label>
-        <input class="form-input" type="text" value="Tayllor Johnson">
+        <input class="form-input" type="text" value="Tayllor Oyewole-Davis">
       </div>
       <div class="form-group">
         <label class="form-label">Bio</label>
@@ -996,6 +1094,17 @@
 </div>
 
 <script>
+  function openModal() {
+    document.getElementById('agreements-modal').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('agreements-modal').classList.remove('open');
+  }
+  function toggleAgreeBtn() {
+    const checked = document.getElementById('agree-check').checked;
+    document.getElementById('agree-btn').disabled = !checked;
+  }
+
   const views = ['home','circles','events','resources','profile'];
 
   function showView(name, el) {
@@ -1063,7 +1172,7 @@
       <div class="card-header">
         <div class="avatar">T</div>
         <div class="card-meta">
-          <div class="card-name">Tayllor Johnson</div>
+          <div class="card-name">Tayllor Oyewole-Davis</div>
           <div class="card-time">Just now</div>
         </div>
         <span class="card-tag">Community</span>
