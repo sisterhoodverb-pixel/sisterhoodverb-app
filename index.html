@@ -908,7 +908,7 @@
       <input type="checkbox" id="agree-check" onchange="toggleAgreeBtn()">
       <label for="agree-check">I have read and agree to the Sisterhood(verb) Community Agreements</label>
     </div>
-    <button class="modal-agree-btn" id="agree-btn" disabled onclick="closeModal(); openAuthModal('signup');">I Agree — Join the Sisterhood</button>
+    <button class="modal-agree-btn" id="agree-btn" disabled onclick="handleAgree()">I Agree — Join the Sisterhood</button>
     <div class="modal-cancel"><button onclick="closeModal()">Not right now</button></div>
   </div>
 </div>
@@ -1414,6 +1414,13 @@
   }
   function closeModal() {
     document.getElementById('agreements-modal').classList.remove('open');
+  }
+  function handleAgree() {
+    document.getElementById('agreements-modal').classList.remove('open');
+    // Small delay to let agreements modal close before opening auth modal
+    setTimeout(() => {
+      openAuthModal('signup');
+    }, 200);
   }
   function toggleAgreeBtn() {
     const checked = document.getElementById('agree-check').checked;
