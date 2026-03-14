@@ -784,8 +784,7 @@ footer {
   window.addEventListener('load', async () => {
     const { data: { session } } = await _supabase.auth.getSession();
     if (session) {
-      // User is logged in — redirect to community app
-      window.location.href = '/app';
+      window.location.href = '/app.html';
     }
   });
 
@@ -856,8 +855,10 @@ footer {
         if (!email || !password) { showToast('Please enter your email and password'); return; }
         const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
         if (error) { showToast('Error: ' + error.message); return; }
-        showToast('Welcome back, sis ✦');
-        setTimeout(() => window.location.href = '/app', 1000);
+        if (data.session) {
+          showToast('Welcome back, sis ✦');
+          setTimeout(() => window.location.href = '/app.html', 1000);
+        }
       };
     }
   }
