@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sisterhood(verb) — You Are Home</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --terra: #C4622D;
+  --deep: #1C1410;
+  --cream: #F5EFE6;
+  --gold: #D4A853;
+  --sage: #7A8C6E;
+  --blush: #E8C4A0;
+  --warm-white: #FBF7F2;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Jost', sans-serif;
+  background: var(--deep);
+  color: var(--cream);
+  overflow-x: hidden;
+}
+
+/* ── GRAIN ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 1000; opacity: 0.5;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  padding: 24px 48px;
+  display: flex; align-items: center; justify-content: space-between;
+  z-index: 100;
+  background: linear-gradient(to bottom, rgba(28,20,16,0.9), transparent);
+}
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.1rem; font-weight: 600;
+  letter-spacing: 0.06em; color: var(--cream);
+}
+.nav-logo span { color: var(--gold); font-style: italic; }
+.nav-actions { display: flex; gap: 16px; align-items: center; }
+.nav-login {
+  background: none; border: 1px solid rgba(245,239,230,0.3);
+  color: var(--cream); padding: 9px 22px;
+  font-family: 'Jost', sans-serif; font-size: 0.8rem;
+  font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px; transition: all 0.2s;
+}
+.nav-login:hover { border-color: var(--cream); }
+.nav-join {
+  background: var(--terra); border: none;
+  color: white; padding: 9px 22px;
+  font-family: 'Jost', sans-serif; font-size: 0.8rem;
+  font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px; transition: background 0.2s;
+}
+.nav-join:hover { background: #a8501f; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 120px 40px 80px;
+  position: relative; overflow: hidden;
+}
+
+.hero-bg {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(196,98,45,0.15) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 20% 20%, rgba(212,168,83,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 30% 30% at 80% 30%, rgba(122,140,110,0.06) 0%, transparent 50%);
+}
+
+.hero-ornament {
+  font-size: 0.75rem; letter-spacing: 0.4em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 32px;
+  opacity: 0; animation: fadeUp 0.8s 0.2s ease both;
+}
+
+.hero-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(3.5rem, 9vw, 8rem);
+  font-weight: 300; line-height: 1.0;
+  color: var(--cream); margin-bottom: 12px;
+  opacity: 0; animation: fadeUp 0.8s 0.4s ease both;
+}
+.hero-title em {
+  font-style: italic; color: var(--gold);
+  display: block;
+}
+
+.hero-subtitle {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  font-weight: 300; font-style: italic;
+  color: rgba(245,239,230,0.6);
+  margin-bottom: 48px; line-height: 1.6;
+  max-width: 560px;
+  opacity: 0; animation: fadeUp 0.8s 0.6s ease both;
+}
+
+.hero-cta {
+  display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+  opacity: 0; animation: fadeUp 0.8s 0.8s ease both;
+}
+
+.btn-primary {
+  background: var(--terra); color: white; border: none;
+  padding: 16px 40px; font-family: 'Jost', sans-serif;
+  font-size: 0.85rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px; transition: all 0.2s;
+}
+.btn-primary:hover { background: #a8501f; transform: translateY(-2px); }
+
+.btn-secondary {
+  background: transparent;
+  border: 1px solid rgba(245,239,230,0.4);
+  color: var(--cream); padding: 16px 40px;
+  font-family: 'Jost', sans-serif; font-size: 0.85rem;
+  font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px; transition: all 0.2s;
+}
+.btn-secondary:hover { border-color: var(--cream); transform: translateY(-2px); }
+
+.hero-scroll {
+  position: absolute; bottom: 40px; left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(245,239,230,0.3);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  animation: fadeIn 1s 1.5s ease both; opacity: 0;
+}
+.scroll-line {
+  width: 1px; height: 40px;
+  background: linear-gradient(to bottom, rgba(245,239,230,0.3), transparent);
+  animation: scrollDown 2s 2s infinite;
+}
+@keyframes scrollDown {
+  0% { transform: scaleY(0); transform-origin: top; }
+  50% { transform: scaleY(1); transform-origin: top; }
+  51% { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+/* ── QUOTE SECTION ── */
+.quote-section {
+  padding: 100px 40px;
+  background: var(--terra);
+  text-align: center; position: relative; overflow: hidden;
+}
+.quote-section::before {
+  content: '"';
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20rem; line-height: 0.8;
+  color: rgba(255,255,255,0.06);
+  position: absolute; top: 0; left: 20px;
+}
+.quote-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(1.6rem, 4vw, 2.8rem);
+  font-weight: 300; font-style: italic;
+  line-height: 1.4; color: white;
+  max-width: 800px; margin: 0 auto 20px;
+  position: relative; z-index: 1;
+}
+.quote-author {
+  font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+}
+
+/* ── WHAT IS THIS ── */
+.what-section {
+  padding: 120px 40px;
+  background: var(--warm-white);
+  color: var(--deep);
+}
+.what-inner {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center;
+}
+.what-label {
+  font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--terra); margin-bottom: 20px;
+  display: flex; align-items: center; gap: 12px;
+}
+.what-label::after { content: ''; flex: 1; height: 1px; background: rgba(196,98,45,0.2); }
+.what-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 400; line-height: 1.2;
+  margin-bottom: 24px; color: var(--deep);
+}
+.what-title em { color: var(--terra); font-style: italic; }
+.what-body {
+  font-size: 1rem; line-height: 1.9;
+  color: rgba(28,20,16,0.7); margin-bottom: 32px;
+}
+.what-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+}
+.stat-box {
+  padding: 20px; border: 1px solid rgba(196,98,45,0.15);
+  border-radius: 3px; text-align: center;
+  background: var(--cream);
+}
+.stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 2.2rem; font-weight: 600; color: var(--terra);
+  line-height: 1;
+}
+.stat-label {
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+  color: rgba(28,20,16,0.5); margin-top: 4px;
+}
+
+.what-visual {
+  position: relative; height: 500px;
+}
+.visual-card {
+  position: absolute; background: var(--deep);
+  border-radius: 4px; padding: 28px;
+  box-shadow: 0 20px 60px rgba(28,20,16,0.15);
+}
+.visual-card:nth-child(1) {
+  top: 0; left: 0; right: 60px;
+}
+.visual-card:nth-child(2) {
+  bottom: 0; right: 0; left: 60px;
+  background: var(--terra);
+}
+.visual-card-label {
+  font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 12px;
+}
+.visual-card:nth-child(2) .visual-card-label { color: rgba(255,255,255,0.6); }
+.visual-card-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem; font-style: italic; line-height: 1.6;
+  color: var(--cream);
+}
+.visual-card:nth-child(2) .visual-card-text { color: white; }
+.visual-card-author {
+  margin-top: 16px; font-size: 0.75rem;
+  color: rgba(245,239,230,0.5);
+  display: flex; align-items: center; gap: 8px;
+}
+.visual-avatar {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--terra), var(--gold));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem; font-weight: 700; color: white;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* ── CIRCLES ── */
+.circles-section {
+  padding: 120px 40px;
+  background: var(--deep);
+}
+.section-header {
+  text-align: center; margin-bottom: 64px;
+}
+.section-label {
+  font-size: 0.7rem; letter-spacing: 0.25em; text-transform: uppercase;
+  color: var(--gold); margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 300; color: var(--cream);
+}
+.section-title em { color: var(--terra); font-style: italic; }
+
+.circles-grid {
+  max-width: 1100px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+.circle-card {
+  border: 1px solid rgba(245,239,230,0.1);
+  border-radius: 4px; padding: 32px;
+  transition: all 0.3s; cursor: default;
+  background: rgba(245,239,230,0.03);
+}
+.circle-card:hover {
+  border-color: rgba(196,98,45,0.4);
+  background: rgba(196,98,45,0.05);
+  transform: translateY(-4px);
+}
+.circle-icon { font-size: 2rem; margin-bottom: 16px; display: block; }
+.circle-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.2rem; font-weight: 600;
+  color: var(--cream); margin-bottom: 10px;
+}
+.circle-desc {
+  font-size: 0.85rem; color: rgba(245,239,230,0.5);
+  line-height: 1.7;
+}
+
+/* ── PRICING ── */
+.pricing-section {
+  padding: 120px 40px;
+  background: var(--cream); color: var(--deep);
+  text-align: center;
+}
+.pricing-card {
+  max-width: 480px; margin: 48px auto 0;
+  background: var(--deep); border-radius: 6px;
+  padding: 48px; position: relative; overflow: hidden;
+  box-shadow: 0 30px 80px rgba(28,20,16,0.2);
+}
+.pricing-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--terra), var(--gold));
+}
+.pricing-badge {
+  display: inline-block; padding: 4px 14px;
+  background: rgba(212,168,83,0.15); border: 1px solid rgba(212,168,83,0.3);
+  border-radius: 20px; font-size: 0.7rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--gold); margin-bottom: 24px;
+}
+.pricing-price {
+  font-family: 'Cormorant Garamond', serif;
+  margin-bottom: 8px;
+}
+.pricing-price .free {
+  font-size: 2rem; font-style: italic; color: var(--gold);
+  display: block; margin-bottom: 4px;
+}
+.pricing-price .amount {
+  font-size: 3.5rem; font-weight: 600; color: var(--cream); line-height: 1;
+}
+.pricing-price .period {
+  font-size: 1rem; color: rgba(245,239,230,0.4);
+}
+.pricing-note {
+  font-size: 0.8rem; color: rgba(245,239,230,0.4); margin-bottom: 32px;
+}
+.pricing-features {
+  list-style: none; margin-bottom: 36px; text-align: left;
+}
+.pricing-features li {
+  padding: 10px 0; border-bottom: 1px solid rgba(245,239,230,0.06);
+  font-size: 0.88rem; color: rgba(245,239,230,0.7);
+  display: flex; align-items: center; gap: 12px;
+}
+.pricing-features li::before {
+  content: '✦'; color: var(--terra); font-size: 0.6rem; flex-shrink: 0;
+}
+.pricing-cta {
+  width: 100%; padding: 16px;
+  background: var(--terra); color: white; border: none;
+  font-family: 'Jost', sans-serif; font-size: 0.85rem;
+  font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px; transition: background 0.2s;
+}
+.pricing-cta:hover { background: #a8501f; }
+
+/* ── FINAL CTA ── */
+.final-section {
+  padding: 140px 40px;
+  background: var(--deep);
+  text-align: center; position: relative; overflow: hidden;
+}
+.final-section::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 60% at 50% 100%, rgba(196,98,45,0.2), transparent 70%);
+}
+.final-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(2.5rem, 7vw, 6rem);
+  font-weight: 300; line-height: 1.1;
+  color: var(--cream); margin-bottom: 24px;
+  position: relative; z-index: 1;
+}
+.final-title em { color: var(--gold); font-style: italic; display: block; }
+.final-sub {
+  font-size: 1rem; color: rgba(245,239,230,0.5);
+  max-width: 400px; margin: 0 auto 40px; line-height: 1.7;
+  position: relative; z-index: 1;
+}
+.final-cta { position: relative; z-index: 1; }
+
+/* ── FLOATING JOIN BUTTON ── */
+.floating-join {
+  position: fixed; bottom: 32px; right: 32px;
+  background: var(--terra); color: white;
+  border: none; padding: 16px 28px;
+  font-family: 'Jost', sans-serif; font-size: 0.82rem;
+  font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+  cursor: pointer; border-radius: 40px;
+  box-shadow: 0 8px 30px rgba(196,98,45,0.4);
+  transition: all 0.3s; z-index: 90;
+  display: flex; align-items: center; gap: 8px;
+  opacity: 0; transform: translateY(20px);
+}
+.floating-join.visible { opacity: 1; transform: translateY(0); }
+.floating-join:hover { background: #a8501f; transform: translateY(-3px); box-shadow: 0 12px 40px rgba(196,98,45,0.5); }
+.floating-join span { font-size: 1rem; }
+
+/* ── FOOTER ── */
+footer {
+  padding: 40px 48px;
+  border-top: 1px solid rgba(245,239,230,0.08);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+  background: var(--deep);
+}
+.footer-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1rem; color: rgba(245,239,230,0.4);
+}
+.footer-logo span { color: var(--gold); font-style: italic; }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a {
+  font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em;
+  color: rgba(245,239,230,0.3); text-decoration: none; transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--cream); }
+
+/* ── MODALS ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(28,20,16,0.8);
+  z-index: 500; display: none; align-items: center; justify-content: center;
+  padding: 20px; backdrop-filter: blur(4px);
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--warm-white); border-radius: 6px;
+  max-width: 560px; width: 100%; max-height: 85vh;
+  overflow-y: auto; padding: 40px;
+  box-shadow: 0 30px 80px rgba(28,20,16,0.4);
+}
+.modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem; font-weight: 600;
+  margin-bottom: 6px; color: var(--deep);
+}
+.modal-sub { font-size: 0.85rem; color: var(--terra); margin-bottom: 24px; }
+.agreement-item {
+  display: flex; gap: 14px; margin-bottom: 18px;
+  padding-bottom: 18px; border-bottom: 1px solid rgba(196,98,45,0.1);
+}
+.agreement-item:last-of-type { border-bottom: none; }
+.agreement-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--terra); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+}
+.agreement-text strong { display: block; font-size: 0.9rem; margin-bottom: 4px; color: var(--deep); }
+.agreement-text p { font-size: 0.82rem; color: rgba(28,20,16,0.65); line-height: 1.6; }
+.modal-check { display: flex; gap: 10px; align-items: flex-start; margin: 24px 0 20px; }
+.modal-check input { margin-top: 3px; accent-color: var(--terra); width: 16px; height: 16px; }
+.modal-check label { font-size: 0.85rem; color: var(--deep); line-height: 1.5; cursor: pointer; }
+.modal-agree-btn {
+  width: 100%; padding: 14px; background: var(--terra); color: white;
+  border: none; font-family: 'Jost', sans-serif; font-size: 0.9rem;
+  font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+  cursor: pointer; border-radius: 2px; transition: background 0.2s;
+}
+.modal-agree-btn:hover { background: #a8501f; }
+.modal-agree-btn:disabled { background: rgba(196,98,45,0.3); cursor: not-allowed; }
+.modal-cancel { text-align: center; margin-top: 12px; }
+.modal-cancel button { background: none; border: none; color: rgba(28,20,16,0.45); font-size: 0.82rem; cursor: pointer; font-family: 'Jost', sans-serif; }
+
+.auth-modal-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.8rem; font-weight: 600; margin-bottom: 6px; color: var(--deep);
+}
+.auth-sub { font-size: 0.85rem; color: var(--terra); margin-bottom: 24px; }
+.form-group { margin-bottom: 18px; }
+.form-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(28,20,16,0.5); margin-bottom: 7px; font-weight: 500; font-family: 'Jost', sans-serif; }
+.form-input {
+  width: 100%; padding: 12px 16px;
+  border: 1.5px solid rgba(196,98,45,0.2);
+  border-radius: 3px; font-family: 'Jost', sans-serif;
+  font-size: 0.9rem; color: var(--deep); background: white;
+  outline: none; transition: border-color 0.2s;
+}
+.form-input:focus { border-color: var(--terra); }
+.auth-switch { text-align: center; font-size: 0.82rem; color: rgba(28,20,16,0.5); margin-top: 16px; font-family: 'Jost', sans-serif; }
+.auth-switch a { color: var(--terra); text-decoration: none; font-weight: 600; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px);
+  background: var(--deep); color: var(--cream);
+  padding: 12px 24px; border-radius: 3px; font-size: 0.85rem;
+  opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 600;
+  white-space: nowrap; border: 1px solid rgba(245,239,230,0.1);
+  font-family: 'Jost', sans-serif;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 768px) {
+  nav { padding: 20px 24px; }
+  .what-inner { grid-template-columns: 1fr; gap: 40px; }
+  .what-visual { display: none; }
+  .hero { padding: 100px 24px 60px; }
+  .circles-section, .what-section, .pricing-section, .final-section { padding: 80px 24px; }
+  footer { flex-direction: column; text-align: center; padding: 32px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- AGREEMENTS MODAL -->
+<div class="modal-overlay" id="agreements-modal">
+  <div class="modal">
+    <div class="modal-title">Community Agreements</div>
+    <div class="modal-sub">Before you join, please read and agree to our community agreements ✦</div>
+    <div class="agreement-item">
+      <div class="agreement-num">1</div>
+      <div class="agreement-text">
+        <strong>We show up with honesty and care</strong>
+        <p>This is a space for real talk — not performance. We bring our full selves and hold space for others to do the same.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">2</div>
+      <div class="agreement-text">
+        <strong>What's shared here, stays here</strong>
+        <p>Confidentiality is sacred. Stories shared in this community are not yours to repeat outside of it.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">3</div>
+      <div class="agreement-text">
+        <strong>We do not give unsolicited advice</strong>
+        <p>We listen to understand, not to fix. Ask before offering advice or feedback.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">4</div>
+      <div class="agreement-text">
+        <strong>We honor all identities and lived experiences</strong>
+        <p>This is an affirming space. Bigotry, discrimination, or harm of any kind will not be tolerated.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">5</div>
+      <div class="agreement-text">
+        <strong>We practice community care</strong>
+        <p>We look out for each other. If something feels off, we speak up — with love, not judgment.</p>
+      </div>
+    </div>
+    <div class="modal-check">
+      <input type="checkbox" id="agree-check" onchange="toggleAgreeBtn()">
+      <label for="agree-check">I have read and agree to the Sisterhood(verb) Community Agreements</label>
+    </div>
+    <button class="modal-agree-btn" id="agree-btn" disabled onclick="handleAgree()">I Agree — Join the Sisterhood</button>
+    <div class="modal-cancel"><button onclick="closeAgreements()">Not right now</button></div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal">
+    <div class="auth-modal-title" id="auth-title">Join the Sisterhood</div>
+    <div class="auth-sub">✦ A space to be seen, speak freely, and practice sisterhood</div>
+    <div class="form-group" id="auth-name-group">
+      <label class="form-label">Your Name</label>
+      <input class="form-input" type="text" id="auth-name" placeholder="What shall we call you?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="auth-email" placeholder="your@email.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="auth-password" placeholder="Create a strong password">
+    </div>
+    <button class="modal-agree-btn" id="auth-submit">Create Account</button>
+    <div class="auth-switch" id="auth-switch">Already a member? <a href="#" onclick="setAuthMode('login'); return false;">Log in</a></div>
+    <div class="modal-cancel"><button onclick="closeAuth()">Not right now</button></div>
+  </div>
+</div>
+
+<!-- FLOATING JOIN BUTTON -->
+<button class="floating-join" id="floating-join" onclick="openAgreements()">
+  <span>✦</span> Join Free
+</button>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">Sisterhood<span>(verb)</span></div>
+  <div class="nav-actions">
+    <button class="nav-login" onclick="openLogin()">Log In</button>
+    <button class="nav-join" onclick="openAgreements()">Join Free</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-ornament">✦ &nbsp; You Are Home &nbsp; ✦</div>
+  <h1 class="hero-title">
+    Welcome to
+    <em>Sisterhood(verb)</em>
+  </h1>
+  <p class="hero-subtitle">A membership community for women who are done performing wellness and ready to practice it.</p>
+  <div class="hero-cta">
+    <button class="btn-primary" onclick="openAgreements()">Join Free — First Month on Us</button>
+    <button class="btn-secondary" onclick="openLogin()">Already a Member</button>
+  </div>
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    Scroll
+  </div>
+</section>
+
+<!-- QUOTE -->
+<section class="quote-section">
+  <p class="quote-text">"Sisterhood(verb): loving yourself and your kin with ancestral abundance."</p>
+  <div class="quote-author">— Tayllor Oyewole-Davis, Founder</div>
+</section>
+
+<!-- WHAT IS THIS -->
+<section class="what-section">
+  <div class="what-inner">
+    <div>
+      <div class="what-label">What is this</div>
+      <h2 class="what-title">A space built for <em>real</em> sisterhood</h2>
+      <p class="what-body">Sisterhood(verb) is a community-rooted creative practice offering workshops, programs, and spaces that use storytelling, arts integration, and facilitated dialogue to support wellness, belonging, and cultural connection.<br><br>This isn't another group chat. This is a practice space — where creativity is a tool for healing, community care replaces burnout, and your lived experience is honored.</p>
+      <div class="what-stats">
+        <div class="stat-box">
+          <div class="stat-num">4</div>
+          <div class="stat-label">Circles</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">5</div>
+          <div class="stat-label">Weekly Events</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-num">∞</div>
+          <div class="stat-label">Sisters</div>
+        </div>
+      </div>
+    </div>
+    <div class="what-visual">
+      <div class="visual-card">
+        <div class="visual-card-label">From the community</div>
+        <div class="visual-card-text">"I didn't realize how much I'd been carrying silently until I finally had a room where I was allowed to put it down."</div>
+        <div class="visual-card-author">
+          <div class="visual-avatar">A</div>
+          Amara W. · Motherhood Speaks
+        </div>
+      </div>
+      <div class="visual-card">
+        <div class="visual-card-label">From the community</div>
+        <div class="visual-card-text">"I've never cried so hard or felt so free at the same time. Thank you for this space."</div>
+        <div class="visual-card-author">
+          <div class="visual-avatar" style="background:linear-gradient(135deg,#fff,rgba(255,255,255,0.6));color:var(--terra)">N</div>
+          Nia R. · Writers Block? I Think Not!
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CIRCLES -->
+<section class="circles-section">
+  <div class="section-header">
+    <div class="section-label">Where you belong</div>
+    <h2 class="section-title">Find your <em>Circle</em></h2>
+  </div>
+  <div class="circles-grid">
+    <div class="circle-card">
+      <span class="circle-icon">🌺</span>
+      <div class="circle-name">Motherhood Speaks</div>
+      <div class="circle-desc">A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.</div>
+    </div>
+    <div class="circle-card">
+      <span class="circle-icon">✍🏾</span>
+      <div class="circle-name">Writers Block? I Think Not!</div>
+      <div class="circle-desc">Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div>
+    </div>
+    <div class="circle-card">
+      <span class="circle-icon">🔥</span>
+      <div class="circle-name">Burnout to Bloom</div>
+      <div class="circle-desc">For educators, organizers, activists, and artists trying to exist in the world and keep your cup full. We get it. We got you.</div>
+    </div>
+    <div class="circle-card">
+      <span class="circle-icon">🎤</span>
+      <div class="circle-name">Speak Poet!</div>
+      <div class="circle-desc">For slam poets, performers, and spoken word artists looking for space to share your work and connect with poets who get it.</div>
+    </div>
+    <div class="circle-card">
+      <span class="circle-icon">💼</span>
+      <div class="circle-name">The Hustle is Healing</div>
+      <div class="circle-desc">For women building businesses, brands, and movements while trying to stay whole. Share your wins, pivots, burnout, and breakthroughs.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section">
+  <div class="section-label" style="color:var(--terra)">Founding Season</div>
+  <h2 class="section-title" style="color:var(--deep);font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3rem);font-weight:300;">Simple, honest <em style="color:var(--terra);font-style:italic;">pricing</em></h2>
+  <div class="pricing-card">
+    <div class="pricing-badge">Founding Member Offer</div>
+    <div class="pricing-price">
+      <span class="free">First month free</span>
+      <span class="amount">$27</span>
+      <span class="period">/month after</span>
+    </div>
+    <div class="pricing-note">Cancel anytime. No contracts. No nonsense.</div>
+    <ul class="pricing-features">
+      <li>Access to all 5 Circles</li>
+      <li>Weekly Motherhood Speaks sessions</li>
+      <li>Community feed & member connections</li>
+      <li>Resources library (workshops, prompts, meditations)</li>
+      <li>Early access to Sisterhood Speaks Summer 2026</li>
+      <li>Direct connection to Tayllor Oyewole-Davis</li>
+    </ul>
+    <button class="pricing-cta" onclick="openAgreements()">Join the Sisterhood — Free First Month</button>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-section">
+  <h2 class="final-title">
+    Your sisters are
+    <em>already here.</em>
+  </h2>
+  <p class="final-sub">This is your invitation. Come as you are. Stay as long as you need.</p>
+  <div class="final-cta">
+    <button class="btn-primary" onclick="openAgreements()" style="padding:18px 48px;font-size:0.9rem;">You Are Home — Join Free</button>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Sisterhood<span>(verb)</span> Community</div>
+  <div class="footer-links">
+    <a href="https://www.sisterhoodverb.com">Main Site</a>
+    <a href="https://www.instagram.com/sisterhoodverb">Instagram</a>
+    <a href="/cdn-cgi/l/email-protection#73001a000716011b1c1c170516011133141e121a1f5d101c1e">Contact</a>
+  </div>
+</footer>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  const _supabase = window.supabase.createClient(
+    'https://cqiymqekdtewnorojlus.supabase.co',
+    'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
+  );
+
+  // Check if already logged in — redirect to app
+  window.addEventListener('load', async () => {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (session) {
+      // User is logged in — redirect to community app
+      window.location.href = '/app';
+    }
+  });
+
+  // ── AGREEMENTS ──
+  function openAgreements() {
+    document.getElementById('agreements-modal').classList.add('open');
+  }
+  function closeAgreements() {
+    document.getElementById('agreements-modal').classList.remove('open');
+  }
+  function toggleAgreeBtn() {
+    const checked = document.getElementById('agree-check').checked;
+    document.getElementById('agree-btn').disabled = !checked;
+  }
+  function handleAgree() {
+    closeAgreements();
+    setTimeout(() => {
+      setAuthMode('signup');
+      document.getElementById('auth-modal').classList.add('open');
+    }, 200);
+  }
+
+  // ── AUTH ──
+  function openLogin() {
+    setAuthMode('login');
+    document.getElementById('auth-modal').classList.add('open');
+  }
+  function closeAuth() {
+    document.getElementById('auth-modal').classList.remove('open');
+  }
+
+  function setAuthMode(mode) {
+    const title = document.getElementById('auth-title');
+    const submitBtn = document.getElementById('auth-submit');
+    const nameGroup = document.getElementById('auth-name-group');
+    const switchEl = document.getElementById('auth-switch');
+    if (mode === 'signup') {
+      title.textContent = 'Join the Sisterhood';
+      submitBtn.textContent = 'Create Account';
+      nameGroup.style.display = 'block';
+      switchEl.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\'); return false;">Log in</a>';
+      submitBtn.onclick = async () => {
+        const name = document.getElementById('auth-name').value;
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        if (!name || !email || !password) { showToast('Please fill in all fields'); return; }
+        const { data, error } = await _supabase.auth.signUp({ email, password });
+        if (error) { showToast('Error: ' + error.message); return; }
+        if (data.user) {
+          await _supabase.from('profiles').insert({
+            id: data.user.id,
+            name: name,
+            handle: '@' + email.split('@')[0],
+            membership_tier: 'free'
+          });
+          closeAuth();
+          showToast('Welcome! Check your email to confirm your account ✦');
+        }
+      };
+    } else {
+      title.textContent = 'Welcome Back, Sis';
+      submitBtn.textContent = 'Log In';
+      nameGroup.style.display = 'none';
+      switchEl.innerHTML = 'New here? <a href="#" onclick="setAuthMode(\'signup\'); return false;">Join the Sisterhood</a>';
+      submitBtn.onclick = async () => {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        if (!email || !password) { showToast('Please enter your email and password'); return; }
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) { showToast('Error: ' + error.message); return; }
+        showToast('Welcome back, sis ✦');
+        setTimeout(() => window.location.href = '/app', 1000);
+      };
+    }
+  }
+
+  // ── FLOATING BUTTON ── show after scrolling past hero
+  const floatingBtn = document.getElementById('floating-join');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > window.innerHeight * 0.6) {
+      floatingBtn.classList.add('visible');
+    } else {
+      floatingBtn.classList.remove('visible');
+    }
+  });
+
+  // ── TOAST ──
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
