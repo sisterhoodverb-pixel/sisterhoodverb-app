@@ -623,13 +623,27 @@
   .profile-banner {
     height: 160px; border-radius: 4px; margin-bottom: -50px;
     background: linear-gradient(135deg, var(--deep) 0%, #3d2b1f 50%, var(--terra) 100%);
-    position: relative; overflow: hidden;
+    position: relative; overflow: hidden; cursor: pointer;
   }
-  .profile-banner::after {
-    content: '✦ ✦ ✦';
-    position: absolute; bottom: 20px; right: 24px;
-    color: rgba(212,168,83,0.3); font-size: 1.2rem; letter-spacing: 12px;
+  .photo-upload-overlay {
+    position: absolute; inset: 0;
+    background: rgba(28,20,16,0.5);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s;
+    font-size: 0.8rem; color: white; letter-spacing: 0.08em;
+    text-transform: uppercase; gap: 8px;
   }
+  .profile-banner:hover .photo-upload-overlay { opacity: 1; }
+  .avatar-upload-btn {
+    position: absolute; bottom: 0; right: -4px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--terra); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; border: 2px solid var(--warm-white);
+    cursor: pointer; transition: background 0.2s;
+  }
+  .avatar-upload-btn:hover { background: #a8501f; }
+  input[type="file"] { display: none; }
   .profile-avatar-wrap {
     position: relative; margin-left: 32px; margin-bottom: 16px;
     width: fit-content;
@@ -1347,10 +1361,14 @@
 <!-- ════ PROFILE ════ -->
 <div class="view" id="view-profile">
   <div style="max-width:720px;margin:0 auto;padding:32px 40px 0;">
-    <div class="profile-banner"></div>
+    <div class="profile-banner" id="profile-banner" onclick="document.getElementById('banner-upload').click()">
+      <div class="photo-upload-overlay">📷 Change Banner</div>
+    </div>
+    <input type="file" id="banner-upload" accept="image/*" onchange="uploadBanner(this)">
+    <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(this)">
     <div class="profile-avatar-wrap">
-      <div class="profile-avatar">T</div>
-      <div class="profile-badge">✦</div>
+      <div class="profile-avatar" id="profile-avatar-display">T</div>
+      <div class="avatar-upload-btn" onclick="document.getElementById('avatar-upload').click()" title="Change photo">📷</div>
     </div>
   </div>
   <div class="profile-info">
@@ -1509,11 +1527,81 @@
     showToast('Mobile menu — use bottom nav');
   }
 
-  // Load profile when profile view is shown
-  const _origShowView = showView;
+  // ── PHOTO UPLOADS ──
+  async function uploadAvatar(input) {
+    if (!currentUser || !input.files[0]) return;
+    const file = input.files[0];
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${currentUser.id}/avatar.${fileExt}`;
+    showToast('Uploading photo...');
+    const { error: uploadError } = await _supabase.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+    if (uploadError) { showToast('Upload failed — try again'); return; }
+    const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
+    const avatarUrl = data.publicUrl;
+    await _supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
+    // Update display
+    const avatarEl = document.getElementById('profile-avatar-display');
+    avatarEl.style.backgroundImage = `url(${avatarUrl})`;
+    avatarEl.style.backgroundSize = 'cover';
+    avatarEl.style.backgroundPosition = 'center';
+    avatarEl.textContent = '';
+    showToast('Profile photo updated ✦');
+  }
+
+  async function uploadBanner(input) {
+    if (!currentUser || !input.files[0]) return;
+    const file = input.files[0];
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${currentUser.id}/banner.${fileExt}`;
+    showToast('Uploading banner...');
+    const { error: uploadError } = await _supabase.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+    if (uploadError) { showToast('Upload failed — try again'); return; }
+    const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
+    const bannerUrl = data.publicUrl;
+    await _supabase.from('profiles').update({ banner_url: bannerUrl }).eq('id', currentUser.id);
+    // Update display
+    const bannerEl = document.getElementById('profile-banner');
+    bannerEl.style.backgroundImage = `url(${bannerUrl})`;
+    bannerEl.style.backgroundSize = 'cover';
+    bannerEl.style.backgroundPosition = 'center';
+    showToast('Banner photo updated ✦');
+  }
+
+  // Load profile photos when profile loads
+  async function loadProfilePhotos() {
+    if (!currentUser) return;
+    const { data: profile } = await _supabase
+      .from('profiles').select('avatar_url, banner_url').eq('id', currentUser.id).single();
+    if (profile?.avatar_url) {
+      const avatarEl = document.getElementById('profile-avatar-display');
+      if (avatarEl) {
+        avatarEl.style.backgroundImage = `url(${profile.avatar_url})`;
+        avatarEl.style.backgroundSize = 'cover';
+        avatarEl.style.backgroundPosition = 'center';
+        avatarEl.textContent = '';
+      }
+    }
+    if (profile?.banner_url) {
+      const bannerEl = document.getElementById('profile-banner');
+      if (bannerEl) {
+        bannerEl.style.backgroundImage = `url(${profile.banner_url})`;
+        bannerEl.style.backgroundSize = 'cover';
+        bannerEl.style.backgroundPosition = 'center';
+      }
+    }
+  }
+
+  // Load profile view with photos
   function showViewWithProfile(name, el) {
     showView(name, el);
-    if (name === 'profile') loadProfile();
+    if (name === 'profile') {
+      loadProfile();
+      loadProfilePhotos();
+    }
   }
 
 </script>
