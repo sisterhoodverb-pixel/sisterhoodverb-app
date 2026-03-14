@@ -780,11 +780,25 @@ footer {
     'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
   );
 
-  // Check if already logged in — redirect to app
+  // Check if already logged in
   window.addEventListener('load', async () => {
     const { data: { session } } = await _supabase.auth.getSession();
     if (session) {
-      window.location.href = '/app.html';
+      // Show "Go to Community" in nav instead of login/join
+      const navActions = document.querySelector('.nav-actions');
+      if (navActions) {
+        navActions.innerHTML = `
+          <span style="font-size:0.8rem;color:rgba(245,239,230,0.5);letter-spacing:0.06em;">Welcome back, sis ✦</span>
+          <button class="nav-join" onclick="window.location.href='/app.html'">Go to Community</button>
+        `;
+      }
+      // Also update hero buttons
+      const heroCta = document.querySelector('.hero-cta');
+      if (heroCta) {
+        heroCta.innerHTML = `
+          <button class="btn-primary" onclick="window.location.href='/app.html'">Go to Your Community ✦</button>
+        `;
+      }
     }
   });
 
