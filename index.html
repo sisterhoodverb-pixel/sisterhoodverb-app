@@ -7,6 +7,87 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ── ALL FUNCTIONS DEFINED EARLY SO BUTTONS CAN USE THEM ──
+
+  function openAgreements() {
+    const modal = document.getElementById('agreements-modal');
+    modal.style.display = 'flex';
+  }
+  function closeAgreements() {
+    document.getElementById('agreements-modal').style.display = 'none';
+  }
+  function toggleAgreeBtn() {
+    document.getElementById('agree-btn').disabled = !document.getElementById('agree-check').checked;
+  }
+  function handleAgree() {
+    closeAgreements();
+    setTimeout(() => openLogin('signup'), 200);
+  }
+  function openLogin(mode) {
+    const m = mode || 'login';
+    const modal = document.getElementById('auth-modal');
+    modal.style.display = 'flex';
+    setAuthMode(m);
+  }
+  function closeAuth() {
+    document.getElementById('auth-modal').style.display = 'none';
+  }
+  function setAuthMode(mode) {
+    const title = document.getElementById('auth-title');
+    const submitBtn = document.getElementById('auth-submit');
+    const nameGroup = document.getElementById('auth-name-group');
+    const switchEl = document.getElementById('auth-switch');
+    if (!title) return;
+    if (mode === 'signup') {
+      title.textContent = 'Join the Sisterhood';
+      submitBtn.textContent = 'Create Account';
+      nameGroup.style.display = 'block';
+      switchEl.innerHTML = 'Already a member? <a href="#" onclick="openLogin(\'login\'); return false;">Log in</a>';
+      submitBtn.onclick = async () => {
+        const name = document.getElementById('auth-name').value;
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        if (!name || !email || !password) { showToast('Please fill in all fields'); return; }
+        const { data, error } = await _supabase.auth.signUp({ email, password });
+        if (error) { showToast('Error: ' + error.message); return; }
+        if (data.user) {
+          await _supabase.from('profiles').insert({
+            id: data.user.id, name: name,
+            handle: '@' + email.split('@')[0], membership_tier: 'free'
+          });
+          closeAuth();
+          showToast('Welcome! Check your email to confirm ✦');
+        }
+      };
+    } else {
+      title.textContent = 'Welcome Back, Sis';
+      submitBtn.textContent = 'Log In';
+      nameGroup.style.display = 'none';
+      switchEl.innerHTML = 'New here? <a href="#" onclick="openLogin(\'signup\'); return false;">Join the Sisterhood</a>';
+      submitBtn.onclick = async () => {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        if (!email || !password) { showToast('Please fill in all fields'); return; }
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) { showToast('Error: ' + error.message); return; }
+        if (data.session) {
+          showToast('Welcome back, sis ✦');
+          setTimeout(() => window.location.href = '/app.html', 1000);
+        }
+      };
+    }
+  }
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
+</script>
 <style>
 :root {
   --terra: #C4622D;
@@ -17,18 +98,18 @@
   --blush: #E8C4A0;
   --warm-white: #FBF7F2;
 }
- 
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
- 
+
 html { scroll-behavior: smooth; }
- 
+
 body {
   font-family: 'Jost', sans-serif;
   background: var(--deep);
   color: var(--cream);
   overflow-x: hidden;
 }
- 
+
 /* ── GRAIN ── */
 body::before {
   content: '';
@@ -36,7 +117,7 @@ body::before {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
   pointer-events: none; z-index: 1000; opacity: 0.5;
 }
- 
+
 /* ── NAV ── */
 nav {
   position: fixed; top: 0; left: 0; right: 0;
@@ -68,7 +149,7 @@ nav {
   cursor: pointer; border-radius: 2px; transition: background 0.2s;
 }
 .nav-join:hover { background: #a8501f; }
- 
+
 /* ── HERO ── */
 .hero {
   min-height: 100vh;
@@ -78,7 +159,7 @@ nav {
   padding: 120px 40px 80px;
   position: relative; overflow: hidden;
 }
- 
+
 .hero-bg {
   position: absolute; inset: 0;
   background:
@@ -86,13 +167,13 @@ nav {
     radial-gradient(ellipse 40% 40% at 20% 20%, rgba(212,168,83,0.08) 0%, transparent 60%),
     radial-gradient(ellipse 30% 30% at 80% 30%, rgba(122,140,110,0.06) 0%, transparent 50%);
 }
- 
+
 .hero-ornament {
   font-size: 0.75rem; letter-spacing: 0.4em; text-transform: uppercase;
   color: var(--gold); margin-bottom: 32px;
   opacity: 0; animation: fadeUp 0.8s 0.2s ease both;
 }
- 
+
 .hero-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(3.5rem, 9vw, 8rem);
@@ -104,7 +185,7 @@ nav {
   font-style: italic; color: var(--gold);
   display: block;
 }
- 
+
 .hero-subtitle {
   font-family: 'Cormorant Garamond', serif;
   font-size: clamp(1.2rem, 3vw, 1.8rem);
@@ -114,12 +195,12 @@ nav {
   max-width: 560px;
   opacity: 0; animation: fadeUp 0.8s 0.6s ease both;
 }
- 
+
 .hero-cta {
   display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
   opacity: 0; animation: fadeUp 0.8s 0.8s ease both;
 }
- 
+
 .btn-primary {
   background: var(--terra); color: white; border: none;
   padding: 16px 40px; font-family: 'Jost', sans-serif;
@@ -128,7 +209,7 @@ nav {
   cursor: pointer; border-radius: 2px; transition: all 0.2s;
 }
 .btn-primary:hover { background: #a8501f; transform: translateY(-2px); }
- 
+
 .btn-secondary {
   background: transparent;
   border: 1px solid rgba(245,239,230,0.4);
@@ -138,7 +219,7 @@ nav {
   cursor: pointer; border-radius: 2px; transition: all 0.2s;
 }
 .btn-secondary:hover { border-color: var(--cream); transform: translateY(-2px); }
- 
+
 .hero-scroll {
   position: absolute; bottom: 40px; left: 50%;
   transform: translateX(-50%);
@@ -158,7 +239,7 @@ nav {
   51% { transform: scaleY(1); transform-origin: bottom; }
   100% { transform: scaleY(0); transform-origin: bottom; }
 }
- 
+
 /* ── QUOTE SECTION ── */
 .quote-section {
   padding: 100px 40px;
@@ -184,7 +265,7 @@ nav {
   font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
   color: rgba(255,255,255,0.6);
 }
- 
+
 /* ── WHAT IS THIS ── */
 .what-section {
   padding: 120px 40px;
@@ -229,7 +310,7 @@ nav {
   font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
   color: rgba(28,20,16,0.5); margin-top: 4px;
 }
- 
+
 .what-visual {
   position: relative; height: 500px;
 }
@@ -268,7 +349,7 @@ nav {
   font-size: 0.7rem; font-weight: 700; color: white;
   font-family: 'Cormorant Garamond', serif;
 }
- 
+
 /* ── CIRCLES ── */
 .circles-section {
   padding: 120px 40px;
@@ -287,7 +368,7 @@ nav {
   font-weight: 300; color: var(--cream);
 }
 .section-title em { color: var(--terra); font-style: italic; }
- 
+
 .circles-grid {
   max-width: 1100px; margin: 0 auto;
   display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -314,7 +395,7 @@ nav {
   font-size: 0.85rem; color: rgba(245,239,230,0.5);
   line-height: 1.7;
 }
- 
+
 /* ── PRICING ── */
 .pricing-section {
   padding: 120px 40px;
@@ -374,7 +455,7 @@ nav {
   cursor: pointer; border-radius: 2px; transition: background 0.2s;
 }
 .pricing-cta:hover { background: #a8501f; }
- 
+
 /* ── FINAL CTA ── */
 .final-section {
   padding: 140px 40px;
@@ -400,7 +481,7 @@ nav {
   position: relative; z-index: 1;
 }
 .final-cta { position: relative; z-index: 1; }
- 
+
 /* ── FLOATING JOIN BUTTON ── */
 .floating-join {
   position: fixed; bottom: 32px; right: 32px;
@@ -417,7 +498,7 @@ nav {
 .floating-join.visible { opacity: 1; transform: translateY(0); }
 .floating-join:hover { background: #a8501f; transform: translateY(-3px); box-shadow: 0 12px 40px rgba(196,98,45,0.5); }
 .floating-join span { font-size: 1rem; }
- 
+
 /* ── FOOTER ── */
 footer {
   padding: 40px 48px;
@@ -437,7 +518,7 @@ footer {
   color: rgba(245,239,230,0.3); text-decoration: none; transition: color 0.2s;
 }
 .footer-links a:hover { color: var(--cream); }
- 
+
 /* ── MODALS ── */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(28,20,16,0.8);
@@ -483,7 +564,7 @@ footer {
 .modal-agree-btn:disabled { background: rgba(196,98,45,0.3); cursor: not-allowed; }
 .modal-cancel { text-align: center; margin-top: 12px; }
 .modal-cancel button { background: none; border: none; color: rgba(28,20,16,0.45); font-size: 0.82rem; cursor: pointer; font-family: 'Jost', sans-serif; }
- 
+
 .auth-modal-title {
   font-family: 'Cormorant Garamond', serif;
   font-size: 1.8rem; font-weight: 600; margin-bottom: 6px; color: var(--deep);
@@ -501,7 +582,7 @@ footer {
 .form-input:focus { border-color: var(--terra); }
 .auth-switch { text-align: center; font-size: 0.82rem; color: rgba(28,20,16,0.5); margin-top: 16px; font-family: 'Jost', sans-serif; }
 .auth-switch a { color: var(--terra); text-decoration: none; font-weight: 600; }
- 
+
 /* ── TOAST ── */
 .toast {
   position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px);
@@ -512,7 +593,7 @@ footer {
   font-family: 'Jost', sans-serif;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
- 
+
 /* ── ANIMATIONS ── */
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(24px); }
@@ -522,7 +603,7 @@ footer {
   from { opacity: 0; }
   to { opacity: 1; }
 }
- 
+
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   nav { padding: 20px 24px; }
@@ -535,10 +616,10 @@ footer {
 </style>
 </head>
 <body>
- 
+
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
- 
+
 <!-- AGREEMENTS MODAL -->
 <div class="modal-overlay" id="agreements-modal">
   <div class="modal">
@@ -587,7 +668,7 @@ footer {
     <div class="modal-cancel"><button onclick="closeAgreements()">Not right now</button></div>
   </div>
 </div>
- 
+
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="auth-modal">
   <div class="modal">
@@ -610,12 +691,12 @@ footer {
     <div class="modal-cancel"><button onclick="closeAuth()">Not right now</button></div>
   </div>
 </div>
- 
+
 <!-- FLOATING JOIN BUTTON -->
 <button class="floating-join" id="floating-join" onclick="openAgreements()">
   <span>✦</span> Join Free
 </button>
- 
+
 <!-- NAV -->
 <nav>
   <div class="nav-logo">Sisterhood<span>(verb)</span></div>
@@ -624,7 +705,7 @@ footer {
     <button class="nav-join" onclick="openAgreements()">Join Free</button>
   </div>
 </nav>
- 
+
 <!-- HERO -->
 <section class="hero">
   <div class="hero-bg"></div>
@@ -643,13 +724,13 @@ footer {
     Scroll
   </div>
 </section>
- 
+
 <!-- QUOTE -->
 <section class="quote-section">
   <p class="quote-text">"Sisterhood(verb): loving yourself and your kin with ancestral abundance."</p>
   <div class="quote-author">— Tayllor Oyewole-Davis, Founder</div>
 </section>
- 
+
 <!-- WHAT IS THIS -->
 <section class="what-section">
   <div class="what-inner">
@@ -692,7 +773,7 @@ footer {
     </div>
   </div>
 </section>
- 
+
 <!-- CIRCLES -->
 <section class="circles-section">
   <div class="section-header">
@@ -727,7 +808,7 @@ footer {
     </div>
   </div>
 </section>
- 
+
 <!-- PRICING -->
 <section class="pricing-section">
   <div class="section-label" style="color:var(--terra)">Founding Season</div>
@@ -751,7 +832,7 @@ footer {
     <button class="pricing-cta" onclick="openAgreements()">Join the Sisterhood — Free First Month</button>
   </div>
 </section>
- 
+
 <!-- FINAL CTA -->
 <section class="final-section">
   <h2 class="final-title">
@@ -763,7 +844,7 @@ footer {
     <button class="btn-primary" onclick="openAgreements()" style="padding:18px 48px;font-size:0.9rem;">You Are Home — Join Free</button>
   </div>
 </section>
- 
+
 <!-- FOOTER -->
 <footer>
   <div class="footer-logo">Sisterhood<span>(verb)</span> Community</div>
@@ -773,13 +854,44 @@ footer {
     <a href="/cdn-cgi/l/email-protection#73001a000716011b1c1c170516011133141e121a1f5d101c1e">Contact</a>
   </div>
 </footer>
- 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+
+<script>
   const _supabase = window.supabase.createClient(
     'https://cqiymqekdtewnorojlus.supabase.co',
     'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
   );
- 
+
+  // Check if already logged in
+  window.addEventListener('load', async () => {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (session) {
+      const navActions = document.querySelector('.nav-actions');
+      if (navActions) {
+        navActions.innerHTML = `
+          <span style="font-size:0.8rem;color:rgba(245,239,230,0.5);letter-spacing:0.06em;">Welcome back, sis ✦</span>
+          <button class="nav-join" onclick="window.location.href='/app.html'">Go to Community</button>
+        `;
+      }
+      const heroCta = document.querySelector('.hero-cta');
+      if (heroCta) {
+        heroCta.innerHTML = `<button class="btn-primary" onclick="window.location.href='/app.html'">Go to Your Community ✦</button>`;
+      }
+    }
+  });
+
+  // Floating button scroll
+  const floatingBtn = document.getElementById('floating-join');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > window.innerHeight * 0.6) {
+      floatingBtn.classList.add('visible');
+    } else {
+      floatingBtn.classList.remove('visible');
+    }
+  });
+</script>
+</body>
+</html>
+
   // Check if already logged in
   window.addEventListener('load', async () => {
     const { data: { session } } = await _supabase.auth.getSession();
@@ -801,93 +913,8 @@ footer {
       }
     }
   });
- 
-  // ── AGREEMENTS ──
-  function openAgreements() {
-    const modal = document.getElementById('agreements-modal');
-    modal.style.display = 'flex';
-    modal.classList.add('open');
-  }
-  function closeAgreements() {
-    const modal = document.getElementById('agreements-modal');
-    modal.style.display = 'none';
-    modal.classList.remove('open');
-  }
-  function toggleAgreeBtn() {
-    const checked = document.getElementById('agree-check').checked;
-    document.getElementById('agree-btn').disabled = !checked;
-  }
-  function handleAgree() {
-    closeAgreements();
-    setTimeout(() => {
-      setAuthMode('signup');
-      const authModal = document.getElementById('auth-modal');
-      authModal.style.display = 'flex';
-      authModal.classList.add('open');
-    }, 200);
-  }
- 
-  // ── AUTH ──
-  function openLogin() {
-    setAuthMode('login');
-    const authModal = document.getElementById('auth-modal');
-    authModal.style.display = 'flex';
-    authModal.classList.add('open');
-  }
-  function closeAuth() {
-    const authModal = document.getElementById('auth-modal');
-    authModal.style.display = 'none';
-    authModal.classList.remove('open');
-  }
- 
-  function setAuthMode(mode) {
-    const title = document.getElementById('auth-title');
-    const submitBtn = document.getElementById('auth-submit');
-    const nameGroup = document.getElementById('auth-name-group');
-    const switchEl = document.getElementById('auth-switch');
-    if (mode === 'signup') {
-      title.textContent = 'Join the Sisterhood';
-      submitBtn.textContent = 'Create Account';
-      nameGroup.style.display = 'block';
-      switchEl.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\'); return false;">Log in</a>';
-      submitBtn.onclick = async () => {
-        const name = document.getElementById('auth-name').value;
-        const email = document.getElementById('auth-email').value;
-        const password = document.getElementById('auth-password').value;
-        if (!name || !email || !password) { showToast('Please fill in all fields'); return; }
-        const { data, error } = await _supabase.auth.signUp({ email, password });
-        if (error) { showToast('Error: ' + error.message); return; }
-        if (data.user) {
-          await _supabase.from('profiles').insert({
-            id: data.user.id,
-            name: name,
-            handle: '@' + email.split('@')[0],
-            membership_tier: 'free'
-          });
-          closeAuth();
-          showToast('Welcome! Check your email to confirm your account ✦');
-        }
-      };
-    } else {
-      title.textContent = 'Welcome Back, Sis';
-      submitBtn.textContent = 'Log In';
-      nameGroup.style.display = 'none';
-      switchEl.innerHTML = 'New here? <a href="#" onclick="setAuthMode(\'signup\'); return false;">Join the Sisterhood</a>';
-      submitBtn.onclick = async () => {
-        const email = document.getElementById('auth-email').value;
-        const password = document.getElementById('auth-password').value;
-        if (!email || !password) { showToast('Please enter your email and password'); return; }
-        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-        if (error) { showToast('Error: ' + error.message); return; }
-        if (data.session) {
-          showToast('Welcome back, sis ✦');
-          setTimeout(() => window.location.href = '/app.html', 1000);
-        }
-      };
-    }
-  }
- 
-  // ── FLOATING BUTTON ── show after scrolling past hero
+
+  // Floating button scroll
   const floatingBtn = document.getElementById('floating-join');
   window.addEventListener('scroll', () => {
     if (window.scrollY > window.innerHeight * 0.6) {
@@ -896,9 +923,6 @@ footer {
       floatingBtn.classList.remove('visible');
     }
   });
- 
-  // ── TOAST ──
-  let toastTimer;
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
+</script>
+</body>
+</html>
