@@ -441,7 +441,7 @@ footer {
 /* ── MODALS ── */
 .modal-overlay {
   position: fixed; inset: 0; background: rgba(28,20,16,0.8);
-  z-index: 500; display: none; align-items: center; justify-content: center;
+  z-index: 9999; display: none; align-items: center; justify-content: center;
   padding: 20px; backdrop-filter: blur(4px);
 }
 .modal-overlay.open { display: flex; }
@@ -804,10 +804,14 @@ footer {
 
   // ── AGREEMENTS ──
   function openAgreements() {
-    document.getElementById('agreements-modal').classList.add('open');
+    const modal = document.getElementById('agreements-modal');
+    modal.style.display = 'flex';
+    modal.classList.add('open');
   }
   function closeAgreements() {
-    document.getElementById('agreements-modal').classList.remove('open');
+    const modal = document.getElementById('agreements-modal');
+    modal.style.display = 'none';
+    modal.classList.remove('open');
   }
   function toggleAgreeBtn() {
     const checked = document.getElementById('agree-check').checked;
@@ -817,17 +821,23 @@ footer {
     closeAgreements();
     setTimeout(() => {
       setAuthMode('signup');
-      document.getElementById('auth-modal').classList.add('open');
+      const authModal = document.getElementById('auth-modal');
+      authModal.style.display = 'flex';
+      authModal.classList.add('open');
     }, 200);
   }
 
   // ── AUTH ──
   function openLogin() {
     setAuthMode('login');
-    document.getElementById('auth-modal').classList.add('open');
+    const authModal = document.getElementById('auth-modal');
+    authModal.style.display = 'flex';
+    authModal.classList.add('open');
   }
   function closeAuth() {
-    document.getElementById('auth-modal').classList.remove('open');
+    const authModal = document.getElementById('auth-modal');
+    authModal.style.display = 'none';
+    authModal.classList.remove('open');
   }
 
   function setAuthMode(mode) {
