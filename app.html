@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -16,282 +15,283 @@
     'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
   );
 
-// ── AUTH STATE ──
-let currentUser = null;
+  // ── AUTH STATE ──
+  let currentUser = null;
 
-async function initAuth() {
-const { data: { session } } = await _supabase.auth.getSession();
-if (session) {
-currentUser = session.user;
-updateNavForUser(currentUser);
-loadFeed();
-}
-_supabase.auth.onAuthStateChange((event, session) => {
-if (session) {
-currentUser = session.user;
-updateNavForUser(currentUser);
-loadFeed();
-} else {
-currentUser = null;
-updateNavForGuest();
-}
-});
-}
+  async function initAuth() {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      updateNavForUser(currentUser);
+      loadFeed();
+    }
+    _supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        currentUser = session.user;
+        updateNavForUser(currentUser);
+        loadFeed();
+      } else {
+        currentUser = null;
+        updateNavForGuest();
+      }
+    });
+  }
 
-function updateNavForUser(user) {
-const joinBtn = document.querySelector(’.nav-cta’);
-if (joinBtn) {
-joinBtn.textContent = ‘My Account’;
-joinBtn.onclick = () => showView(‘profile’, joinBtn);
-}
-// Show logout button
-const logoutBtn = document.getElementById(‘logout-btn’);
-if (logoutBtn) logoutBtn.style.display = ‘block’;
-}
+  function updateNavForUser(user) {
+    const joinBtn = document.querySelector('.nav-cta');
+    if (joinBtn) {
+      joinBtn.textContent = 'My Account';
+      joinBtn.onclick = () => showView('profile', joinBtn);
+    }
+    // Show logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.style.display = 'block';
+  }
 
-function updateNavForGuest() {
-const joinBtn = document.querySelector(’.nav-cta’);
-if (joinBtn) {
-joinBtn.textContent = ‘Join’;
-joinBtn.onclick = () => openModal();
-}
-const logoutBtn = document.getElementById(‘logout-btn’);
-if (logoutBtn) logoutBtn.style.display = ‘none’;
-}
+  function updateNavForGuest() {
+    const joinBtn = document.querySelector('.nav-cta');
+    if (joinBtn) {
+      joinBtn.textContent = 'Join';
+      joinBtn.onclick = () => openModal();
+    }
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  }
 
-async function signUp(email, password, name) {
-const { data, error } = await _supabase.auth.signUp({ email, password });
-if (error) { showToast(‘Error: ’ + error.message); return; }
-if (data.user) {
-await _supabase.from(‘profiles’).insert({
-id: data.user.id,
-name: name,
-handle: ‘@’ + email.split(’@’)[0],
-membership_tier: ‘free’
-});
-showToast(‘Welcome to the Sisterhood ✦’);
-closeAuthModal();
-}
-}
+  async function signUp(email, password, name) {
+    const { data, error } = await _supabase.auth.signUp({ email, password });
+    if (error) { showToast('Error: ' + error.message); return; }
+    if (data.user) {
+      await _supabase.from('profiles').insert({
+        id: data.user.id,
+        name: name,
+        handle: '@' + email.split('@')[0],
+        membership_tier: 'free'
+      });
+      showToast('Welcome to the Sisterhood ✦');
+      closeAuthModal();
+    }
+  }
 
-async function signIn(email, password) {
-const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-if (error) { showToast(’Error: ’ + error.message); return; }
-showToast(‘Welcome back, sis ✦’);
-closeAuthModal();
-}
+  async function signIn(email, password) {
+    const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+    if (error) { showToast('Error: ' + error.message); return; }
+    showToast('Welcome back, sis ✦');
+    closeAuthModal();
+  }
 
-async function signOut() {
-await _supabase.auth.signOut();
-showToast(‘See you soon, sis 🌿’);
-showView(‘home’, document.querySelector(’.nav-links a’));
-}
+  async function signOut() {
+    await _supabase.auth.signOut();
+    showToast('See you soon, sis 🌿');
+    showView('home', document.querySelector('.nav-links a'));
+  }
 
-// ── FEED ──
-async function loadFeed() {
-const { data: posts, error } = await _supabase
-.from(‘posts’)
-.select(’*, profiles(name)’)
-.order(‘created_at’, { ascending: false })
-.limit(20);
+  // ── FEED ──
+  async function loadFeed() {
+    const { data: posts, error } = await _supabase
+      .from('posts')
+      .select('*, profiles(name)')
+      .order('created_at', { ascending: false })
+      .limit(20);
 
-```
-if (error || !posts || posts.length === 0) return;
+    if (error || !posts || posts.length === 0) return;
 
-const feed = document.getElementById('feed-posts');
-// Keep sample posts if no real posts yet
-if (posts.length === 0) return;
+    const feed = document.getElementById('feed-posts');
+    // Keep sample posts if no real posts yet
+    if (posts.length === 0) return;
 
-// Clear sample posts and show real ones
-feed.innerHTML = '';
-posts.forEach((post, i) => {
-  const name = post.profiles?.name || 'Sister';
-  const initial = name.charAt(0).toUpperCase();
-  const time = timeAgo(post.created_at);
-  const card = document.createElement('div');
-  card.className = 'feed-card';
-  card.style.animationDelay = (i * 0.1) + 's';
-  card.innerHTML = `
-    <div class="card-header">
-      <div class="avatar" style="background:linear-gradient(135deg,var(--terra),var(--gold))">${initial}</div>
-      <div class="card-meta">
-        <div class="card-name">${name}</div>
-        <div class="card-time">${time}</div>
-      </div>
-      <span class="card-tag">${post.tag || 'Community'}</span>
-    </div>
-    <div class="card-body">${post.content}</div>
-    <div class="card-footer">
-      <button class="react-btn" onclick="toggleLike(this, '${post.id}')">🫂 <span>${post.likes || 0}</span></button>
-      <button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button>
-      <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-    </div>`;
-  feed.insertBefore(card, feed.firstChild);
-});
-```
+    // Clear sample posts and show real ones
+    feed.innerHTML = '';
+    posts.forEach((post, i) => {
+      const name = post.profiles?.name || 'Sister';
+      const initial = name.charAt(0).toUpperCase();
+      const time = timeAgo(post.created_at);
+      const card = document.createElement('div');
+      card.className = 'feed-card';
+      card.style.animationDelay = (i * 0.1) + 's';
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="avatar" style="background:linear-gradient(135deg,var(--terra),var(--gold))">${initial}</div>
+          <div class="card-meta">
+            <div class="card-name">${name}</div>
+            <div class="card-time">${time}</div>
+          </div>
+          <span class="card-tag">${post.tag || 'Community'}</span>
+        </div>
+        <div class="card-body">${post.content}</div>
+        <div class="card-footer">
+          <button class="react-btn" onclick="toggleLike(this, '${post.id}')">🫂 <span>${post.likes || 0}</span></button>
+          <button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button>
+          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
+        </div>`;
+      feed.insertBefore(card, feed.firstChild);
+    });
+  }
 
-}
+  async function savePost(content) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const { error } = await _supabase.from('posts').insert({
+      user_id: currentUser.id,
+      content: content,
+      tag: 'Community',
+      likes: 0
+    });
+    if (error) { showToast('Could not post — try again'); return; }
+    showToast('Shared with your sisters ✦');
+    loadFeed();
+  }
 
-async function savePost(content) {
-if (!currentUser) { openAuthModal(‘login’); return; }
-const { error } = await _supabase.from(‘posts’).insert({
-user_id: currentUser.id,
-content: content,
-tag: ‘Community’,
-likes: 0
-});
-if (error) { showToast(‘Could not post — try again’); return; }
-showToast(‘Shared with your sisters ✦’);
-loadFeed();
-}
+  async function toggleLike(btn, postId) {
+    const span = btn.querySelector('span');
+    const liked = btn.classList.contains('liked');
+    const n = parseInt(span.textContent) || 0;
+    btn.classList.toggle('liked');
+    span.textContent = liked ? n - 1 : n + 1;
+    if (!liked && postId) {
+      await _supabase.from('posts').update({ likes: n + 1 }).eq('id', postId);
+    }
+  }
 
-async function toggleLike(btn, postId) {
-const span = btn.querySelector(‘span’);
-const liked = btn.classList.contains(‘liked’);
-const n = parseInt(span.textContent) || 0;
-btn.classList.toggle(‘liked’);
-span.textContent = liked ? n - 1 : n + 1;
-if (!liked && postId) {
-await _supabase.from(‘posts’).update({ likes: n + 1 }).eq(‘id’, postId);
-}
-}
+  // ── CIRCLES ──
+  async function joinCircleDB(circleName, btn) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const joined = btn.classList.contains('joined');
+    if (!joined) {
+      await _supabase.from('circle_members').insert({
+        user_id: currentUser.id,
+        circle_name: circleName
+      });
+      btn.classList.add('joined');
+      btn.textContent = 'Joined ✦';
+      showToast('Joined ' + circleName + ' ✦');
+    } else {
+      await _supabase.from('circle_members')
+        .delete()
+        .eq('user_id', currentUser.id)
+        .eq('circle_name', circleName);
+      btn.classList.remove('joined');
+      btn.textContent = 'Join';
+      showToast('Left ' + circleName);
+    }
+  }
 
-// ── CIRCLES ──
-async function joinCircleDB(circleName, btn) {
-if (!currentUser) { openAuthModal(‘login’); return; }
-const joined = btn.classList.contains(‘joined’);
-if (!joined) {
-await _supabase.from(‘circle_members’).insert({
-user_id: currentUser.id,
-circle_name: circleName
-});
-btn.classList.add(‘joined’);
-btn.textContent = ‘Joined ✦’;
-showToast(‘Joined ’ + circleName + ’ ✦’);
-} else {
-await _supabase.from(‘circle_members’)
-.delete()
-.eq(‘user_id’, currentUser.id)
-.eq(‘circle_name’, circleName);
-btn.classList.remove(‘joined’);
-btn.textContent = ‘Join’;
-showToast(’Left ’ + circleName);
-}
-}
+  // ── EVENT REGISTRATION ──
+  async function registerEventDB(eventName, btn) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    await _supabase.from('event_registrations').insert({
+      user_id: currentUser.id,
+      event_name: eventName
+    });
+    btn.classList.add('registered');
+    btn.textContent = 'Registered ✦';
+    showToast('Registered for ' + eventName + ' ✦');
+  }
 
-// ── EVENT REGISTRATION ──
-async function registerEventDB(eventName, btn) {
-if (!currentUser) { openAuthModal(‘login’); return; }
-await _supabase.from(‘event_registrations’).insert({
-user_id: currentUser.id,
-event_name: eventName
-});
-btn.classList.add(‘registered’);
-btn.textContent = ‘Registered ✦’;
-showToast(‘Registered for ’ + eventName + ’ ✦’);
-}
+  // ── PROFILE ──
+  async function loadProfile() {
+    if (!currentUser) return;
+    const { data: profile } = await _supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser.id)
+      .single();
 
-// ── PROFILE ──
-async function loadProfile() {
-if (!currentUser) return;
-const { data: profile } = await _supabase
-.from(‘profiles’)
-.select(’*’)
-.eq(‘id’, currentUser.id)
-.single();
+    if (profile) {
+      document.querySelector('.profile-name').textContent = profile.name || 'Sister';
+      document.querySelector('.profile-handle').textContent = profile.handle || '@sister';
+      if (profile.bio) document.querySelector('.profile-bio').textContent = profile.bio;
+      // Update form fields safely by finding them within the profile view
+      const profileView = document.getElementById('view-profile');
+      if (profileView) {
+        const inputs = profileView.querySelectorAll('.form-input');
+        if (inputs[0]) inputs[0].value = profile.name || '';
+        if (inputs[2]) inputs[2].value = profile.location || '';
+        if (inputs[3]) inputs[3].value = currentUser.email || '';
+        if (inputs[1]) inputs[1].value = profile.bio || '';
+      }
+    }
 
-```
-if (profile) {
-  document.querySelector('.profile-name').textContent = profile.name || 'Sister';
-  document.querySelector('.profile-handle').textContent = profile.handle || '@sister';
-  if (profile.bio) document.querySelector('.profile-bio').textContent = profile.bio;
-  // Update form fields
-  document.querySelector('input[type="text"]').value = profile.name || '';
-  document.querySelector('input[type="email"]').value = currentUser.email || '';
-}
+    // Load stats
+    const { count: circleCount } = await _supabase
+      .from('circle_members').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
+    const { count: eventCount } = await _supabase
+      .from('event_registrations').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
+    const { count: postCount } = await _supabase
+      .from('posts').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
 
-// Load stats
-const { count: circleCount } = await _supabase
-  .from('circle_members').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
-const { count: eventCount } = await _supabase
-  .from('event_registrations').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
-const { count: postCount } = await _supabase
-  .from('posts').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
+    const stats = document.querySelectorAll('.stat-num');
+    if (stats[0]) stats[0].textContent = circleCount || 0;
+    if (stats[1]) stats[1].textContent = eventCount || 0;
+    if (stats[2]) stats[2].textContent = postCount || 0;
+  }
 
-const stats = document.querySelectorAll('.stat-num');
-if (stats[0]) stats[0].textContent = circleCount || 0;
-if (stats[1]) stats[1].textContent = eventCount || 0;
-if (stats[2]) stats[2].textContent = postCount || 0;
-```
+  async function saveProfile() {
+    if (!currentUser) return;
+    const profileView = document.getElementById('view-profile');
+    const inputs = profileView.querySelectorAll('.form-input');
+    const name = inputs[0]?.value || '';
+    const bio = inputs[1]?.value || '';
+    const location = inputs[2]?.value || '';
+    await _supabase.from('profiles').update({ name, bio, location }).eq('id', currentUser.id);
+    showToast('Profile saved ✦');
+    loadProfile();
+  }
 
-}
+  // ── HELPERS ──
+  function timeAgo(dateStr) {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff/60) + ' min ago';
+    if (diff < 86400) return Math.floor(diff/3600) + ' hours ago';
+    return Math.floor(diff/86400) + ' days ago';
+  }
 
-async function saveProfile() {
-if (!currentUser) return;
-const name = document.querySelectorAll(’.form-input’)[0].value;
-const bio = document.querySelectorAll(’.form-input’)[1].value;
-const location = document.querySelectorAll(’.form-input’)[2].value;
-await _supabase.from(‘profiles’).update({ name, bio, location }).eq(‘id’, currentUser.id);
-showToast(‘Profile saved ✦’);
-loadProfile();
-}
+  // ── AUTH MODAL ──
+  function openAuthModal(mode = 'signup') {
+    closeModal();
+    const modal = document.getElementById('auth-modal');
+    modal.classList.add('open');
+    setAuthMode(mode);
+  }
 
-// ── HELPERS ──
-function timeAgo(dateStr) {
-const now = new Date();
-const date = new Date(dateStr);
-const diff = Math.floor((now - date) / 1000);
-if (diff < 60) return ‘Just now’;
-if (diff < 3600) return Math.floor(diff/60) + ’ min ago’;
-if (diff < 86400) return Math.floor(diff/3600) + ’ hours ago’;
-return Math.floor(diff/86400) + ’ days ago’;
-}
+  function closeAuthModal() {
+    document.getElementById('auth-modal').classList.remove('open');
+  }
 
-// ── AUTH MODAL ──
-function openAuthModal(mode = ‘signup’) {
-closeModal();
-const modal = document.getElementById(‘auth-modal’);
-modal.classList.add(‘open’);
-setAuthMode(mode);
-}
+  function setAuthMode(mode) {
+    const title = document.getElementById('auth-title');
+    const submitBtn = document.getElementById('auth-submit');
+    const nameGroup = document.getElementById('auth-name-group');
+    const switchBtn = document.getElementById('auth-switch');
+    if (mode === 'signup') {
+      title.textContent = 'Join the Sisterhood';
+      submitBtn.textContent = 'Create Account';
+      nameGroup.style.display = 'block';
+      switchBtn.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\')">Log in</a>';
+      submitBtn.onclick = () => {
+        const name = document.getElementById('auth-name').value;
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        signUp(email, password, name);
+      };
+    } else {
+      title.textContent = 'Welcome Back, Sis';
+      submitBtn.textContent = 'Log In';
+      nameGroup.style.display = 'none';
+      switchBtn.innerHTML = 'New here? <a href="#" onclick="setAuthMode(\'signup\')">Join the Sisterhood</a>';
+      submitBtn.onclick = () => {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        signIn(email, password);
+      };
+    }
+  }
 
-function closeAuthModal() {
-document.getElementById(‘auth-modal’).classList.remove(‘open’);
-}
-
-function setAuthMode(mode) {
-const title = document.getElementById(‘auth-title’);
-const submitBtn = document.getElementById(‘auth-submit’);
-const nameGroup = document.getElementById(‘auth-name-group’);
-const switchBtn = document.getElementById(‘auth-switch’);
-if (mode === ‘signup’) {
-title.textContent = ‘Join the Sisterhood’;
-submitBtn.textContent = ‘Create Account’;
-nameGroup.style.display = ‘block’;
-switchBtn.innerHTML = ‘Already a member? <a href="#" onclick="setAuthMode(\'login\')">Log in</a>’;
-submitBtn.onclick = () => {
-const name = document.getElementById(‘auth-name’).value;
-const email = document.getElementById(‘auth-email’).value;
-const password = document.getElementById(‘auth-password’).value;
-signUp(email, password, name);
-};
-} else {
-title.textContent = ‘Welcome Back, Sis’;
-submitBtn.textContent = ‘Log In’;
-nameGroup.style.display = ‘none’;
-switchBtn.innerHTML = ‘New here? <a href="#" onclick="setAuthMode(\'signup\')">Join the Sisterhood</a>’;
-submitBtn.onclick = () => {
-const email = document.getElementById(‘auth-email’).value;
-const password = document.getElementById(‘auth-password’).value;
-signIn(email, password);
-};
-}
-}
-
-// Init on load
-window.addEventListener(‘load’, initAuth);
+  // Init on load
+  window.addEventListener('load', initAuth);
 </script>
-
 <style>
   :root {
     --terra: #C4622D;
@@ -858,12 +858,10 @@ window.addEventListener(‘load’, initAuth);
   }
   .quote-author { font-size: 0.78rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; }
 </style>
-
 </head>
 <body>
 
 <!-- AUTH MODAL -->
-
 <div class="modal-overlay" id="auth-modal">
   <div class="modal auth-modal">
     <div class="auth-title" id="auth-title">Join the Sisterhood</div>
@@ -887,62 +885,57 @@ window.addEventListener(‘load’, initAuth);
 </div>
 
 <!-- COMMUNITY AGREEMENTS MODAL -->
-
 <div class="modal-overlay" id="agreements-modal">
   <div class="modal">
     <div class="modal-title">Community Agreements</div>
     <div class="modal-sub">Before you join, please read and agree to our community agreements ✦</div>
 
-```
-<div class="agreement-item">
-  <div class="agreement-num">1</div>
-  <div class="agreement-text">
-    <strong>Safe Space / Safe Place</strong>
-    <p>Vulnerability and honesty are honored here by not tearing down our sisters but building them up in every interaction.</p>
-  </div>
-</div>
-<div class="agreement-item">
-  <div class="agreement-num">2</div>
-  <div class="agreement-text">
-    <strong>This is a No Judgement Zone</strong>
-    <p>Please refrain from judging someone's words, work, or offering an opinion without an invitation to do so.</p>
-  </div>
-</div>
-<div class="agreement-item">
-  <div class="agreement-num">3</div>
-  <div class="agreement-text">
-    <strong>Assume Best Intentions</strong>
-    <p>If someone's actions or words gives you pause, then do just that — pause before responding or reporting.</p>
-  </div>
-</div>
-<div class="agreement-item">
-  <div class="agreement-num">4</div>
-  <div class="agreement-text">
-    <strong>0 Tolerance Policy</strong>
-    <p>This is an affirming space. Bigotry, discrimination, or harm of any kind will not be tolerated.</p>
-  </div>
-</div>
-<div class="agreement-item">
-  <div class="agreement-num">5</div>
-  <div class="agreement-text">
-    <strong>What is Said Here Stays Here</strong>
-    <p>This space is by us for us. Please protect it by not sharing what you see here without written permission.</p>
-  </div>
-</div>
+    <div class="agreement-item">
+      <div class="agreement-num">1</div>
+      <div class="agreement-text">
+        <strong>Safe Space / Safe Place</strong>
+        <p>Vulnerability and honesty are honored here by not tearing down our sisters but building them up in every interaction.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">2</div>
+      <div class="agreement-text">
+        <strong>This is a No Judgement Zone</strong>
+        <p>Please refrain from judging someone's words, work, or offering an opinion without an invitation to do so.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">3</div>
+      <div class="agreement-text">
+        <strong>Assume Best Intentions</strong>
+        <p>If someone's actions or words gives you pause, then do just that — pause before responding or reporting.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">4</div>
+      <div class="agreement-text">
+        <strong>0 Tolerance Policy</strong>
+        <p>This is an affirming space. Bigotry, discrimination, or harm of any kind will not be tolerated.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">5</div>
+      <div class="agreement-text">
+        <strong>What is Said Here Stays Here</strong>
+        <p>This space is by us for us. Please protect it by not sharing what you see here without written permission.</p>
+      </div>
+    </div>
 
-<div class="modal-check">
-  <input type="checkbox" id="agree-check" onchange="toggleAgreeBtn()">
-  <label for="agree-check">I have read and agree to the Sisterhood(verb) Community Agreements</label>
-</div>
-<button class="modal-agree-btn" id="agree-btn" disabled onclick="handleAgree()">I Agree — Join the Sisterhood</button>
-<div class="modal-cancel"><button onclick="closeModal()">Not right now</button></div>
-```
-
+    <div class="modal-check">
+      <input type="checkbox" id="agree-check" onchange="toggleAgreeBtn()">
+      <label for="agree-check">I have read and agree to the Sisterhood(verb) Community Agreements</label>
+    </div>
+    <button class="modal-agree-btn" id="agree-btn" disabled onclick="handleAgree()">I Agree — Join the Sisterhood</button>
+    <div class="modal-cancel"><button onclick="closeModal()">Not right now</button></div>
   </div>
 </div>
 
 <!-- NAV -->
-
 <nav>
   <div class="nav-logo">Sisterhood<span>(verb)</span></div>
   <div class="nav-links">
@@ -960,11 +953,9 @@ window.addEventListener(‘load’, initAuth);
 </nav>
 
 <!-- TOAST -->
-
 <div class="toast" id="toast"></div>
 
 <!-- ════ HOME ════ -->
-
 <div class="view active" id="view-home">
   <div class="home-hero">
     <div class="hero-greeting">Welcome home, Sister ✦</div>
@@ -984,92 +975,88 @@ window.addEventListener(‘load’, initAuth);
   <div class="feed-section">
     <div class="section-label">Community Feed</div>
 
-```
-<div class="post-composer">
-  <div class="composer-top">
-    <div class="avatar">T</div>
-    <textarea class="composer-input" rows="2" placeholder="What's on your heart today, sister?"></textarea>
-  </div>
-  <div class="composer-actions">
-    <div class="composer-tools">
-      <button class="tool-btn" onclick="showToast('Image upload coming soon')">🖼 Photo</button>
-      <button class="tool-btn" onclick="showToast('Voice notes coming soon')">🎙 Voice</button>
-      <button class="tool-btn" onclick="showToast('Prompts loaded')">✨ Prompt</button>
-    </div>
-    <button class="post-btn" onclick="postToFeed()">Share</button>
-  </div>
-</div>
-
-<div class="quote-card">
-  <p class="quote-text">Sisterhood(verb): loving yourself and your kin with ancestral abundance.</p>
-  <div class="quote-author">— Tayllor Oyewole-Davis, Founder</div>
-</div>
-
-<div id="feed-posts">
-  <div class="feed-card">
-    <div class="card-header">
-      <div class="avatar" style="background: linear-gradient(135deg, #7A8C6E, #C4622D);">A</div>
-      <div class="card-meta">
-        <div class="card-name">Amara W.</div>
-        <div class="card-time">2 hours ago</div>
+    <div class="post-composer">
+      <div class="composer-top">
+        <div class="avatar">T</div>
+        <textarea class="composer-input" rows="2" placeholder="What's on your heart today, sister?"></textarea>
       </div>
-      <span class="card-tag">Motherhood</span>
-    </div>
-    <div class="card-body">
-      Just finished the <strong>Motherhood Speaks</strong> workshop and I am undone in the best way. I didn't realize how much I'd been carrying silently until I finally had a room — even a virtual one — where I was allowed to put it down.
-    </div>
-    <div class="card-footer">
-      <button class="react-btn" onclick="toggleLike(this)">🫂 <span>14</span></button>
-      <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>3 replies</span></button>
-      <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-    </div>
-  </div>
-
-  <div class="feed-card" style="animation-delay:0.1s">
-    <div class="card-header">
-      <div class="avatar" style="background: linear-gradient(135deg, #D4A853, #C4622D);">N</div>
-      <div class="card-meta">
-        <div class="card-name">Nia R.</div>
-        <div class="card-time">Yesterday</div>
+      <div class="composer-actions">
+        <div class="composer-tools">
+          <button class="tool-btn" onclick="showToast('Image upload coming soon')">🖼 Photo</button>
+          <button class="tool-btn" onclick="showToast('Voice notes coming soon')">🎙 Voice</button>
+          <button class="tool-btn" onclick="showToast('Prompts loaded')">✨ Prompt</button>
+        </div>
+        <button class="post-btn" onclick="postToFeed()">Share</button>
       </div>
-      <span class="card-tag">Creative</span>
     </div>
-    <div class="card-body">
-      Sharing my writing prompt response from Circle this week — "Write the letter your 13-year-old self needed to receive." I've never cried so hard or felt so free at the same time. Thank you for this space. 🌺
-    </div>
-    <div class="card-footer">
-      <button class="react-btn" onclick="toggleLike(this)">🫂 <span>27</span></button>
-      <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>8 replies</span></button>
-      <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-    </div>
-  </div>
 
-  <div class="feed-card" style="animation-delay:0.2s">
-    <div class="card-header">
-      <div class="avatar" style="background: linear-gradient(135deg, #C4622D, #1C1410);">S</div>
-      <div class="card-meta">
-        <div class="card-name">Simone T.</div>
-        <div class="card-time">2 days ago</div>
+    <div class="quote-card">
+      <p class="quote-text">Sisterhood(verb): loving yourself and your kin with ancestral abundance.</p>
+      <div class="quote-author">— Tayllor Oyewole-Davis, Founder</div>
+    </div>
+
+    <div id="feed-posts">
+      <div class="feed-card">
+        <div class="card-header">
+          <div class="avatar" style="background: linear-gradient(135deg, #7A8C6E, #C4622D);">A</div>
+          <div class="card-meta">
+            <div class="card-name">Amara W.</div>
+            <div class="card-time">2 hours ago</div>
+          </div>
+          <span class="card-tag">Motherhood</span>
+        </div>
+        <div class="card-body">
+          Just finished the <strong>Motherhood Speaks</strong> workshop and I am undone in the best way. I didn't realize how much I'd been carrying silently until I finally had a room — even a virtual one — where I was allowed to put it down.
+        </div>
+        <div class="card-footer">
+          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>14</span></button>
+          <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>3 replies</span></button>
+          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
+        </div>
       </div>
-      <span class="card-tag">Wellness</span>
-    </div>
-    <div class="card-body">
-      Reminder to us all: rest is <strong>resistance</strong>. You don't have to earn your stillness. You are allowed to pause without producing. That's the whole point of this sisterhood — we hold each other in the becoming, not just the doing.
-    </div>
-    <div class="card-footer">
-      <button class="react-btn" onclick="toggleLike(this)">🫂 <span>42</span></button>
-      <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>12 replies</span></button>
-      <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-    </div>
-  </div>
-</div>
-```
 
+      <div class="feed-card" style="animation-delay:0.1s">
+        <div class="card-header">
+          <div class="avatar" style="background: linear-gradient(135deg, #D4A853, #C4622D);">N</div>
+          <div class="card-meta">
+            <div class="card-name">Nia R.</div>
+            <div class="card-time">Yesterday</div>
+          </div>
+          <span class="card-tag">Creative</span>
+        </div>
+        <div class="card-body">
+          Sharing my writing prompt response from Circle this week — "Write the letter your 13-year-old self needed to receive." I've never cried so hard or felt so free at the same time. Thank you for this space. 🌺
+        </div>
+        <div class="card-footer">
+          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>27</span></button>
+          <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>8 replies</span></button>
+          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
+        </div>
+      </div>
+
+      <div class="feed-card" style="animation-delay:0.2s">
+        <div class="card-header">
+          <div class="avatar" style="background: linear-gradient(135deg, #C4622D, #1C1410);">S</div>
+          <div class="card-meta">
+            <div class="card-name">Simone T.</div>
+            <div class="card-time">2 days ago</div>
+          </div>
+          <span class="card-tag">Wellness</span>
+        </div>
+        <div class="card-body">
+          Reminder to us all: rest is <strong>resistance</strong>. You don't have to earn your stillness. You are allowed to pause without producing. That's the whole point of this sisterhood — we hold each other in the becoming, not just the doing.
+        </div>
+        <div class="card-footer">
+          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>42</span></button>
+          <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>12 replies</span></button>
+          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <!-- ════ CIRCLES ════ -->
-
 <div class="view" id="view-circles">
   <div class="circles-hero">
     <div class="section-label" style="margin-bottom:12px">Your Spaces</div>
@@ -1091,66 +1078,62 @@ window.addEventListener(‘load’, initAuth);
       </div>
     </div>
 
-```
-<div class="circle-card">
-  <div class="circle-banner" style="background: linear-gradient(135deg, #E8F0E4, #c5d9be);">
-    <span class="circle-icon">✍🏾</span>
-  </div>
-  <div class="circle-body">
-    <div class="circle-name">Writers Block? I Think Not!</div>
-    <div class="circle-desc">A space for creative writers, poets, and scribes to stay connected to the craft and themselves. Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div>
-    <div class="circle-meta">
-      <button class="join-btn" onclick="toggleJoin(this, 'Writers Block? I Think Not!')">Join</button>
+    <div class="circle-card">
+      <div class="circle-banner" style="background: linear-gradient(135deg, #E8F0E4, #c5d9be);">
+        <span class="circle-icon">✍🏾</span>
+      </div>
+      <div class="circle-body">
+        <div class="circle-name">Writers Block? I Think Not!</div>
+        <div class="circle-desc">A space for creative writers, poets, and scribes to stay connected to the craft and themselves. Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div>
+        <div class="circle-meta">
+          <button class="join-btn" onclick="toggleJoin(this, 'Writers Block? I Think Not!')">Join</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<div class="circle-card">
-  <div class="circle-banner" style="background: linear-gradient(135deg, #F5EFE6, #ddc9b0);">
-    <span class="circle-icon">🔥</span>
-  </div>
-  <div class="circle-body">
-    <div class="circle-name">Burnout to Bloom</div>
-    <div class="circle-desc">Are you an educator, community organizer, activist, or artist trying to exist in the world and keep your cup full? This space is for you to vent, seek advice, find community care, and share — so you can enjoy life and have something left for yourself. We get it. We got you.</div>
-    <div class="circle-meta">
-      <button class="join-btn" onclick="toggleJoin(this, 'Burnout to Bloom')">Join</button>
+    <div class="circle-card">
+      <div class="circle-banner" style="background: linear-gradient(135deg, #F5EFE6, #ddc9b0);">
+        <span class="circle-icon">🔥</span>
+      </div>
+      <div class="circle-body">
+        <div class="circle-name">Burnout to Bloom</div>
+        <div class="circle-desc">Are you an educator, community organizer, activist, or artist trying to exist in the world and keep your cup full? This space is for you to vent, seek advice, find community care, and share — so you can enjoy life and have something left for yourself. We get it. We got you.</div>
+        <div class="circle-meta">
+          <button class="join-btn" onclick="toggleJoin(this, 'Burnout to Bloom')">Join</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<div class="circle-card">
-  <div class="circle-banner" style="background: linear-gradient(135deg, #1C1410, #3d2b1f);">
-    <span class="circle-icon">🎤</span>
-  </div>
-  <div class="circle-body">
-    <div class="circle-name">Speak Poet!</div>
-    <div class="circle-desc">This is for the slam poets, performers, and spoken word artists looking for space to share your work, network, and connect with poets who get it. And trust us — we get it!</div>
-    <div class="circle-meta">
-      <button class="join-btn" onclick="toggleJoin(this, 'Speak Poet!')">Join</button>
+    <div class="circle-card">
+      <div class="circle-banner" style="background: linear-gradient(135deg, #1C1410, #3d2b1f);">
+        <span class="circle-icon">🎤</span>
+      </div>
+      <div class="circle-body">
+        <div class="circle-name">Speak Poet!</div>
+        <div class="circle-desc">This is for the slam poets, performers, and spoken word artists looking for space to share your work, network, and connect with poets who get it. And trust us — we get it!</div>
+        <div class="circle-meta">
+          <button class="join-btn" onclick="toggleJoin(this, 'Speak Poet!')">Join</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<div class="circle-card" style="border: 1.5px dashed rgba(196,98,45,0.3); background: var(--cream);">
-  <div class="circle-banner" style="background: transparent; height: 70px;">
-    <span class="circle-icon">✦</span>
-  </div>
-  <div class="circle-body">
-    <div class="circle-name" style="color:var(--terra)">Start a Circle</div>
-    <div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the Sisterhood(verb) team.</div>
-    <div class="circle-meta">
-      <span class="circle-members">Members only</span>
-      <button class="join-btn" onclick="showToast('Proposal form opening...')">Propose</button>
+    <div class="circle-card" style="border: 1.5px dashed rgba(196,98,45,0.3); background: var(--cream);">
+      <div class="circle-banner" style="background: transparent; height: 70px;">
+        <span class="circle-icon">✦</span>
+      </div>
+      <div class="circle-body">
+        <div class="circle-name" style="color:var(--terra)">Start a Circle</div>
+        <div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the Sisterhood(verb) team.</div>
+        <div class="circle-meta">
+          <span class="circle-members">Members only</span>
+          <button class="join-btn" onclick="showToast('Proposal form opening...')">Propose</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
-```
-
   </div>
 </div>
 
 <!-- ════ EVENTS ════ -->
-
 <div class="view" id="view-events">
   <div class="circles-hero">
     <div class="section-label" style="margin-bottom:12px">Gatherings</div>
@@ -1161,123 +1144,119 @@ window.addEventListener(‘load’, initAuth);
     <div class="events-main">
       <div class="section-label">Upcoming</div>
 
-```
-  <div class="event-card">
-    <div class="event-date">
-      <span class="date-month">Mar</span>
-      <span class="date-day">18</span>
-    </div>
-    <div class="event-info">
-      <div class="event-title">Motherhood Speaks — Session 2</div>
-      <div class="event-meta">
-        <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
-        <span class="event-detail">📍 Virtual (Zoom)</span>
-        <span class="event-detail">💰 Members only</span>
+      <div class="event-card">
+        <div class="event-date">
+          <span class="date-month">Mar</span>
+          <span class="date-day">18</span>
+        </div>
+        <div class="event-info">
+          <div class="event-title">Motherhood Speaks — Session 2</div>
+          <div class="event-meta">
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
+            <span class="event-detail">💰 Members only</span>
+          </div>
+          <div class="event-desc">Week 2 of our Motherhood Speaks series. A space to share your wins, losses, resources, hopes, and fears with moms who get it.</div>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
+        </div>
       </div>
-      <div class="event-desc">Week 2 of our Motherhood Speaks series. A space to share your wins, losses, resources, hopes, and fears with moms who get it.</div>
-      <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
-    </div>
-  </div>
 
-  <div class="event-card">
-    <div class="event-date">
-      <span class="date-month">Mar</span>
-      <span class="date-day">25</span>
-    </div>
-    <div class="event-info">
-      <div class="event-title">Motherhood Speaks — Session 3</div>
-      <div class="event-meta">
-        <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
-        <span class="event-detail">📍 Virtual (Zoom)</span>
-        <span class="event-detail">💰 Members only</span>
+      <div class="event-card">
+        <div class="event-date">
+          <span class="date-month">Mar</span>
+          <span class="date-day">25</span>
+        </div>
+        <div class="event-info">
+          <div class="event-title">Motherhood Speaks — Session 3</div>
+          <div class="event-meta">
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
+            <span class="event-detail">💰 Members only</span>
+          </div>
+          <div class="event-desc">Week 3 of our Wednesday series. Come as you are, bring what you carry.</div>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
+        </div>
       </div>
-      <div class="event-desc">Week 3 of our Wednesday series. Come as you are, bring what you carry.</div>
-      <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
-    </div>
-  </div>
 
-  <div class="event-card">
-    <div class="event-date">
-      <span class="date-month">Apr</span>
-      <span class="date-day">1</span>
-    </div>
-    <div class="event-info">
-      <div class="event-title">Motherhood Speaks — Session 4</div>
-      <div class="event-meta">
-        <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
-        <span class="event-detail">📍 Virtual (Zoom)</span>
-        <span class="event-detail">💰 Members only</span>
+      <div class="event-card">
+        <div class="event-date">
+          <span class="date-month">Apr</span>
+          <span class="date-day">1</span>
+        </div>
+        <div class="event-info">
+          <div class="event-title">Motherhood Speaks — Session 4</div>
+          <div class="event-meta">
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
+            <span class="event-detail">💰 Members only</span>
+          </div>
+          <div class="event-desc">Week 4 of our Wednesday series. We're going deeper — bring your whole self.</div>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
+        </div>
       </div>
-      <div class="event-desc">Week 4 of our Wednesday series. We're going deeper — bring your whole self.</div>
-      <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
-    </div>
-  </div>
 
-  <div class="event-card">
-    <div class="event-date">
-      <span class="date-month">Apr</span>
-      <span class="date-day">8</span>
-    </div>
-    <div class="event-info">
-      <div class="event-title">Motherhood Speaks — Session 5 (Finale)</div>
-      <div class="event-meta">
-        <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
-        <span class="event-detail">📍 Virtual (Zoom)</span>
-        <span class="event-detail">💰 Members only</span>
+      <div class="event-card">
+        <div class="event-date">
+          <span class="date-month">Apr</span>
+          <span class="date-day">8</span>
+        </div>
+        <div class="event-info">
+          <div class="event-title">Motherhood Speaks — Session 5 (Finale)</div>
+          <div class="event-meta">
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
+            <span class="event-detail">💰 Members only</span>
+          </div>
+          <div class="event-desc">The final Wednesday gathering of this series. We celebrate, reflect, and send each other off rooted and full.</div>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
+        </div>
       </div>
-      <div class="event-desc">The final Wednesday gathering of this series. We celebrate, reflect, and send each other off rooted and full.</div>
-      <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
-    </div>
-  </div>
 
-  <div class="event-card">
-    <div class="event-date">
-      <span class="date-month">Sum</span>
-      <span class="date-day" style="font-size:1.1rem;">2026</span>
-    </div>
-    <div class="event-info">
-      <div class="event-title">Sisterhood Speaks — Launching Summer 2026 🌸</div>
-      <div class="event-meta">
-        <span class="event-detail">📍 TBD</span>
-        <span class="event-detail">💰 Stay tuned</span>
+      <div class="event-card">
+        <div class="event-date">
+          <span class="date-month">Sum</span>
+          <span class="date-day" style="font-size:1.1rem;">2026</span>
+        </div>
+        <div class="event-info">
+          <div class="event-title">Sisterhood Speaks — Launching Summer 2026 🌸</div>
+          <div class="event-meta">
+            <span class="event-detail">📍 TBD</span>
+            <span class="event-detail">💰 Stay tuned</span>
+          </div>
+          <div class="event-desc">Something big is coming. Sisterhood Speaks is launching Summer 2026 — join the community now to be the first to know.</div>
+          <button class="event-register" onclick="showToast('Stay tuned — announcements coming soon ✦')">Notify Me</button>
+        </div>
       </div>
-      <div class="event-desc">Something big is coming. Sisterhood Speaks is launching Summer 2026 — join the community now to be the first to know.</div>
-      <button class="event-register" onclick="showToast('Stay tuned — announcements coming soon ✦')">Notify Me</button>
     </div>
-  </div>
-</div>
 
-<div class="events-sidebar">
-  <div class="mini-cal">
-    <div class="cal-header">
-      <div class="cal-title">March 2026</div>
-      <button class="cal-nav">‹</button>
-      <button class="cal-nav">›</button>
+    <div class="events-sidebar">
+      <div class="mini-cal">
+        <div class="cal-header">
+          <div class="cal-title">March 2026</div>
+          <button class="cal-nav">‹</button>
+          <button class="cal-nav">›</button>
+        </div>
+        <div class="cal-grid">
+          <div class="cal-day-label">S</div><div class="cal-day-label">M</div><div class="cal-day-label">T</div><div class="cal-day-label">W</div><div class="cal-day-label">T</div><div class="cal-day-label">F</div><div class="cal-day-label">S</div>
+          <div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day">1</div>
+          <div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div>
+          <div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day today">11</div><div class="cal-day has-event">12</div><div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day">15</div>
+          <div class="cal-day">16</div><div class="cal-day">17</div><div class="cal-day has-event">18</div><div class="cal-day">19</div><div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div>
+          <div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day has-event">25</div><div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div>
+          <div class="cal-day">30</div><div class="cal-day">31</div>
+        </div>
+      </div>
+
+      <div style="background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:20px;">
+        <div class="profile-section-title">Host a Workshop</div>
+        <p style="font-size:0.83rem;color:rgba(28,20,16,0.6);line-height:1.6;margin-bottom:14px;">Are you an educator, healer, or artist? Propose a workshop to our community.</p>
+        <button class="save-btn" style="width:100%;padding:10px;" onclick="showToast('Proposal form coming soon ✦')">Propose Event</button>
+      </div>
     </div>
-    <div class="cal-grid">
-      <div class="cal-day-label">S</div><div class="cal-day-label">M</div><div class="cal-day-label">T</div><div class="cal-day-label">W</div><div class="cal-day-label">T</div><div class="cal-day-label">F</div><div class="cal-day-label">S</div>
-      <div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day">1</div>
-      <div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div>
-      <div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day today">11</div><div class="cal-day has-event">12</div><div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day">15</div>
-      <div class="cal-day">16</div><div class="cal-day">17</div><div class="cal-day has-event">18</div><div class="cal-day">19</div><div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div>
-      <div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day has-event">25</div><div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div>
-      <div class="cal-day">30</div><div class="cal-day">31</div>
-    </div>
-  </div>
-
-  <div style="background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:20px;">
-    <div class="profile-section-title">Host a Workshop</div>
-    <p style="font-size:0.83rem;color:rgba(28,20,16,0.6);line-height:1.6;margin-bottom:14px;">Are you an educator, healer, or artist? Propose a workshop to our community.</p>
-    <button class="save-btn" style="width:100%;padding:10px;" onclick="showToast('Proposal form coming soon ✦')">Propose Event</button>
-  </div>
-</div>
-```
-
   </div>
 </div>
 
 <!-- ════ RESOURCES ════ -->
-
 <div class="view" id="view-resources">
   <div class="circles-hero">
     <div class="section-label" style="margin-bottom:12px">Library</div>
@@ -1309,89 +1288,85 @@ window.addEventListener(‘load’, initAuth);
         </div>
       </div>
 
-```
-  <div class="resource-card">
-    <div class="resource-thumb" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be);">
-      ✍🏾
-      <span class="resource-type" style="color:var(--sage);">Prompts</span>
-    </div>
-    <div class="resource-body">
-      <div class="resource-title">52 Healing Prompts</div>
-      <div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and creative healing.</div>
-      <div class="resource-footer">
-        <span class="resource-author">Sisterhood(verb)</span>
-        <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
+      <div class="resource-card">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be);">
+          ✍🏾
+          <span class="resource-type" style="color:var(--sage);">Prompts</span>
+        </div>
+        <div class="resource-body">
+          <div class="resource-title">52 Healing Prompts</div>
+          <div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and creative healing.</div>
+          <div class="resource-footer">
+            <span class="resource-author">Sisterhood(verb)</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);">
+          🎙
+          <span class="resource-type" style="color:var(--gold);">Audio</span>
+        </div>
+        <div class="resource-body">
+          <div class="resource-title">River Meditation (Guided Meditation)</div>
+          <div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div>
+          <div class="resource-footer">
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#f0e0ca);">
+          📖
+          <span class="resource-type" style="color:#8B6914;">Reading</span>
+        </div>
+        <div class="resource-body">
+          <div class="resource-title">Community Care Reading List</div>
+          <div class="resource-desc">Curated books on collective healing, Black feminist thought, creative practice, and care work.</div>
+          <div class="resource-footer">
+            <span class="resource-author">Sisterhood(verb)</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#eee8f5,#d9c8f0);">
+          🗺
+          <span class="resource-type" style="color:#6B3FA0;">Guide</span>
+        </div>
+        <div class="resource-body">
+          <div class="resource-title">What They Don't Tell You About Building Community</div>
+          <div class="resource-desc">A raw, honest guide to the real work of building connected, resilient communities from the inside out.</div>
+          <div class="resource-footer">
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">
+          🎤
+          <span class="resource-type" style="color:var(--terra);">Workshop</span>
+        </div>
+        <div class="resource-body">
+          <div class="resource-title">Poetry Workshop Recording</div>
+          <div class="resource-desc">Full workshop recording for spoken word artists and poets ready to deepen their practice and find their stage voice.</div>
+          <div class="resource-footer">
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-
-  <div class="resource-card">
-    <div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);">
-      🎙
-      <span class="resource-type" style="color:var(--gold);">Audio</span>
-    </div>
-    <div class="resource-body">
-      <div class="resource-title">River Meditation (Guided Meditation)</div>
-      <div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div>
-      <div class="resource-footer">
-        <span class="resource-author">by Tayllor Oyewole-Davis</span>
-        <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="resource-card">
-    <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#f0e0ca);">
-      📖
-      <span class="resource-type" style="color:#8B6914;">Reading</span>
-    </div>
-    <div class="resource-body">
-      <div class="resource-title">Community Care Reading List</div>
-      <div class="resource-desc">Curated books on collective healing, Black feminist thought, creative practice, and care work.</div>
-      <div class="resource-footer">
-        <span class="resource-author">Sisterhood(verb)</span>
-        <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="resource-card">
-    <div class="resource-thumb" style="background:linear-gradient(135deg,#eee8f5,#d9c8f0);">
-      🗺
-      <span class="resource-type" style="color:#6B3FA0;">Guide</span>
-    </div>
-    <div class="resource-body">
-      <div class="resource-title">What They Don't Tell You About Building Community</div>
-      <div class="resource-desc">A raw, honest guide to the real work of building connected, resilient communities from the inside out.</div>
-      <div class="resource-footer">
-        <span class="resource-author">by Tayllor Oyewole-Davis</span>
-        <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="resource-card">
-    <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">
-      🎤
-      <span class="resource-type" style="color:var(--terra);">Workshop</span>
-    </div>
-    <div class="resource-body">
-      <div class="resource-title">Poetry Workshop Recording</div>
-      <div class="resource-desc">Full workshop recording for spoken word artists and poets ready to deepen their practice and find their stage voice.</div>
-      <div class="resource-footer">
-        <span class="resource-author">by Tayllor Oyewole-Davis</span>
-        <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
-      </div>
-    </div>
-  </div>
-</div>
-```
-
   </div>
 </div>
 
 <!-- ════ PROFILE ════ -->
-
 <div class="view" id="view-profile">
   <div style="max-width:720px;margin:0 auto;padding:32px 40px 0;">
     <div class="profile-banner" id="profile-banner" onclick="document.getElementById('banner-upload').click()">
@@ -1451,7 +1426,6 @@ window.addEventListener(‘load’, initAuth);
 </div>
 
 <!-- MOBILE NAV -->
-
 <div class="mobile-nav">
   <button class="mobile-nav-btn active" onclick="showView('home', this)" id="mob-home"><span>🏠</span>Home</button>
   <button class="mobile-nav-btn" onclick="showView('circles', this)" id="mob-circles"><span>⭕</span>Circles</button>
@@ -1639,6 +1613,5 @@ window.addEventListener(‘load’, initAuth);
   }
 
 </script>
-
 </body>
 </html>
