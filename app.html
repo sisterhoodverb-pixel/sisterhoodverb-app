@@ -49,18 +49,14 @@
       .eq('user_id', currentUser.id);
     if (!memberships) return;
     const joined = memberships.map(m => m.circle_name);
-    document.querySelectorAll('.join-btn').forEach(btn => {
-      const onclickAttr = btn.getAttribute('onclick') || '';
-      const match = onclickAttr.match(/toggleJoin\(this,\s*'([^']+)'\)/);
-      if (match) {
-        const circleName = match[1];
-        if (joined.includes(circleName)) {
-          btn.classList.add('joined');
-          btn.textContent = 'Joined ✦';
-        } else {
-          btn.classList.remove('joined');
-          btn.textContent = 'Join';
-        }
+    document.querySelectorAll('.join-btn[data-circle]').forEach(btn => {
+      const circleName = btn.getAttribute('data-circle');
+      if (joined.includes(circleName)) {
+        btn.classList.add('joined');
+        btn.textContent = 'Joined ✦';
+      } else {
+        btn.classList.remove('joined');
+        btn.textContent = 'Join';
       }
     });
   }
@@ -376,27 +372,6 @@
     selectedGifUrl = null;
     document.getElementById('gif-preview').style.display = 'none';
     document.getElementById('gif-preview-img').src = '';
-  }
-
-  async function loadJoinedCircles() {
-    if (!currentUser) return;
-    const { data: memberships } = await _supabase
-      .from('circle_members')
-      .select('circle_name')
-      .eq('user_id', currentUser.id);
-    if (!memberships) return;
-    const joinedNames = memberships.map(m => m.circle_name);
-    // Update all join buttons on circles page
-    document.querySelectorAll('.join-btn').forEach(btn => {
-      const circleName = btn.getAttribute('onclick')?.match(/toggleJoin\(this,\s*'([^']+)'\)/)?.[1];
-      if (circleName && joinedNames.includes(circleName)) {
-        btn.classList.add('joined');
-        btn.textContent = 'Joined ✦';
-      } else if (circleName) {
-        btn.classList.remove('joined');
-        btn.textContent = 'Join';
-      }
-    });
   }
 
   // ── CIRCLE DATA ──
@@ -1556,7 +1531,7 @@
         <div class="circle-desc">A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.</div>
         <div class="circle-meta">
           <span class="circle-members">48 sisters</span>
-          <button class="join-btn joined" onclick="event.stopPropagation(); toggleJoin(this, 'Motherhood Speaks')">Joined ✦</button>
+          <button class="join-btn joined" data-circle="Motherhood Speaks" onclick="event.stopPropagation(); toggleJoin(this, 'Motherhood Speaks')">Joined ✦</button>
         </div>
       </div>
     </div>
@@ -1569,7 +1544,7 @@
         <div class="circle-name">Writers Block? I Think Not!</div>
         <div class="circle-desc">A space for creative writers, poets, and scribes to stay connected to the craft and themselves. Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div>
         <div class="circle-meta">
-          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Writers Block? I Think Not!')">Join</button>
+          <button class="join-btn" data-circle="Writers Block? I Think Not!" onclick="event.stopPropagation(); toggleJoin(this, 'Writers Block? I Think Not!')">Join</button>
         </div>
       </div>
     </div>
@@ -1582,7 +1557,7 @@
         <div class="circle-name">Burnout to Bloom</div>
         <div class="circle-desc">Are you an educator, community organizer, activist, or artist trying to exist in the world and keep your cup full? This space is for you to vent, seek advice, find community care, and share — so you can enjoy life and have something left for yourself. We get it. We got you.</div>
         <div class="circle-meta">
-          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Burnout to Bloom')">Join</button>
+          <button class="join-btn" data-circle="Burnout to Bloom" onclick="event.stopPropagation(); toggleJoin(this, 'Burnout to Bloom')">Join</button>
         </div>
       </div>
     </div>
@@ -1595,7 +1570,7 @@
         <div class="circle-name">Speak Poet!</div>
         <div class="circle-desc">This is for the slam poets, performers, and spoken word artists looking for space to share your work, network, and connect with poets who get it. And trust us — we get it!</div>
         <div class="circle-meta">
-          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Speak Poet!')">Join</button>
+          <button class="join-btn" data-circle="Speak Poet!" onclick="event.stopPropagation(); toggleJoin(this, 'Speak Poet!')">Join</button>
         </div>
       </div>
     </div>
@@ -1609,7 +1584,7 @@
         <div class="circle-desc">Divesting from oppressive systems doesn't mean we don't get to follow our dreams. This space is for entrepreneurs to connect, network, and get support as we go big or go home.</div>
         <div class="circle-meta">
           <span class="circle-members">0 sisters</span>
-          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Healing As We Hustle')">Join</button>
+          <button class="join-btn" data-circle="Healing As We Hustle" onclick="event.stopPropagation(); toggleJoin(this, 'Healing As We Hustle')">Join</button>
         </div>
       </div>
     </div>
@@ -1623,7 +1598,7 @@
         <div class="circle-desc">Trip tips, resources, warnings, and storytelling. Whether your passport is booked and busy or the plans are still living in the group chat — you're welcome here.</div>
         <div class="circle-meta">
           <span class="circle-members">0 sisters</span>
-          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'The Travel Girlies')">Join</button>
+          <button class="join-btn" data-circle="The Travel Girlies" onclick="event.stopPropagation(); toggleJoin(this, 'The Travel Girlies')">Join</button>
         </div>
       </div>
     </div>
