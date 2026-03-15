@@ -2094,7 +2094,8 @@
     const { error: updateError } = await _supabase
       .from('profiles')
       .update({ avatar_url: avatarUrl })
-      .eq('id', currentUser.id);
+      .eq('id', currentUser.id)
+      .select();
     if (updateError) { showToast('Save failed: ' + updateError.message); return; }
     const avatarEl = document.getElementById('profile-avatar-display');
     if (avatarEl) {
@@ -2121,7 +2122,8 @@
     const { error: updateError } = await _supabase
       .from('profiles')
       .update({ banner_url: bannerUrl })
-      .eq('id', currentUser.id);
+      .eq('id', currentUser.id)
+      .select();
     if (updateError) { showToast('Save failed: ' + updateError.message); return; }
     const bannerEl = document.getElementById('profile-banner');
     if (bannerEl) {
