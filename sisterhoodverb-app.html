@@ -6,6 +6,589 @@
 <title>Sisterhood(verb) — Community</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.memberstack.com/scripts/webcomponents/memberstack.js" data-memberstack-app="pk_715b7f282440a2747b11" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // ── SUPABASE CONNECTION ──
+  const _supabase = window.supabase.createClient(
+    'https://cqiymqekdtewnorojlus.supabase.co',
+    'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
+  );
+
+  // ── AUTH STATE ──
+  let currentUser = null;
+
+  async function initAuth() {
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (session) {
+      currentUser = session.user;
+      updateNavForUser(currentUser);
+      loadFeed();
+    }
+    _supabase.auth.onAuthStateChange((event, session) => {
+      if (session) {
+        currentUser = session.user;
+        updateNavForUser(currentUser);
+        loadFeed();
+      } else {
+        currentUser = null;
+        updateNavForGuest();
+      }
+    });
+  }
+
+  function updateNavForUser(user) {
+    const joinBtn = document.querySelector('.nav-cta');
+    if (joinBtn) {
+      joinBtn.textContent = 'My Account';
+      joinBtn.onclick = () => showView('profile', joinBtn);
+    }
+    // Show logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.style.display = 'block';
+  }
+
+  function updateNavForGuest() {
+    const joinBtn = document.querySelector('.nav-cta');
+    if (joinBtn) {
+      joinBtn.textContent = 'Join';
+      joinBtn.onclick = () => openModal();
+    }
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  }
+
+  async function signUp(email, password, name) {
+    const { data, error } = await _supabase.auth.signUp({ email, password });
+    if (error) { showToast('Error: ' + error.message); return; }
+    if (data.user) {
+      await _supabase.from('profiles').insert({
+        id: data.user.id,
+        name: name,
+        handle: '@' + email.split('@')[0],
+        membership_tier: 'free'
+      });
+      showToast('Welcome to the Sisterhood ✦');
+      closeAuthModal();
+    }
+  }
+
+  async function signIn(email, password) {
+    const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+    if (error) { showToast('Error: ' + error.message); return; }
+    showToast('Welcome back, sis ✦');
+    closeAuthModal();
+  }
+
+  async function signOut() {
+    await _supabase.auth.signOut();
+    showToast('See you soon, sis 🌿');
+    showView('home', document.querySelector('.nav-links a'));
+  }
+
+  // ── FEED ──
+  async function loadFeed() {
+    const { data: posts, error } = await _supabase
+      .from('posts')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (error) { console.log('Feed error:', error); return; }
+    if (!posts || posts.length === 0) return;
+
+    // Load profile names separately
+    const userIds = [...new Set(posts.map(p => p.user_id).filter(Boolean))];
+    let profileMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await _supabase
+        .from('profiles')
+        .select('id, name')
+        .in('id', userIds);
+      if (profiles) profiles.forEach(p => profileMap[p.id] = p.name);
+    }
+
+    const feed = document.getElementById('feed-posts');
+    feed.innerHTML = '';
+    posts.forEach((post, i) => {
+      const name = profileMap[post.user_id] || 'Sister';
+      const initial = name.charAt(0).toUpperCase();
+      const time = timeAgo(post.created_at);
+
+      // Parse GIF from content
+      let textContent = post.content || '';
+      let gifHtml = '';
+      const gifMatch = textContent.match(/\[gif:(.*?)\]/);
+      if (gifMatch) {
+        gifHtml = `<img src="${gifMatch[1]}" style="max-width:100%;border-radius:4px;margin-top:10px;max-height:200px;object-fit:cover;" alt="GIF">`;
+        textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
+      }
+
+      const card = document.createElement('div');
+      card.className = 'feed-card';
+      card.style.animationDelay = (i * 0.1) + 's';
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="avatar" style="background:linear-gradient(135deg,var(--terra),var(--gold))">${initial}</div>
+          <div class="card-meta">
+            <div class="card-name">${name}</div>
+            <div class="card-time">${time}</div>
+          </div>
+          <span class="card-tag">${post.tag || 'Community'}</span>
+        </div>
+        <div class="card-body">${textContent}${gifHtml}</div>
+        <div class="card-footer">
+          <button class="react-btn" onclick="toggleLike(this, '${post.id}')">🫂 <span>${post.likes || 0}</span></button>
+          <button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button>
+          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
+        </div>`;
+      feed.insertBefore(card, feed.firstChild);
+    });
+  }
+
+  async function savePost(content) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    showToast('Sharing... ✦');
+    const { data, error } = await _supabase.from('posts').insert({
+      user_id: currentUser.id,
+      content: content,
+      tag: 'Community',
+      likes: 0
+    }).select();
+    if (error) {
+      console.log('Post error:', error);
+      showToast('Could not post: ' + error.message);
+      return;
+    }
+    showToast('Shared with your sisters ✦');
+    loadFeed();
+  }
+
+  async function toggleLike(btn, postId) {
+    const span = btn.querySelector('span');
+    const liked = btn.classList.contains('liked');
+    const n = parseInt(span.textContent) || 0;
+    btn.classList.toggle('liked');
+    span.textContent = liked ? n - 1 : n + 1;
+    if (!liked && postId) {
+      await _supabase.from('posts').update({ likes: n + 1 }).eq('id', postId);
+    }
+  }
+
+  // ── CIRCLES ──
+  async function joinCircleDB(circleName, btn) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const joined = btn.classList.contains('joined');
+    if (!joined) {
+      await _supabase.from('circle_members').insert({
+        user_id: currentUser.id,
+        circle_name: circleName
+      });
+      btn.classList.add('joined');
+      btn.textContent = 'Joined ✦';
+      showToast('Joined ' + circleName + ' ✦');
+    } else {
+      await _supabase.from('circle_members')
+        .delete()
+        .eq('user_id', currentUser.id)
+        .eq('circle_name', circleName);
+      btn.classList.remove('joined');
+      btn.textContent = 'Join';
+      showToast('Left ' + circleName);
+    }
+  }
+
+  // ── EVENT REGISTRATION ──
+  async function registerEventDB(eventName, btn) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    await _supabase.from('event_registrations').insert({
+      user_id: currentUser.id,
+      event_name: eventName
+    });
+    btn.classList.add('registered');
+    btn.textContent = 'Registered ✦';
+    showToast('Registered for ' + eventName + ' ✦');
+  }
+
+  // ── PROFILE ──
+  async function loadProfile() {
+    if (!currentUser) return;
+    const { data: profile } = await _supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', currentUser.id)
+      .single();
+
+    if (profile) {
+      document.querySelector('.profile-name').textContent = profile.name || 'Sister';
+      document.querySelector('.profile-handle').textContent = profile.handle || '@sister';
+      if (profile.bio) document.querySelector('.profile-bio').textContent = profile.bio;
+      // Update form fields safely by finding them within the profile view
+      const profileView = document.getElementById('view-profile');
+      if (profileView) {
+        const inputs = profileView.querySelectorAll('.form-input');
+        if (inputs[0]) inputs[0].value = profile.name || '';
+        if (inputs[2]) inputs[2].value = profile.location || '';
+        if (inputs[3]) inputs[3].value = currentUser.email || '';
+        if (inputs[1]) inputs[1].value = profile.bio || '';
+      }
+    }
+
+    // Load stats
+    const { count: circleCount } = await _supabase
+      .from('circle_members').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
+    const { count: eventCount } = await _supabase
+      .from('event_registrations').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
+    const { count: postCount } = await _supabase
+      .from('posts').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
+
+    const stats = document.querySelectorAll('.stat-num');
+    if (stats[0]) stats[0].textContent = circleCount || 0;
+    if (stats[1]) stats[1].textContent = eventCount || 0;
+    if (stats[2]) stats[2].textContent = postCount || 0;
+  }
+
+  async function saveProfile() {
+    if (!currentUser) return;
+    const profileView = document.getElementById('view-profile');
+    const inputs = profileView.querySelectorAll('.form-input');
+    const name = inputs[0]?.value || '';
+    const bio = inputs[1]?.value || '';
+    const location = inputs[2]?.value || '';
+    await _supabase.from('profiles').update({ name, bio, location }).eq('id', currentUser.id);
+    showToast('Profile saved ✦');
+    loadProfile();
+  }
+
+  // ── GIF PICKER ──
+  const GIPHY_KEY = 'AgkjTleIOrzAZS8xROMk5MBOhC87TO4v';
+  let selectedGifUrl = null;
+
+  function toggleGifPicker() {
+    const picker = document.getElementById('gif-picker');
+    const btn = document.getElementById('gif-btn');
+    picker.classList.toggle('open');
+    btn.classList.toggle('active');
+    if (picker.classList.contains('open')) {
+      document.getElementById('gif-search-input').focus();
+      loadTrendingGifs();
+    }
+  }
+
+  async function loadTrendingGifs() {
+    const grid = document.getElementById('gif-grid');
+    grid.innerHTML = '<div class="gif-loading">Loading trending GIFs... ✦</div>';
+    try {
+      const res = await fetch(`https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_KEY}&limit=12&rating=pg`);
+      const data = await res.json();
+      renderGifs(data.data);
+    } catch (e) {
+      grid.innerHTML = '<div class="gif-loading">Search for a GIF above ✦</div>';
+    }
+  }
+
+  async function searchGifs() {
+    const query = document.getElementById('gif-search-input').value.trim();
+    if (!query) return;
+    const grid = document.getElementById('gif-grid');
+    grid.innerHTML = '<div class="gif-loading">Searching... ✦</div>';
+    try {
+      const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(query)}&limit=12&rating=pg`);
+      const data = await res.json();
+      renderGifs(data.data);
+    } catch (e) {
+      grid.innerHTML = '<div class="gif-loading">Could not load GIFs — try again</div>';
+    }
+  }
+
+  function renderGifs(gifs) {
+    const grid = document.getElementById('gif-grid');
+    if (!gifs || gifs.length === 0) {
+      grid.innerHTML = '<div class="gif-loading">No GIFs found — try another search</div>';
+      return;
+    }
+    grid.innerHTML = gifs.map(gif => `
+      <img class="gif-item"
+        src="${gif.images.fixed_height_small.url}"
+        data-full="${gif.images.fixed_height.url}"
+        onclick="selectGif('${gif.images.fixed_height.url}')"
+        alt="${gif.title}">`
+    ).join('');
+  }
+
+  function selectGif(url) {
+    selectedGifUrl = url;
+    const preview = document.getElementById('gif-preview');
+    const previewImg = document.getElementById('gif-preview-img');
+    previewImg.src = url;
+    preview.style.display = 'block';
+    // Close picker
+    document.getElementById('gif-picker').classList.remove('open');
+    document.getElementById('gif-btn').classList.remove('active');
+    showToast('GIF selected ✦');
+  }
+
+  function removeGif() {
+    selectedGifUrl = null;
+    document.getElementById('gif-preview').style.display = 'none';
+    document.getElementById('gif-preview-img').src = '';
+  }
+
+  // ── CIRCLE DATA ──
+  const circleData = {
+    'Motherhood Speaks': { icon: '🌺', desc: 'A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.', bg: 'linear-gradient(135deg, #1C1410, #C4622D)' },
+    'Writers Block? I Think Not!': { icon: '✍🏾', desc: 'Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.', bg: 'linear-gradient(135deg, #1C1410, #2d5a3d)' },
+    'Burnout to Bloom': { icon: '🔥', desc: 'For educators, organizers, activists, and artists trying to exist in the world and keep your cup full. We get it. We got you.', bg: 'linear-gradient(135deg, #1C1410, #8B4513)' },
+    'Speak Poet!': { icon: '🎤', desc: 'For slam poets, performers, and spoken word artists looking for space to share your work and connect with poets who get it.', bg: 'linear-gradient(135deg, #1C1410, #2d1f3d)' },
+    'Healing As We Hustle': { icon: '💼', desc: 'Divesting from oppressive systems doesn\'t mean we don\'t get to follow our dreams. Space for entrepreneurs to connect, network, and get support.', bg: 'linear-gradient(135deg, #1C1410, #3d2b5c)' },
+    'The Travel Girlies': { icon: '✈️', desc: 'Trip tips, resources, warnings, and storytelling. Whether your passport is booked and busy or the plans are still living in the group chat.', bg: 'linear-gradient(135deg, #1C1410, #1a3a4a)' }
+  };
+
+  let currentCircle = null;
+  let selectedCircleGifUrl = null;
+  let circleIsJoined = false;
+
+  async function openCircle(name) {
+    currentCircle = name;
+    const data = circleData[name] || { icon: '✦', desc: '', bg: 'var(--deep)' };
+
+    // Update header
+    document.getElementById('circle-detail-icon').textContent = data.icon;
+    document.getElementById('circle-detail-name').textContent = name;
+    document.getElementById('circle-detail-desc').textContent = data.desc;
+    document.getElementById('circle-detail-header').style.background = data.bg;
+
+    // Check if joined
+    if (currentUser) {
+      const { data: membership } = await _supabase
+        .from('circle_members')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .eq('circle_name', name)
+        .single();
+      circleIsJoined = !!membership;
+      const joinBtn = document.getElementById('circle-detail-join-btn');
+      joinBtn.textContent = circleIsJoined ? 'Joined ✦' : 'Join Circle';
+      joinBtn.className = circleIsJoined ? 'circle-join-btn joined' : 'circle-join-btn';
+      document.getElementById('circle-composer').style.display = circleIsJoined ? 'block' : 'none';
+    }
+
+    // Get member count
+    const { count } = await _supabase
+      .from('circle_members')
+      .select('*', { count: 'exact' })
+      .eq('circle_name', name);
+    document.getElementById('circle-detail-count').textContent = (count || 0) + ' sisters';
+
+    // Load circle feed
+    loadCircleFeed(name);
+    showView('circle-detail', null);
+  }
+
+  async function loadCircleFeed(circleName) {
+    const feed = document.getElementById('circle-feed-posts');
+    feed.innerHTML = '<div class="circle-empty"><span class="circle-empty-icon">✦</span>Loading posts...</div>';
+
+    const { data: posts, error } = await _supabase
+      .from('posts')
+      .select('*')
+      .eq('circle', circleName)
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (error || !posts || posts.length === 0) {
+      feed.innerHTML = `<div class="circle-empty">
+        <span class="circle-empty-icon">${circleData[circleName]?.icon || '✦'}</span>
+        No posts yet — be the first to share in this Circle!
+      </div>`;
+      return;
+    }
+
+    // Load profile names
+    const userIds = [...new Set(posts.map(p => p.user_id).filter(Boolean))];
+    let profileMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await _supabase
+        .from('profiles').select('id, name').in('id', userIds);
+      if (profiles) profiles.forEach(p => profileMap[p.id] = p.name);
+    }
+
+    feed.innerHTML = '';
+    posts.forEach((post, i) => {
+      const name = profileMap[post.user_id] || 'Sister';
+      const initial = name.charAt(0).toUpperCase();
+      const time = timeAgo(post.created_at);
+      let textContent = post.content || '';
+      let gifHtml = '';
+      const gifMatch = textContent.match(/\[gif:(.*?)\]/);
+      if (gifMatch) {
+        gifHtml = `<img src="${gifMatch[1]}" style="max-width:100%;border-radius:4px;margin-top:10px;max-height:200px;object-fit:cover;" alt="GIF">`;
+        textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
+      }
+      const card = document.createElement('div');
+      card.className = 'feed-card';
+      card.style.animationDelay = (i * 0.1) + 's';
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="avatar" style="background:linear-gradient(135deg,var(--terra),var(--gold))">${initial}</div>
+          <div class="card-meta">
+            <div class="card-name">${name}</div>
+            <div class="card-time">${time}</div>
+          </div>
+        </div>
+        <div class="card-body">${textContent}${gifHtml}</div>
+        <div class="card-footer">
+          <button class="react-btn" onclick="toggleLike(this, '${post.id}')">🫂 <span>${post.likes || 0}</span></button>
+          <button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button>
+          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
+        </div>`;
+      feed.appendChild(card);
+    });
+  }
+
+  async function toggleCircleDetailJoin() {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const btn = document.getElementById('circle-detail-join-btn');
+    if (!circleIsJoined) {
+      await _supabase.from('circle_members').insert({ user_id: currentUser.id, circle_name: currentCircle });
+      circleIsJoined = true;
+      btn.textContent = 'Joined ✦';
+      btn.className = 'circle-join-btn joined';
+      document.getElementById('circle-composer').style.display = 'block';
+      showToast('Joined ' + currentCircle + ' ✦');
+    } else {
+      await _supabase.from('circle_members').delete().eq('user_id', currentUser.id).eq('circle_name', currentCircle);
+      circleIsJoined = false;
+      btn.textContent = 'Join Circle';
+      btn.className = 'circle-join-btn';
+      document.getElementById('circle-composer').style.display = 'none';
+      showToast('Left ' + currentCircle);
+    }
+  }
+
+  async function postToCircle() {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const ta = document.getElementById('circle-composer-input');
+    const text = ta.value.trim();
+    if (!text && !selectedCircleGifUrl) { showToast('Write something first ✦'); return; }
+    const content = text + (selectedCircleGifUrl ? `\n[gif:${selectedCircleGifUrl}]` : '');
+    showToast('Sharing... ✦');
+    const { error } = await _supabase.from('posts').insert({
+      user_id: currentUser.id,
+      content: content,
+      circle: currentCircle,
+      tag: currentCircle,
+      likes: 0
+    });
+    if (error) { showToast('Could not post: ' + error.message); return; }
+    ta.value = '';
+    removeCircleGif();
+    showToast('Shared with the circle ✦');
+    loadCircleFeed(currentCircle);
+  }
+
+  function toggleCircleGifPicker() {
+    const picker = document.getElementById('circle-gif-picker');
+    const btn = document.getElementById('circle-gif-btn');
+    picker.classList.toggle('open');
+    btn.classList.toggle('active');
+    if (picker.classList.contains('open')) {
+      document.getElementById('circle-gif-search').focus();
+    }
+  }
+
+  async function searchCircleGifs() {
+    const query = document.getElementById('circle-gif-search').value.trim();
+    if (!query) return;
+    const grid = document.getElementById('circle-gif-grid');
+    grid.innerHTML = '<div class="gif-loading">Searching... ✦</div>';
+    try {
+      const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(query)}&limit=12&rating=pg`);
+      const data = await res.json();
+      grid.innerHTML = '';
+      data.data.forEach(gif => {
+        const img = document.createElement('img');
+        img.className = 'gif-item';
+        img.src = gif.images.fixed_height_small.url;
+        img.onclick = () => selectCircleGif(gif.images.fixed_height.url);
+        grid.appendChild(img);
+      });
+    } catch (e) {
+      grid.innerHTML = '<div class="gif-loading">Could not load GIFs</div>';
+    }
+  }
+
+  function selectCircleGif(url) {
+    selectedCircleGifUrl = url;
+    const preview = document.getElementById('circle-gif-preview');
+    document.getElementById('circle-gif-preview-img').src = url;
+    preview.style.display = 'block';
+    document.getElementById('circle-gif-picker').classList.remove('open');
+    document.getElementById('circle-gif-btn').classList.remove('active');
+    showToast('GIF selected ✦');
+  }
+
+  function removeCircleGif() {
+    selectedCircleGifUrl = null;
+    document.getElementById('circle-gif-preview').style.display = 'none';
+    document.getElementById('circle-gif-preview-img').src = '';
+  }
+
+  // ── HELPERS ──
+  function timeAgo(dateStr) {
+    const now = new Date();
+    const date = new Date(dateStr);
+    const diff = Math.floor((now - date) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return Math.floor(diff/60) + ' min ago';
+    if (diff < 86400) return Math.floor(diff/3600) + ' hours ago';
+    return Math.floor(diff/86400) + ' days ago';
+  }
+
+  // ── AUTH MODAL ──
+  function openAuthModal(mode = 'signup') {
+    closeModal();
+    const modal = document.getElementById('auth-modal');
+    modal.classList.add('open');
+    setAuthMode(mode);
+  }
+
+  function closeAuthModal() {
+    document.getElementById('auth-modal').classList.remove('open');
+  }
+
+  function setAuthMode(mode) {
+    const title = document.getElementById('auth-title');
+    const submitBtn = document.getElementById('auth-submit');
+    const nameGroup = document.getElementById('auth-name-group');
+    const switchBtn = document.getElementById('auth-switch');
+    if (mode === 'signup') {
+      title.textContent = 'Join the Sisterhood';
+      submitBtn.textContent = 'Create Account';
+      nameGroup.style.display = 'block';
+      switchBtn.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\')">Log in</a>';
+      submitBtn.onclick = () => {
+        const name = document.getElementById('auth-name').value;
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        signUp(email, password, name);
+      };
+    } else {
+      title.textContent = 'Welcome Back, Sis';
+      submitBtn.textContent = 'Log In';
+      nameGroup.style.display = 'none';
+      switchBtn.innerHTML = 'New here? <a href="#" onclick="setAuthMode(\'signup\')">Join the Sisterhood</a>';
+      submitBtn.onclick = () => {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        signIn(email, password);
+      };
+    }
+  }
+
+  // Init on load
+  window.addEventListener('load', initAuth);
+</script>
 <style>
   :root {
     --terra: #C4622D;
@@ -101,7 +684,7 @@
   }
   .hero-title em { color: var(--gold); font-style: italic; }
   .hero-sub {
-    color: rgba(245,239,230,0.6); font-size: 0.95rem;
+    color: rgba(245,239,230,0.85); font-size: 0.95rem;
     max-width: 480px; line-height: 1.7;
   }
   .hero-accent {
@@ -145,6 +728,68 @@
   }
   .composer-actions { display: flex; justify-content: space-between; align-items: center; }
   .composer-tools { display: flex; gap: 8px; }
+  .tool-btn {
+    background: none; border: none; cursor: pointer;
+    padding: 6px 10px; border-radius: 2px;
+    font-size: 0.8rem; color: rgba(28,20,16,0.5);
+    transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+  }
+  .tool-btn:hover { background: var(--cream); color: var(--terra); }
+  .tool-btn.active { background: var(--cream); color: var(--terra); }
+
+  /* ── GIF PICKER ── */
+  .gif-picker {
+    display: none; margin-top: 12px;
+    border: 1px solid rgba(196,98,45,0.2);
+    border-radius: 4px; overflow: hidden;
+    background: var(--cream);
+  }
+  .gif-picker.open { display: block; }
+  .gif-search-bar {
+    display: flex; gap: 8px; padding: 10px;
+    border-bottom: 1px solid rgba(196,98,45,0.1);
+  }
+  .gif-search-input {
+    flex: 1; padding: 8px 12px; border: 1.5px solid rgba(196,98,45,0.2);
+    border-radius: 3px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; color: var(--deep); outline: none;
+    background: white;
+  }
+  .gif-search-input:focus { border-color: var(--terra); }
+  .gif-search-btn {
+    background: var(--terra); color: white; border: none;
+    padding: 8px 16px; border-radius: 3px; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
+    font-weight: 500; transition: background 0.2s;
+  }
+  .gif-search-btn:hover { background: #a8501f; }
+  .gif-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 4px; padding: 8px; max-height: 200px; overflow-y: auto;
+  }
+  .gif-item {
+    width: 100%; aspect-ratio: 1; object-fit: cover;
+    border-radius: 3px; cursor: pointer; transition: opacity 0.2s;
+  }
+  .gif-item:hover { opacity: 0.8; }
+  .gif-loading {
+    text-align: center; padding: 20px;
+    font-size: 0.82rem; color: rgba(28,20,16,0.5);
+  }
+  .gif-preview {
+    margin-top: 10px; position: relative; display: none;
+  }
+  .gif-preview img {
+    max-width: 100%; border-radius: 4px;
+    max-height: 200px; object-fit: cover;
+  }
+  .gif-remove {
+    position: absolute; top: 6px; right: 6px;
+    background: rgba(28,20,16,0.7); color: white;
+    border: none; border-radius: 50%; width: 24px; height: 24px;
+    cursor: pointer; font-size: 0.8rem; display: flex;
+    align-items: center; justify-content: center;
+  }
   .tool-btn {
     background: none; border: none; cursor: pointer;
     padding: 6px 10px; border-radius: 2px;
@@ -345,13 +990,27 @@
   .profile-banner {
     height: 160px; border-radius: 4px; margin-bottom: -50px;
     background: linear-gradient(135deg, var(--deep) 0%, #3d2b1f 50%, var(--terra) 100%);
-    position: relative; overflow: hidden;
+    position: relative; overflow: hidden; cursor: pointer;
   }
-  .profile-banner::after {
-    content: '✦ ✦ ✦';
-    position: absolute; bottom: 20px; right: 24px;
-    color: rgba(212,168,83,0.3); font-size: 1.2rem; letter-spacing: 12px;
+  .photo-upload-overlay {
+    position: absolute; inset: 0;
+    background: rgba(28,20,16,0.5);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 0.2s;
+    font-size: 0.8rem; color: white; letter-spacing: 0.08em;
+    text-transform: uppercase; gap: 8px;
   }
+  .profile-banner:hover .photo-upload-overlay { opacity: 1; }
+  .avatar-upload-btn {
+    position: absolute; bottom: 0; right: -4px;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--terra); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.7rem; border: 2px solid var(--warm-white);
+    cursor: pointer; transition: background 0.2s;
+  }
+  .avatar-upload-btn:hover { background: #a8501f; }
+  input[type="file"] { display: none; }
   .profile-avatar-wrap {
     position: relative; margin-left: 32px; margin-bottom: 16px;
     width: fit-content;
@@ -449,7 +1108,114 @@
     .profile-info, .settings-form { padding: 0 16px; }
   }
 
-  /* ── TOAST ── */
+  /* ── AUTH MODAL ── */
+  .auth-modal { max-width: 420px; }
+  .auth-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
+  .auth-sub { font-size: 0.85rem; color: var(--terra); margin-bottom: 24px; }
+  .auth-switch { text-align: center; font-size: 0.82rem; color: rgba(28,20,16,0.5); margin-top: 16px; }
+  .auth-switch a { color: var(--terra); text-decoration: none; font-weight: 600; }
+
+  /* ── LOGOUT BTN ── */
+  .logout-btn {
+    background: none; border: 1.5px solid rgba(196,98,45,0.3);
+    color: var(--terra); padding: 6px 14px; border-radius: 2px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+    font-weight: 500; cursor: pointer; display: none;
+    transition: all 0.2s;
+  }
+  .logout-btn:hover { background: var(--terra); color: white; }
+
+  /* ── CIRCLE DETAIL VIEW ── */
+  .circle-detail-header {
+    background: var(--deep); padding: 60px 40px 40px;
+    position: relative; overflow: hidden;
+  }
+  .circle-detail-back {
+    background: none; border: 1px solid rgba(245,239,230,0.2);
+    color: var(--cream); padding: 8px 16px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+    cursor: pointer; border-radius: 2px; margin-bottom: 24px;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.2s;
+  }
+  .circle-detail-back:hover { border-color: var(--cream); }
+  .circle-detail-icon { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+  .circle-detail-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--cream); margin-bottom: 10px;
+  }
+  .circle-detail-desc {
+    color: rgba(245,239,230,0.65); font-size: 0.95rem;
+    line-height: 1.7; max-width: 560px; margin-bottom: 20px;
+  }
+  .circle-detail-meta {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .circle-detail-count {
+    font-size: 0.78rem; color: rgba(245,239,230,0.4);
+    letter-spacing: 0.06em;
+  }
+  .circle-join-btn {
+    background: var(--terra); color: white; border: none;
+    padding: 10px 24px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; cursor: pointer; border-radius: 2px;
+    transition: background 0.2s;
+  }
+  .circle-join-btn:hover { background: #a8501f; }
+  .circle-join-btn.joined { background: var(--sage); }
+  .circle-feed { padding: 40px; max-width: 700px; margin: 0 auto; }
+  .circle-empty {
+    text-align: center; padding: 60px 20px;
+    color: rgba(28,20,16,0.4); font-size: 0.9rem; line-height: 1.8;
+  }
+  .circle-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(28,20,16,0.7);
+    z-index: 500; display: none; align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--warm-white); border-radius: 6px;
+    max-width: 560px; width: 100%; max-height: 85vh;
+    overflow-y: auto; padding: 40px;
+    box-shadow: 0 20px 60px rgba(28,20,16,0.3);
+  }
+  .modal-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem; font-weight: 700;
+    margin-bottom: 6px; color: var(--deep);
+  }
+  .modal-sub { font-size: 0.85rem; color: var(--terra); margin-bottom: 24px; letter-spacing: 0.04em; }
+  .agreement-item {
+    display: flex; gap: 14px; margin-bottom: 18px;
+    padding-bottom: 18px; border-bottom: 1px solid rgba(196,98,45,0.1);
+  }
+  .agreement-item:last-of-type { border-bottom: none; }
+  .agreement-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--terra); color: white;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
+  }
+  .agreement-text strong { display: block; font-size: 0.9rem; margin-bottom: 4px; color: var(--deep); }
+  .agreement-text p { font-size: 0.82rem; color: rgba(28,20,16,0.65); line-height: 1.6; }
+  .modal-check { display: flex; gap: 10px; align-items: flex-start; margin: 24px 0 20px; }
+  .modal-check input { margin-top: 3px; accent-color: var(--terra); width: 16px; height: 16px; }
+  .modal-check label { font-size: 0.85rem; color: var(--deep); line-height: 1.5; cursor: pointer; }
+  .modal-agree-btn {
+    width: 100%; padding: 14px; background: var(--terra); color: white;
+    border: none; font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+    cursor: pointer; border-radius: 2px; transition: background 0.2s;
+  }
+  .modal-agree-btn:hover { background: #a8501f; }
+  .modal-agree-btn:disabled { background: rgba(196,98,45,0.3); cursor: not-allowed; }
+  .modal-cancel { text-align: center; margin-top: 12px; }
+  .modal-cancel button { background: none; border: none; color: rgba(28,20,16,0.45); font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+
   .toast {
     position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
     background: var(--deep); color: var(--cream);
@@ -499,6 +1265,80 @@
 </head>
 <body>
 
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal auth-modal">
+    <div class="auth-title" id="auth-title">Join the Sisterhood</div>
+    <div class="auth-sub">✦ A space to be seen, speak freely, and practice sisterhood</div>
+    <div class="form-group" id="auth-name-group">
+      <label class="form-label">Your Name</label>
+      <input class="form-input" type="text" id="auth-name" placeholder="What shall we call you?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input class="form-input" type="email" id="auth-email" placeholder="your@email.com">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="auth-password" placeholder="Create a strong password">
+    </div>
+    <button class="modal-agree-btn" id="auth-submit">Create Account</button>
+    <div class="auth-switch" id="auth-switch">Already a member? <a href="#" onclick="setAuthMode('login')">Log in</a></div>
+    <div class="modal-cancel"><button onclick="closeAuthModal()">Not right now</button></div>
+  </div>
+</div>
+
+<!-- COMMUNITY AGREEMENTS MODAL -->
+<div class="modal-overlay" id="agreements-modal">
+  <div class="modal">
+    <div class="modal-title">Community Agreements</div>
+    <div class="modal-sub">Before you join, please read and agree to our community agreements ✦</div>
+
+    <div class="agreement-item">
+      <div class="agreement-num">1</div>
+      <div class="agreement-text">
+        <strong>Safe Space / Safe Place</strong>
+        <p>Vulnerability and honesty are honored here by not tearing down our sisters but building them up in every interaction.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">2</div>
+      <div class="agreement-text">
+        <strong>This is a No Judgement Zone</strong>
+        <p>Please refrain from judging someone's words, work, or offering an opinion without an invitation to do so.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">3</div>
+      <div class="agreement-text">
+        <strong>Assume Best Intentions</strong>
+        <p>If someone's actions or words gives you pause, then do just that — pause before responding or reporting.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">4</div>
+      <div class="agreement-text">
+        <strong>0 Tolerance Policy</strong>
+        <p>This is an affirming space. Bigotry, discrimination, or harm of any kind will not be tolerated.</p>
+      </div>
+    </div>
+    <div class="agreement-item">
+      <div class="agreement-num">5</div>
+      <div class="agreement-text">
+        <strong>What is Said Here Stays Here</strong>
+        <p>This space is by us for us. Please protect it by not sharing what you see here without written permission.</p>
+      </div>
+    </div>
+
+    <div class="modal-check">
+      <input type="checkbox" id="agree-check" onchange="toggleAgreeBtn()">
+      <label for="agree-check">I have read and agree to the Sisterhood(verb) Community Agreements</label>
+    </div>
+    <button class="modal-agree-btn" id="agree-btn" disabled onclick="handleAgree()">I Agree — Join the Sisterhood</button>
+    <div class="modal-cancel"><button onclick="closeModal()">Not right now</button></div>
+  </div>
+</div>
+
 <!-- NAV -->
 <nav>
   <div class="nav-logo">Sisterhood<span>(verb)</span></div>
@@ -508,7 +1348,8 @@
     <a href="#" onclick="showView('events', this)">Events</a>
     <a href="#" onclick="showView('resources', this)">Resources</a>
     <a href="#" onclick="showView('profile', this)">Profile</a>
-    <a href="#" class="nav-cta" onclick="showToast('Welcome, Sister ✦'); return false;">Join</a>
+    <a href="#" class="nav-cta" onclick="openModal(); return false;">Join</a>
+    <button class="logout-btn" id="logout-btn" onclick="signOut()">Log Out</button>
   </div>
   <div class="hamburger" onclick="toggleMobile()">
     <span></span><span></span><span></span>
@@ -521,8 +1362,8 @@
 <!-- ════ HOME ════ -->
 <div class="view active" id="view-home">
   <div class="home-hero">
-    <div class="hero-greeting">Good morning, Sister ✦</div>
-    <h1 class="hero-title">Welcome back to <em>your</em> community</h1>
+    <div class="hero-greeting">Welcome home, Sister ✦</div>
+    <h1 class="hero-title">Welcome home, <em>sis</em></h1>
     <p class="hero-sub">A space to be seen, speak freely, and practice sisterhood — not just talk about it.</p>
     <div class="hero-accent"></div>
   </div>
@@ -532,7 +1373,7 @@
       <strong>Upgrade to Full Member</strong>
       <span>Unlock all Circles, workshop recordings, and 1:1 mentorship access</span>
     </div>
-    <button class="membership-cta" onclick="showToast('Redirecting to membership plans...')">Explore Plans</button>
+    <button class="membership-cta" onclick="openModal()">Explore Plans</button>
   </div>
 
   <div class="feed-section">
@@ -543,19 +1384,33 @@
         <div class="avatar">T</div>
         <textarea class="composer-input" rows="2" placeholder="What's on your heart today, sister?"></textarea>
       </div>
+      <div class="gif-preview" id="gif-preview">
+        <img id="gif-preview-img" src="" alt="Selected GIF">
+        <button class="gif-remove" onclick="removeGif()">✕</button>
+      </div>
+      <div class="gif-picker" id="gif-picker">
+        <div class="gif-search-bar">
+          <input class="gif-search-input" id="gif-search-input" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter') searchGifs()">
+          <button class="gif-search-btn" onclick="searchGifs()">Search</button>
+        </div>
+        <div class="gif-grid" id="gif-grid">
+          <div class="gif-loading">Search for a GIF above ✦</div>
+        </div>
+      </div>
       <div class="composer-actions">
         <div class="composer-tools">
           <button class="tool-btn" onclick="showToast('Image upload coming soon')">🖼 Photo</button>
           <button class="tool-btn" onclick="showToast('Voice notes coming soon')">🎙 Voice</button>
           <button class="tool-btn" onclick="showToast('Prompts loaded')">✨ Prompt</button>
+          <button class="tool-btn" id="gif-btn" onclick="toggleGifPicker()">GIF 🎬</button>
         </div>
         <button class="post-btn" onclick="postToFeed()">Share</button>
       </div>
     </div>
 
     <div class="quote-card">
-      <p class="quote-text">Sisterhood is not proximity. It's practice. It's the daily act of showing up — for yourself and each other.</p>
-      <div class="quote-author">— Tayllor Johnson, Founder</div>
+      <p class="quote-text">Sisterhood(verb): loving yourself and your kin with ancestral abundance.</p>
+      <div class="quote-author">— Tayllor Oyewole-Davis, Founder</div>
     </div>
 
     <div id="feed-posts">
@@ -572,7 +1427,7 @@
           Just finished the <strong>Motherhood Speaks</strong> workshop and I am undone in the best way. I didn't realize how much I'd been carrying silently until I finally had a room — even a virtual one — where I was allowed to put it down.
         </div>
         <div class="card-footer">
-          <button class="react-btn" onclick="toggleLike(this)">🌿 <span>14</span></button>
+          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>14</span></button>
           <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>3 replies</span></button>
           <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
         </div>
@@ -591,7 +1446,7 @@
           Sharing my writing prompt response from Circle this week — "Write the letter your 13-year-old self needed to receive." I've never cried so hard or felt so free at the same time. Thank you for this space. 🌺
         </div>
         <div class="card-footer">
-          <button class="react-btn" onclick="toggleLike(this)">🌿 <span>27</span></button>
+          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>27</span></button>
           <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>8 replies</span></button>
           <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
         </div>
@@ -610,7 +1465,7 @@
           Reminder to us all: rest is <strong>resistance</strong>. You don't have to earn your stillness. You are allowed to pause without producing. That's the whole point of this sisterhood — we hold each other in the becoming, not just the doing.
         </div>
         <div class="card-footer">
-          <button class="react-btn" onclick="toggleLike(this)">🌿 <span>42</span></button>
+          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>42</span></button>
           <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>12 replies</span></button>
           <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
         </div>
@@ -627,82 +1482,93 @@
     <p class="page-sub">Intimate groups where the real conversations happen. Each Circle is a practice space — not a performance.</p>
   </div>
   <div class="circles-grid">
-    <div class="circle-card">
+    <div class="circle-card" onclick="openCircle('Motherhood Speaks')" style="cursor:pointer;">
       <div class="circle-banner" style="background: linear-gradient(135deg, #F5EFE6, #E8C4A0);">
         <span class="circle-icon">🌺</span>
       </div>
       <div class="circle-body">
         <div class="circle-name">Motherhood Speaks</div>
-        <div class="circle-desc">A brave space for mothers to process, grieve, celebrate, and speak the unspoken truths of motherhood through storytelling.</div>
+        <div class="circle-desc">A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.</div>
         <div class="circle-meta">
           <span class="circle-members">48 sisters</span>
-          <button class="join-btn joined" onclick="toggleJoin(this)">Joined ✦</button>
+          <button class="join-btn joined" onclick="event.stopPropagation(); toggleJoin(this, 'Motherhood Speaks')">Joined ✦</button>
         </div>
       </div>
     </div>
 
-    <div class="circle-card">
+    <div class="circle-card" onclick="openCircle('Writers Block? I Think Not!')" style="cursor:pointer;">
       <div class="circle-banner" style="background: linear-gradient(135deg, #E8F0E4, #c5d9be);">
         <span class="circle-icon">✍🏾</span>
       </div>
       <div class="circle-body">
-        <div class="circle-name">Write to Heal</div>
-        <div class="circle-desc">Weekly prompts, accountability, and community for women using creative writing as a wellness practice and truth-telling tool.</div>
+        <div class="circle-name">Writers Block? I Think Not!</div>
+        <div class="circle-desc">A space for creative writers, poets, and scribes to stay connected to the craft and themselves. Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div>
         <div class="circle-meta">
-          <span class="circle-members">63 sisters</span>
-          <button class="join-btn" onclick="toggleJoin(this)">Join</button>
+          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Writers Block? I Think Not!')">Join</button>
         </div>
       </div>
     </div>
 
-    <div class="circle-card">
+    <div class="circle-card" onclick="openCircle('Burnout to Bloom')" style="cursor:pointer;">
       <div class="circle-banner" style="background: linear-gradient(135deg, #F5EFE6, #ddc9b0);">
         <span class="circle-icon">🔥</span>
       </div>
       <div class="circle-body">
         <div class="circle-name">Burnout to Bloom</div>
-        <div class="circle-desc">For educators, artists, and organizers navigating depletion. Rooted in community care, boundaries, and sustainable creative practice.</div>
+        <div class="circle-desc">Are you an educator, community organizer, activist, or artist trying to exist in the world and keep your cup full? This space is for you to vent, seek advice, find community care, and share — so you can enjoy life and have something left for yourself. We get it. We got you.</div>
         <div class="circle-meta">
-          <span class="circle-members">35 sisters</span>
-          <button class="join-btn" onclick="toggleJoin(this)">Join</button>
+          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Burnout to Bloom')">Join</button>
         </div>
       </div>
     </div>
 
-    <div class="circle-card">
+    <div class="circle-card" onclick="openCircle('Speak Poet!')" style="cursor:pointer;">
       <div class="circle-banner" style="background: linear-gradient(135deg, #1C1410, #3d2b1f);">
-        <span class="circle-icon">🎭</span>
+        <span class="circle-icon">🎤</span>
       </div>
       <div class="circle-body">
-        <div class="circle-name">Spoken & Seen</div>
-        <div class="circle-desc">Performance, spoken word, and arts-based storytelling for women reclaiming their voice and visibility through the stage.</div>
+        <div class="circle-name">Speak Poet!</div>
+        <div class="circle-desc">This is for the slam poets, performers, and spoken word artists looking for space to share your work, network, and connect with poets who get it. And trust us — we get it!</div>
         <div class="circle-meta">
-          <span class="circle-members">29 sisters</span>
-          <button class="join-btn" onclick="toggleJoin(this)">Join</button>
+          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Speak Poet!')">Join</button>
         </div>
       </div>
     </div>
 
-    <div class="circle-card">
-      <div class="circle-banner" style="background: linear-gradient(135deg, #F5EFE6, #e8d5c0);">
-        <span class="circle-icon">🌍</span>
+    <div class="circle-card" onclick="openCircle('Healing As We Hustle')" style="cursor:pointer;">
+      <div class="circle-banner" style="background: linear-gradient(135deg, #2d1f3d, #5c3d7a);">
+        <span class="circle-icon">💼</span>
       </div>
       <div class="circle-body">
-        <div class="circle-name">Roots & Routes</div>
-        <div class="circle-desc">Exploring cultural identity, ancestry, and diasporic belonging through creative dialogue, storytelling, and shared memory.</div>
+        <div class="circle-name">Healing As We Hustle</div>
+        <div class="circle-desc">Divesting from oppressive systems doesn't mean we don't get to follow our dreams. This space is for entrepreneurs to connect, network, and get support as we go big or go home.</div>
         <div class="circle-meta">
-          <span class="circle-members">41 sisters</span>
-          <button class="join-btn" onclick="toggleJoin(this)">Join</button>
+          <span class="circle-members">0 sisters</span>
+          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Healing As We Hustle')">Join</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="circle-card" onclick="openCircle('The Travel Girlies')" style="cursor:pointer;">
+      <div class="circle-banner" style="background: linear-gradient(135deg, #1a3a4a, #2d6a8a);">
+        <span class="circle-icon">✈️</span>
+      </div>
+      <div class="circle-body">
+        <div class="circle-name">The Travel Girlies</div>
+        <div class="circle-desc">Trip tips, resources, warnings, and storytelling. Whether your passport is booked and busy or the plans are still living in the group chat — you're welcome here.</div>
+        <div class="circle-meta">
+          <span class="circle-members">0 sisters</span>
+          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'The Travel Girlies')">Join</button>
         </div>
       </div>
     </div>
 
     <div class="circle-card" style="border: 1.5px dashed rgba(196,98,45,0.3); background: var(--cream);">
-      <div class="circle-banner" style="background: transparent; height: 70px;">
-        <span class="circle-icon">✦</span>
-      </div>
-      <div class="circle-body">
-        <div class="circle-name" style="color:var(--terra)">Start a Circle</div>
+        <div class="circle-banner" style="background: transparent; height: 70px;">
+          <span class="circle-icon">✦</span>
+        </div>
+        <div class="circle-body">
+          <div class="circle-name" style="color:var(--terra)">Start a Circle</div>
         <div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the Sisterhood(verb) team.</div>
         <div class="circle-meta">
           <span class="circle-members">Members only</span>
@@ -710,6 +1576,48 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ════ CIRCLE DETAIL ════ -->
+<div class="view" id="view-circle-detail">
+  <div class="circle-detail-header" id="circle-detail-header">
+    <button class="circle-detail-back" onclick="showView('circles', null)">← Back to Circles</button>
+    <span class="circle-detail-icon" id="circle-detail-icon">🌺</span>
+    <h1 class="circle-detail-name" id="circle-detail-name">Circle Name</h1>
+    <p class="circle-detail-desc" id="circle-detail-desc">Circle description</p>
+    <div class="circle-detail-meta">
+      <span class="circle-detail-count" id="circle-detail-count">0 sisters</span>
+      <button class="circle-join-btn" id="circle-detail-join-btn" onclick="toggleCircleDetailJoin()">Join Circle</button>
+    </div>
+  </div>
+  <div class="circle-feed">
+    <div class="post-composer" id="circle-composer" style="display:none;">
+      <div class="composer-top">
+        <div class="avatar" id="circle-composer-avatar">T</div>
+        <textarea class="composer-input" id="circle-composer-input" rows="2" placeholder="Share with your sisters..."></textarea>
+      </div>
+      <div class="composer-actions">
+        <div class="composer-tools">
+          <button class="tool-btn" id="circle-gif-btn" onclick="toggleCircleGifPicker()">GIF 🎬</button>
+        </div>
+        <button class="post-btn" onclick="postToCircle()">Share</button>
+      </div>
+      <div class="gif-picker" id="circle-gif-picker">
+        <div class="gif-search-bar">
+          <input class="gif-search-input" id="circle-gif-search" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter') searchCircleGifs()">
+          <button class="gif-search-btn" onclick="searchCircleGifs()">Search</button>
+        </div>
+        <div class="gif-grid" id="circle-gif-grid">
+          <div class="gif-loading">Search for a GIF above ✦</div>
+        </div>
+      </div>
+      <div class="gif-preview" id="circle-gif-preview">
+        <img id="circle-gif-preview-img" src="" alt="Selected GIF">
+        <button class="gif-remove" onclick="removeCircleGif()">✕</button>
+      </div>
+    </div>
+    <div id="circle-feed-posts"></div>
   </div>
 </div>
 
@@ -722,24 +1630,7 @@
   </div>
   <div class="events-layout">
     <div class="events-main">
-      <div class="section-label">This Month</div>
-
-      <div class="event-card">
-        <div class="event-date">
-          <span class="date-month">Mar</span>
-          <span class="date-day">11</span>
-        </div>
-        <div class="event-info">
-          <div class="event-title">Motherhood Speaks — Session 1</div>
-          <div class="event-meta">
-            <span class="event-detail">🕕 6:00 PM – 8:00 PM PT</span>
-            <span class="event-detail">📍 Virtual (Zoom)</span>
-            <span class="event-detail">💰 $197 / series</span>
-          </div>
-          <div class="event-desc">The first gathering of our 4-week storytelling series for mothers. Come to speak, listen, and be witnessed.</div>
-          <button class="event-register registered" onclick="showToast('You\'re registered ✦')">Registered ✦</button>
-        </div>
-      </div>
+      <div class="section-label">Upcoming</div>
 
       <div class="event-card">
         <div class="event-date">
@@ -747,14 +1638,14 @@
           <span class="date-day">18</span>
         </div>
         <div class="event-info">
-          <div class="event-title">Write to Heal: Open Circle</div>
+          <div class="event-title">Motherhood Speaks — Session 2</div>
           <div class="event-meta">
-            <span class="event-detail">🕖 7:00 PM PT</span>
-            <span class="event-detail">📍 Virtual</span>
-            <span class="event-detail">💰 Free for members</span>
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
+            <span class="event-detail">💰 Members only</span>
           </div>
-          <div class="event-desc">A free-write session with guided prompts, sharing, and community witnessing. All members welcome.</div>
-          <button class="event-register" onclick="registerEvent(this)">Register Free</button>
+          <div class="event-desc">Week 2 of our Motherhood Speaks series. A space to share your wins, losses, resources, hopes, and fears with moms who get it.</div>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
         </div>
       </div>
 
@@ -764,31 +1655,64 @@
           <span class="date-day">25</span>
         </div>
         <div class="event-info">
-          <div class="event-title">Burnout to Bloom: Spring Reset</div>
+          <div class="event-title">Motherhood Speaks — Session 3</div>
           <div class="event-meta">
-            <span class="event-detail">🕔 4:00 PM PT</span>
-            <span class="event-detail">📍 Los Angeles, CA</span>
-            <span class="event-detail">💰 $45 / in-person</span>
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
+            <span class="event-detail">💰 Members only</span>
           </div>
-          <div class="event-desc">A half-day in-person gathering for rest, reflection, and reconnection. Limited to 20 sisters.</div>
-          <button class="event-register" onclick="registerEvent(this)">Reserve Spot</button>
+          <div class="event-desc">Week 3 of our Wednesday series. Come as you are, bring what you carry.</div>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
         </div>
       </div>
 
       <div class="event-card">
         <div class="event-date">
           <span class="date-month">Apr</span>
-          <span class="date-day">5</span>
+          <span class="date-day">1</span>
         </div>
         <div class="event-info">
-          <div class="event-title">Roots & Routes: Story Share</div>
+          <div class="event-title">Motherhood Speaks — Session 4</div>
           <div class="event-meta">
-            <span class="event-detail">🕖 6:30 PM PT</span>
-            <span class="event-detail">📍 Virtual</span>
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
             <span class="event-detail">💰 Members only</span>
           </div>
-          <div class="event-desc">Sisters share 3-minute stories about a cultural memory, object, or ancestor that shaped who they are.</div>
-          <button class="event-register" onclick="registerEvent(this)">RSVP</button>
+          <div class="event-desc">Week 4 of our Wednesday series. We're going deeper — bring your whole self.</div>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
+        </div>
+      </div>
+
+      <div class="event-card">
+        <div class="event-date">
+          <span class="date-month">Apr</span>
+          <span class="date-day">8</span>
+        </div>
+        <div class="event-info">
+          <div class="event-title">Motherhood Speaks — Session 5 (Finale)</div>
+          <div class="event-meta">
+            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
+            <span class="event-detail">📍 Virtual (Zoom)</span>
+            <span class="event-detail">💰 Members only</span>
+          </div>
+          <div class="event-desc">The final Wednesday gathering of this series. We celebrate, reflect, and send each other off rooted and full.</div>
+          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
+        </div>
+      </div>
+
+      <div class="event-card">
+        <div class="event-date">
+          <span class="date-month">Sum</span>
+          <span class="date-day" style="font-size:1.1rem;">2026</span>
+        </div>
+        <div class="event-info">
+          <div class="event-title">Sisterhood Speaks — Launching Summer 2026 🌸</div>
+          <div class="event-meta">
+            <span class="event-detail">📍 TBD</span>
+            <span class="event-detail">💰 Stay tuned</span>
+          </div>
+          <div class="event-desc">Something big is coming. Sisterhood Speaks is launching Summer 2026 — join the community now to be the first to know.</div>
+          <button class="event-register" onclick="showToast('Stay tuned — announcements coming soon ✦')">Notify Me</button>
         </div>
       </div>
     </div>
@@ -843,11 +1767,11 @@
           <span class="resource-type" style="color:var(--terra);">Workshop</span>
         </div>
         <div class="resource-body">
-          <div class="resource-title">Motherhood Speaks: Session 3 Recording</div>
-          <div class="resource-desc">Full recording of our most-attended session. Theme: the grief nobody prepares you for.</div>
+          <div class="resource-title">Motherhood Speaks Session Recording</div>
+          <div class="resource-desc">Full session recording coming soon for members who can't make it live.</div>
           <div class="resource-footer">
-            <span class="resource-author">by Tayllor Johnson</span>
-            <span class="resource-access" onclick="showToast('Playing recording...')">Watch →</span>
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
@@ -858,11 +1782,11 @@
           <span class="resource-type" style="color:var(--sage);">Prompts</span>
         </div>
         <div class="resource-body">
-          <div class="resource-title">52 Healing Writing Prompts</div>
-          <div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and emotional processing.</div>
+          <div class="resource-title">52 Healing Prompts</div>
+          <div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and creative healing.</div>
           <div class="resource-footer">
             <span class="resource-author">Sisterhood(verb)</span>
-            <span class="resource-access" onclick="showToast('Downloading PDF...')">Download →</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
@@ -873,11 +1797,11 @@
           <span class="resource-type" style="color:var(--gold);">Audio</span>
         </div>
         <div class="resource-body">
-          <div class="resource-title">Rest as Resistance: A Guided Meditation</div>
-          <div class="resource-desc">A 12-minute grounding practice for women navigating burnout and over-functioning.</div>
+          <div class="resource-title">River Meditation (Guided Meditation)</div>
+          <div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div>
           <div class="resource-footer">
-            <span class="resource-author">by Tayllor Johnson</span>
-            <span class="resource-access" onclick="showToast('Opening audio...')">Listen →</span>
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
@@ -892,7 +1816,7 @@
           <div class="resource-desc">Curated books on collective healing, Black feminist thought, creative practice, and care work.</div>
           <div class="resource-footer">
             <span class="resource-author">Sisterhood(verb)</span>
-            <span class="resource-access" onclick="showToast('Opening list...')">View →</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
@@ -903,26 +1827,26 @@
           <span class="resource-type" style="color:#6B3FA0;">Guide</span>
         </div>
         <div class="resource-body">
-          <div class="resource-title">Facilitator's Guide: Arts-Based Dialogue</div>
-          <div class="resource-desc">A step-by-step facilitation framework for running creative community dialogues in schools and orgs.</div>
+          <div class="resource-title">What They Don't Tell You About Building Community</div>
+          <div class="resource-desc">A raw, honest guide to the real work of building connected, resilient communities from the inside out.</div>
           <div class="resource-footer">
-            <span class="resource-author">by Tayllor Johnson</span>
-            <span class="resource-access" onclick="showToast('Members only — upgrade to access')">Unlock →</span>
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
 
       <div class="resource-card">
         <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">
-          🌺
+          🎤
           <span class="resource-type" style="color:var(--terra);">Workshop</span>
         </div>
         <div class="resource-body">
-          <div class="resource-title">Spoken & Seen: Performance Prep Workshop</div>
-          <div class="resource-desc">Full 90-minute workshop on finding your voice, telling your story, and performing with presence.</div>
+          <div class="resource-title">Poetry Workshop Recording</div>
+          <div class="resource-desc">Full workshop recording for spoken word artists and poets ready to deepen their practice and find their stage voice.</div>
           <div class="resource-footer">
-            <span class="resource-author">by Tayllor Johnson</span>
-            <span class="resource-access" onclick="showToast('Playing recording...')">Watch →</span>
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
           </div>
         </div>
       </div>
@@ -933,14 +1857,18 @@
 <!-- ════ PROFILE ════ -->
 <div class="view" id="view-profile">
   <div style="max-width:720px;margin:0 auto;padding:32px 40px 0;">
-    <div class="profile-banner"></div>
+    <div class="profile-banner" id="profile-banner" onclick="document.getElementById('banner-upload').click()">
+      <div class="photo-upload-overlay">📷 Change Banner</div>
+    </div>
+    <input type="file" id="banner-upload" accept="image/*" onchange="uploadBanner(this)">
+    <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(this)">
     <div class="profile-avatar-wrap">
-      <div class="profile-avatar">T</div>
-      <div class="profile-badge">✦</div>
+      <div class="profile-avatar" id="profile-avatar-display">T</div>
+      <div class="avatar-upload-btn" onclick="document.getElementById('avatar-upload').click()" title="Change photo">📷</div>
     </div>
   </div>
   <div class="profile-info">
-    <div class="profile-name">Tayllor Johnson</div>
+    <div class="profile-name">Tayllor Oyewole-Davis</div>
     <div class="profile-handle">@sisterhoodverb · Founder & Facilitator</div>
     <div class="profile-bio">Poet, writer, mother, educator, sister. Using creativity and community to hold space for women to be, explore, embrace, and celebrate themselves.</div>
     <div class="profile-stats">
@@ -962,7 +1890,7 @@
     <div class="settings-form" style="padding:0;">
       <div class="form-group">
         <label class="form-label">Display Name</label>
-        <input class="form-input" type="text" value="Tayllor Johnson">
+        <input class="form-input" type="text" value="Tayllor Oyewole-Davis">
       </div>
       <div class="form-group">
         <label class="form-label">Bio</label>
@@ -980,7 +1908,7 @@
         <label class="form-label">Membership Plan</label>
         <input class="form-input" type="text" value="Founder Member ✦" readonly style="background:var(--cream);color:var(--terra);font-weight:600;">
       </div>
-      <button class="save-btn" onclick="showToast('Profile saved ✦')">Save Changes</button>
+      <button class="save-btn" onclick="saveProfile()">Save Changes</button>
     </div>
   </div>
 </div>
@@ -995,7 +1923,25 @@
 </div>
 
 <script>
-  const views = ['home','circles','events','resources','profile'];
+  function openModal() {
+    document.getElementById('agreements-modal').classList.add('open');
+  }
+  function closeModal() {
+    document.getElementById('agreements-modal').classList.remove('open');
+  }
+  function handleAgree() {
+    document.getElementById('agreements-modal').classList.remove('open');
+    // Small delay to let agreements modal close before opening auth modal
+    setTimeout(() => {
+      openAuthModal('signup');
+    }, 200);
+  }
+  function toggleAgreeBtn() {
+    const checked = document.getElementById('agree-check').checked;
+    document.getElementById('agree-btn').disabled = !checked;
+  }
+
+  const views = ['home','circles','events','resources','profile','circle-detail'];
 
   function showView(name, el) {
     views.forEach(v => {
@@ -1025,25 +1971,37 @@
     toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
   }
 
-  function toggleLike(btn) {
+  function toggleLike(btn, postId) {
     btn.classList.toggle('liked');
     const span = btn.querySelector('span');
-    const n = parseInt(span.textContent);
+    const n = parseInt(span.textContent) || 0;
     span.textContent = btn.classList.contains('liked') ? n+1 : n-1;
     showToast(btn.classList.contains('liked') ? 'Loved ✦' : 'Removed');
+    if (postId) {
+      const newCount = btn.classList.contains('liked') ? n+1 : n-1;
+      _supabase.from('posts').update({ likes: newCount }).eq('id', postId);
+    }
   }
 
-  function toggleJoin(btn) {
-    const joined = btn.classList.contains('joined');
-    btn.classList.toggle('joined');
-    btn.textContent = joined ? 'Join' : 'Joined ✦';
-    showToast(joined ? 'Left circle' : 'Joined circle ✦');
+  function toggleJoin(btn, circleName) {
+    if (circleName) {
+      joinCircleDB(circleName, btn);
+    } else {
+      const joined = btn.classList.contains('joined');
+      btn.classList.toggle('joined');
+      btn.textContent = joined ? 'Join' : 'Joined ✦';
+      showToast(joined ? 'Left circle' : 'Joined circle ✦');
+    }
   }
 
-  function registerEvent(btn) {
-    btn.classList.add('registered');
-    btn.textContent = 'Registered ✦';
-    showToast('You\'re registered! Check your email ✦');
+  function registerEvent(btn, eventName) {
+    if (eventName) {
+      registerEventDB(eventName, btn);
+    } else {
+      btn.classList.add('registered');
+      btn.textContent = 'Registered ✦';
+      showToast('You\'re registered! Check your email ✦');
+    }
   }
 
   function filterRes(btn) {
@@ -1055,33 +2013,95 @@
   function postToFeed() {
     const ta = document.querySelector('.composer-input');
     const text = ta.value.trim();
-    if (!text) { showToast('Write something first ✦'); return; }
-    const card = document.createElement('div');
-    card.className = 'feed-card';
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="avatar">T</div>
-        <div class="card-meta">
-          <div class="card-name">Tayllor Johnson</div>
-          <div class="card-time">Just now</div>
-        </div>
-        <span class="card-tag">Community</span>
-      </div>
-      <div class="card-body">${text}</div>
-      <div class="card-footer">
-        <button class="react-btn" onclick="toggleLike(this)">🌿 <span>0</span></button>
-        <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>0 replies</span></button>
-        <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-      </div>`;
-    const feed = document.getElementById('feed-posts');
-    feed.insertBefore(card, feed.firstChild);
+    if (!text && !selectedGifUrl) { showToast('Write something first ✦'); return; }
+    if (!currentUser) { openAuthModal('login'); return; }
+    const content = text + (selectedGifUrl ? `\n[gif:${selectedGifUrl}]` : '');
+    savePost(content);
     ta.value = '';
-    showToast('Shared with your sisters ✦');
+    removeGif();
   }
 
   function toggleMobile() {
     showToast('Mobile menu — use bottom nav');
   }
+
+  // ── PHOTO UPLOADS ──
+  async function uploadAvatar(input) {
+    if (!currentUser || !input.files[0]) return;
+    const file = input.files[0];
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${currentUser.id}/avatar.${fileExt}`;
+    showToast('Uploading photo...');
+    const { error: uploadError } = await _supabase.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+    if (uploadError) { showToast('Upload failed — try again'); return; }
+    const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
+    const avatarUrl = data.publicUrl;
+    await _supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
+    // Update display
+    const avatarEl = document.getElementById('profile-avatar-display');
+    avatarEl.style.backgroundImage = `url(${avatarUrl})`;
+    avatarEl.style.backgroundSize = 'cover';
+    avatarEl.style.backgroundPosition = 'center';
+    avatarEl.textContent = '';
+    showToast('Profile photo updated ✦');
+  }
+
+  async function uploadBanner(input) {
+    if (!currentUser || !input.files[0]) return;
+    const file = input.files[0];
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${currentUser.id}/banner.${fileExt}`;
+    showToast('Uploading banner...');
+    const { error: uploadError } = await _supabase.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+    if (uploadError) { showToast('Upload failed — try again'); return; }
+    const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
+    const bannerUrl = data.publicUrl;
+    await _supabase.from('profiles').update({ banner_url: bannerUrl }).eq('id', currentUser.id);
+    // Update display
+    const bannerEl = document.getElementById('profile-banner');
+    bannerEl.style.backgroundImage = `url(${bannerUrl})`;
+    bannerEl.style.backgroundSize = 'cover';
+    bannerEl.style.backgroundPosition = 'center';
+    showToast('Banner photo updated ✦');
+  }
+
+  // Load profile photos when profile loads
+  async function loadProfilePhotos() {
+    if (!currentUser) return;
+    const { data: profile } = await _supabase
+      .from('profiles').select('avatar_url, banner_url').eq('id', currentUser.id).single();
+    if (profile?.avatar_url) {
+      const avatarEl = document.getElementById('profile-avatar-display');
+      if (avatarEl) {
+        avatarEl.style.backgroundImage = `url(${profile.avatar_url})`;
+        avatarEl.style.backgroundSize = 'cover';
+        avatarEl.style.backgroundPosition = 'center';
+        avatarEl.textContent = '';
+      }
+    }
+    if (profile?.banner_url) {
+      const bannerEl = document.getElementById('profile-banner');
+      if (bannerEl) {
+        bannerEl.style.backgroundImage = `url(${profile.banner_url})`;
+        bannerEl.style.backgroundSize = 'cover';
+        bannerEl.style.backgroundPosition = 'center';
+      }
+    }
+  }
+
+  // Load profile view with photos
+  function showViewWithProfile(name, el) {
+    showView(name, el);
+    if (name === 'profile') {
+      loadProfile();
+      loadProfilePhotos();
+    }
+  }
+
 </script>
 </body>
 </html>
