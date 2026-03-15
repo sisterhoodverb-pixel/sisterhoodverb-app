@@ -52,12 +52,15 @@
     document.querySelectorAll('.join-btn').forEach(btn => {
       const onclickAttr = btn.getAttribute('onclick') || '';
       const match = onclickAttr.match(/toggleJoin\(this,\s*'([^']+)'\)/);
-      if (match && joined.includes(match[1])) {
-        btn.classList.add('joined');
-        btn.textContent = 'Joined ✦';
-      } else if (match && !joined.includes(match[1])) {
-        btn.classList.remove('joined');
-        btn.textContent = 'Join';
+      if (match) {
+        const circleName = match[1];
+        if (joined.includes(circleName)) {
+          btn.classList.add('joined');
+          btn.textContent = 'Joined ✦';
+        } else {
+          btn.classList.remove('joined');
+          btn.textContent = 'Join';
+        }
       }
     });
   }
@@ -1404,7 +1407,7 @@
   <div class="nav-logo">Sisterhood<span>(verb)</span></div>
   <div class="nav-links">
     <a href="#" class="active" onclick="showView('home', this)">Home</a>
-    <a href="#" onclick="showView('circles', this)">Circles</a>
+    <a href="#" onclick="showViewWithProfile('circles', this)">Circles</a>
     <a href="#" onclick="showView('events', this)">Events</a>
     <a href="#" onclick="showView('resources', this)">Resources</a>
     <a href="#" onclick="showView('profile', this)">Profile</a>
@@ -1642,7 +1645,7 @@
 <!-- ════ CIRCLE DETAIL ════ -->
 <div class="view" id="view-circle-detail">
   <div class="circle-detail-header" id="circle-detail-header">
-    <button class="circle-detail-back" onclick="showView('circles', null)">← Back to Circles</button>
+    <button class="circle-detail-back" onclick="showViewWithProfile('circles', null)">← Back to Circles</button>
     <span class="circle-detail-icon" id="circle-detail-icon">🌺</span>
     <h1 class="circle-detail-name" id="circle-detail-name">Circle Name</h1>
     <p class="circle-detail-desc" id="circle-detail-desc">Circle description</p>
@@ -1976,7 +1979,7 @@
 <!-- MOBILE NAV -->
 <div class="mobile-nav">
   <button class="mobile-nav-btn active" onclick="showView('home', this)" id="mob-home"><span>🏠</span>Home</button>
-  <button class="mobile-nav-btn" onclick="showView('circles', this)" id="mob-circles"><span>⭕</span>Circles</button>
+  <button class="mobile-nav-btn" onclick="showViewWithProfile('circles', this)" id="mob-circles"><span>⭕</span>Circles</button>
   <button class="mobile-nav-btn" onclick="showView('events', this)" id="mob-events"><span>📅</span>Events</button>
   <button class="mobile-nav-btn" onclick="showView('resources', this)" id="mob-resources"><span>📚</span>Library</button>
   <button class="mobile-nav-btn" onclick="showView('profile', this)" id="mob-profile"><span>👤</span>Profile</button>
