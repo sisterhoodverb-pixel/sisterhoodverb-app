@@ -334,6 +334,206 @@
     document.getElementById('gif-preview-img').src = '';
   }
 
+  // ── CIRCLE DATA ──
+  const circleData = {
+    'Motherhood Speaks': { icon: '🌺', desc: 'A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.', bg: 'linear-gradient(135deg, #1C1410, #C4622D)' },
+    'Writers Block? I Think Not!': { icon: '✍🏾', desc: 'Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.', bg: 'linear-gradient(135deg, #1C1410, #2d5a3d)' },
+    'Burnout to Bloom': { icon: '🔥', desc: 'For educators, organizers, activists, and artists trying to exist in the world and keep your cup full. We get it. We got you.', bg: 'linear-gradient(135deg, #1C1410, #8B4513)' },
+    'Speak Poet!': { icon: '🎤', desc: 'For slam poets, performers, and spoken word artists looking for space to share your work and connect with poets who get it.', bg: 'linear-gradient(135deg, #1C1410, #2d1f3d)' },
+    'Healing As We Hustle': { icon: '💼', desc: 'Divesting from oppressive systems doesn\'t mean we don\'t get to follow our dreams. Space for entrepreneurs to connect, network, and get support.', bg: 'linear-gradient(135deg, #1C1410, #3d2b5c)' },
+    'The Travel Girlies': { icon: '✈️', desc: 'Trip tips, resources, warnings, and storytelling. Whether your passport is booked and busy or the plans are still living in the group chat.', bg: 'linear-gradient(135deg, #1C1410, #1a3a4a)' }
+  };
+
+  let currentCircle = null;
+  let selectedCircleGifUrl = null;
+  let circleIsJoined = false;
+
+  async function openCircle(name) {
+    currentCircle = name;
+    const data = circleData[name] || { icon: '✦', desc: '', bg: 'var(--deep)' };
+
+    // Update header
+    document.getElementById('circle-detail-icon').textContent = data.icon;
+    document.getElementById('circle-detail-name').textContent = name;
+    document.getElementById('circle-detail-desc').textContent = data.desc;
+    document.getElementById('circle-detail-header').style.background = data.bg;
+
+    // Check if joined
+    if (currentUser) {
+      const { data: membership } = await _supabase
+        .from('circle_members')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .eq('circle_name', name)
+        .single();
+      circleIsJoined = !!membership;
+      const joinBtn = document.getElementById('circle-detail-join-btn');
+      joinBtn.textContent = circleIsJoined ? 'Joined ✦' : 'Join Circle';
+      joinBtn.className = circleIsJoined ? 'circle-join-btn joined' : 'circle-join-btn';
+      document.getElementById('circle-composer').style.display = circleIsJoined ? 'block' : 'none';
+    }
+
+    // Get member count
+    const { count } = await _supabase
+      .from('circle_members')
+      .select('*', { count: 'exact' })
+      .eq('circle_name', name);
+    document.getElementById('circle-detail-count').textContent = (count || 0) + ' sisters';
+
+    // Load circle feed
+    loadCircleFeed(name);
+    showView('circle-detail', null);
+  }
+
+  async function loadCircleFeed(circleName) {
+    const feed = document.getElementById('circle-feed-posts');
+    feed.innerHTML = '<div class="circle-empty"><span class="circle-empty-icon">✦</span>Loading posts...</div>';
+
+    const { data: posts, error } = await _supabase
+      .from('posts')
+      .select('*')
+      .eq('circle', circleName)
+      .order('created_at', { ascending: false })
+      .limit(30);
+
+    if (error || !posts || posts.length === 0) {
+      feed.innerHTML = `<div class="circle-empty">
+        <span class="circle-empty-icon">${circleData[circleName]?.icon || '✦'}</span>
+        No posts yet — be the first to share in this Circle!
+      </div>`;
+      return;
+    }
+
+    // Load profile names
+    const userIds = [...new Set(posts.map(p => p.user_id).filter(Boolean))];
+    let profileMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await _supabase
+        .from('profiles').select('id, name').in('id', userIds);
+      if (profiles) profiles.forEach(p => profileMap[p.id] = p.name);
+    }
+
+    feed.innerHTML = '';
+    posts.forEach((post, i) => {
+      const name = profileMap[post.user_id] || 'Sister';
+      const initial = name.charAt(0).toUpperCase();
+      const time = timeAgo(post.created_at);
+      let textContent = post.content || '';
+      let gifHtml = '';
+      const gifMatch = textContent.match(/\[gif:(.*?)\]/);
+      if (gifMatch) {
+        gifHtml = `<img src="${gifMatch[1]}" style="max-width:100%;border-radius:4px;margin-top:10px;max-height:200px;object-fit:cover;" alt="GIF">`;
+        textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
+      }
+      const card = document.createElement('div');
+      card.className = 'feed-card';
+      card.style.animationDelay = (i * 0.1) + 's';
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="avatar" style="background:linear-gradient(135deg,var(--terra),var(--gold))">${initial}</div>
+          <div class="card-meta">
+            <div class="card-name">${name}</div>
+            <div class="card-time">${time}</div>
+          </div>
+        </div>
+        <div class="card-body">${textContent}${gifHtml}</div>
+        <div class="card-footer">
+          <button class="react-btn" onclick="toggleLike(this, '${post.id}')">🫂 <span>${post.likes || 0}</span></button>
+          <button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button>
+          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
+        </div>`;
+      feed.appendChild(card);
+    });
+  }
+
+  async function toggleCircleDetailJoin() {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const btn = document.getElementById('circle-detail-join-btn');
+    if (!circleIsJoined) {
+      await _supabase.from('circle_members').insert({ user_id: currentUser.id, circle_name: currentCircle });
+      circleIsJoined = true;
+      btn.textContent = 'Joined ✦';
+      btn.className = 'circle-join-btn joined';
+      document.getElementById('circle-composer').style.display = 'block';
+      showToast('Joined ' + currentCircle + ' ✦');
+    } else {
+      await _supabase.from('circle_members').delete().eq('user_id', currentUser.id).eq('circle_name', currentCircle);
+      circleIsJoined = false;
+      btn.textContent = 'Join Circle';
+      btn.className = 'circle-join-btn';
+      document.getElementById('circle-composer').style.display = 'none';
+      showToast('Left ' + currentCircle);
+    }
+  }
+
+  async function postToCircle() {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const ta = document.getElementById('circle-composer-input');
+    const text = ta.value.trim();
+    if (!text && !selectedCircleGifUrl) { showToast('Write something first ✦'); return; }
+    const content = text + (selectedCircleGifUrl ? `\n[gif:${selectedCircleGifUrl}]` : '');
+    showToast('Sharing... ✦');
+    const { error } = await _supabase.from('posts').insert({
+      user_id: currentUser.id,
+      content: content,
+      circle: currentCircle,
+      tag: currentCircle,
+      likes: 0
+    });
+    if (error) { showToast('Could not post: ' + error.message); return; }
+    ta.value = '';
+    removeCircleGif();
+    showToast('Shared with the circle ✦');
+    loadCircleFeed(currentCircle);
+  }
+
+  function toggleCircleGifPicker() {
+    const picker = document.getElementById('circle-gif-picker');
+    const btn = document.getElementById('circle-gif-btn');
+    picker.classList.toggle('open');
+    btn.classList.toggle('active');
+    if (picker.classList.contains('open')) {
+      document.getElementById('circle-gif-search').focus();
+    }
+  }
+
+  async function searchCircleGifs() {
+    const query = document.getElementById('circle-gif-search').value.trim();
+    if (!query) return;
+    const grid = document.getElementById('circle-gif-grid');
+    grid.innerHTML = '<div class="gif-loading">Searching... ✦</div>';
+    try {
+      const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(query)}&limit=12&rating=pg`);
+      const data = await res.json();
+      grid.innerHTML = '';
+      data.data.forEach(gif => {
+        const img = document.createElement('img');
+        img.className = 'gif-item';
+        img.src = gif.images.fixed_height_small.url;
+        img.onclick = () => selectCircleGif(gif.images.fixed_height.url);
+        grid.appendChild(img);
+      });
+    } catch (e) {
+      grid.innerHTML = '<div class="gif-loading">Could not load GIFs</div>';
+    }
+  }
+
+  function selectCircleGif(url) {
+    selectedCircleGifUrl = url;
+    const preview = document.getElementById('circle-gif-preview');
+    document.getElementById('circle-gif-preview-img').src = url;
+    preview.style.display = 'block';
+    document.getElementById('circle-gif-picker').classList.remove('open');
+    document.getElementById('circle-gif-btn').classList.remove('active');
+    showToast('GIF selected ✦');
+  }
+
+  function removeCircleGif() {
+    selectedCircleGifUrl = null;
+    document.getElementById('circle-gif-preview').style.display = 'none';
+    document.getElementById('circle-gif-preview-img').src = '';
+  }
+
   // ── HELPERS ──
   function timeAgo(dateStr) {
     const now = new Date();
@@ -925,7 +1125,52 @@
   }
   .logout-btn:hover { background: var(--terra); color: white; }
 
-  /* ── COMMUNITY AGREEMENTS MODAL ── */
+  /* ── CIRCLE DETAIL VIEW ── */
+  .circle-detail-header {
+    background: var(--deep); padding: 60px 40px 40px;
+    position: relative; overflow: hidden;
+  }
+  .circle-detail-back {
+    background: none; border: 1px solid rgba(245,239,230,0.2);
+    color: var(--cream); padding: 8px 16px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+    cursor: pointer; border-radius: 2px; margin-bottom: 24px;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: all 0.2s;
+  }
+  .circle-detail-back:hover { border-color: var(--cream); }
+  .circle-detail-icon { font-size: 2.5rem; margin-bottom: 12px; display: block; }
+  .circle-detail-name {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    color: var(--cream); margin-bottom: 10px;
+  }
+  .circle-detail-desc {
+    color: rgba(245,239,230,0.65); font-size: 0.95rem;
+    line-height: 1.7; max-width: 560px; margin-bottom: 20px;
+  }
+  .circle-detail-meta {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  }
+  .circle-detail-count {
+    font-size: 0.78rem; color: rgba(245,239,230,0.4);
+    letter-spacing: 0.06em;
+  }
+  .circle-join-btn {
+    background: var(--terra); color: white; border: none;
+    padding: 10px 24px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; cursor: pointer; border-radius: 2px;
+    transition: background 0.2s;
+  }
+  .circle-join-btn:hover { background: #a8501f; }
+  .circle-join-btn.joined { background: var(--sage); }
+  .circle-feed { padding: 40px; max-width: 700px; margin: 0 auto; }
+  .circle-empty {
+    text-align: center; padding: 60px 20px;
+    color: rgba(28,20,16,0.4); font-size: 0.9rem; line-height: 1.8;
+  }
+  .circle-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(28,20,16,0.7);
     z-index: 500; display: none; align-items: center; justify-content: center;
@@ -1237,7 +1482,7 @@
     <p class="page-sub">Intimate groups where the real conversations happen. Each Circle is a practice space — not a performance.</p>
   </div>
   <div class="circles-grid">
-    <div class="circle-card">
+    <div class="circle-card" onclick="openCircle('Motherhood Speaks')" style="cursor:pointer;">
       <div class="circle-banner" style="background: linear-gradient(135deg, #F5EFE6, #E8C4A0);">
         <span class="circle-icon">🌺</span>
       </div>
@@ -1246,12 +1491,12 @@
         <div class="circle-desc">A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.</div>
         <div class="circle-meta">
           <span class="circle-members">48 sisters</span>
-          <button class="join-btn joined" onclick="toggleJoin(this, 'Motherhood Speaks')">Joined ✦</button>
+          <button class="join-btn joined" onclick="event.stopPropagation(); toggleJoin(this, 'Motherhood Speaks')">Joined ✦</button>
         </div>
       </div>
     </div>
 
-    <div class="circle-card">
+    <div class="circle-card" onclick="openCircle('Writers Block? I Think Not!')" style="cursor:pointer;">
       <div class="circle-banner" style="background: linear-gradient(135deg, #E8F0E4, #c5d9be);">
         <span class="circle-icon">✍🏾</span>
       </div>
@@ -1259,12 +1504,12 @@
         <div class="circle-name">Writers Block? I Think Not!</div>
         <div class="circle-desc">A space for creative writers, poets, and scribes to stay connected to the craft and themselves. Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div>
         <div class="circle-meta">
-          <button class="join-btn" onclick="toggleJoin(this, 'Writers Block? I Think Not!')">Join</button>
+          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Writers Block? I Think Not!')">Join</button>
         </div>
       </div>
     </div>
 
-    <div class="circle-card">
+    <div class="circle-card" onclick="openCircle('Burnout to Bloom')" style="cursor:pointer;">
       <div class="circle-banner" style="background: linear-gradient(135deg, #F5EFE6, #ddc9b0);">
         <span class="circle-icon">🔥</span>
       </div>
@@ -1272,12 +1517,12 @@
         <div class="circle-name">Burnout to Bloom</div>
         <div class="circle-desc">Are you an educator, community organizer, activist, or artist trying to exist in the world and keep your cup full? This space is for you to vent, seek advice, find community care, and share — so you can enjoy life and have something left for yourself. We get it. We got you.</div>
         <div class="circle-meta">
-          <button class="join-btn" onclick="toggleJoin(this, 'Burnout to Bloom')">Join</button>
+          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Burnout to Bloom')">Join</button>
         </div>
       </div>
     </div>
 
-    <div class="circle-card">
+    <div class="circle-card" onclick="openCircle('Speak Poet!')" style="cursor:pointer;">
       <div class="circle-banner" style="background: linear-gradient(135deg, #1C1410, #3d2b1f);">
         <span class="circle-icon">🎤</span>
       </div>
@@ -1285,12 +1530,12 @@
         <div class="circle-name">Speak Poet!</div>
         <div class="circle-desc">This is for the slam poets, performers, and spoken word artists looking for space to share your work, network, and connect with poets who get it. And trust us — we get it!</div>
         <div class="circle-meta">
-          <button class="join-btn" onclick="toggleJoin(this, 'Speak Poet!')">Join</button>
+          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Speak Poet!')">Join</button>
         </div>
       </div>
     </div>
 
-    <div class="circle-card">
+    <div class="circle-card" onclick="openCircle('Healing As We Hustle')" style="cursor:pointer;">
       <div class="circle-banner" style="background: linear-gradient(135deg, #2d1f3d, #5c3d7a);">
         <span class="circle-icon">💼</span>
       </div>
@@ -1299,12 +1544,12 @@
         <div class="circle-desc">Divesting from oppressive systems doesn't mean we don't get to follow our dreams. This space is for entrepreneurs to connect, network, and get support as we go big or go home.</div>
         <div class="circle-meta">
           <span class="circle-members">0 sisters</span>
-          <button class="join-btn" onclick="toggleJoin(this, 'Healing As We Hustle')">Join</button>
+          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'Healing As We Hustle')">Join</button>
         </div>
       </div>
     </div>
 
-    <div class="circle-card">
+    <div class="circle-card" onclick="openCircle('The Travel Girlies')" style="cursor:pointer;">
       <div class="circle-banner" style="background: linear-gradient(135deg, #1a3a4a, #2d6a8a);">
         <span class="circle-icon">✈️</span>
       </div>
@@ -1313,7 +1558,7 @@
         <div class="circle-desc">Trip tips, resources, warnings, and storytelling. Whether your passport is booked and busy or the plans are still living in the group chat — you're welcome here.</div>
         <div class="circle-meta">
           <span class="circle-members">0 sisters</span>
-          <button class="join-btn" onclick="toggleJoin(this, 'The Travel Girlies')">Join</button>
+          <button class="join-btn" onclick="event.stopPropagation(); toggleJoin(this, 'The Travel Girlies')">Join</button>
         </div>
       </div>
     </div>
@@ -1331,6 +1576,48 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ════ CIRCLE DETAIL ════ -->
+<div class="view" id="view-circle-detail">
+  <div class="circle-detail-header" id="circle-detail-header">
+    <button class="circle-detail-back" onclick="showView('circles', null)">← Back to Circles</button>
+    <span class="circle-detail-icon" id="circle-detail-icon">🌺</span>
+    <h1 class="circle-detail-name" id="circle-detail-name">Circle Name</h1>
+    <p class="circle-detail-desc" id="circle-detail-desc">Circle description</p>
+    <div class="circle-detail-meta">
+      <span class="circle-detail-count" id="circle-detail-count">0 sisters</span>
+      <button class="circle-join-btn" id="circle-detail-join-btn" onclick="toggleCircleDetailJoin()">Join Circle</button>
+    </div>
+  </div>
+  <div class="circle-feed">
+    <div class="post-composer" id="circle-composer" style="display:none;">
+      <div class="composer-top">
+        <div class="avatar" id="circle-composer-avatar">T</div>
+        <textarea class="composer-input" id="circle-composer-input" rows="2" placeholder="Share with your sisters..."></textarea>
+      </div>
+      <div class="composer-actions">
+        <div class="composer-tools">
+          <button class="tool-btn" id="circle-gif-btn" onclick="toggleCircleGifPicker()">GIF 🎬</button>
+        </div>
+        <button class="post-btn" onclick="postToCircle()">Share</button>
+      </div>
+      <div class="gif-picker" id="circle-gif-picker">
+        <div class="gif-search-bar">
+          <input class="gif-search-input" id="circle-gif-search" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter') searchCircleGifs()">
+          <button class="gif-search-btn" onclick="searchCircleGifs()">Search</button>
+        </div>
+        <div class="gif-grid" id="circle-gif-grid">
+          <div class="gif-loading">Search for a GIF above ✦</div>
+        </div>
+      </div>
+      <div class="gif-preview" id="circle-gif-preview">
+        <img id="circle-gif-preview-img" src="" alt="Selected GIF">
+        <button class="gif-remove" onclick="removeCircleGif()">✕</button>
+      </div>
+    </div>
+    <div id="circle-feed-posts"></div>
   </div>
 </div>
 
@@ -1654,7 +1941,7 @@
     document.getElementById('agree-btn').disabled = !checked;
   }
 
-  const views = ['home','circles','events','resources','profile'];
+  const views = ['home','circles','events','resources','profile','circle-detail'];
 
   function showView(name, el) {
     views.forEach(v => {
