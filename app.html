@@ -114,6 +114,19 @@
   async function signIn(email, password) {
     const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
     if (error) { showToast('Error: ' + error.message); return; }
+    // Create profile if it doesn't exist yet
+    if (data.user) {
+      const { data: existing } = await _supabase
+        .from('profiles').select('id').eq('id', data.user.id).single();
+      if (!existing) {
+        await _supabase.from('profiles').insert({
+          id: data.user.id,
+          name: email.split('@')[0],
+          handle: '@' + email.split('@')[0],
+          membership_tier: 'free'
+        });
+      }
+    }
     showToast('Welcome back, sis ✦');
     closeAuthModal();
   }
