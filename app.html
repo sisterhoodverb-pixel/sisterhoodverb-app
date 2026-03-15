@@ -23,13 +23,15 @@
     if (session) {
       currentUser = session.user;
       updateNavForUser(currentUser);
+      await loadUserInitial(); // wait for name before loading feed
       loadFeed();
       loadJoinedCircles();
     }
-    _supabase.auth.onAuthStateChange((event, session) => {
+    _supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
         currentUser = session.user;
         updateNavForUser(currentUser);
+        await loadUserInitial();
         loadFeed();
         loadJoinedCircles();
       } else {
