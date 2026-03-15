@@ -907,34 +907,3 @@ footer {
 
 </body>
 </html>
-
-// Check if already logged in
-window.addEventListener(‘load’, async () => {
-const { data: { session } } = await _supabase.auth.getSession();
-if (session) {
-// Show “Go to Community” in nav instead of login/join
-const navActions = document.querySelector(’.nav-actions’);
-if (navActions) {
-navActions.innerHTML = `<span style="font-size:0.8rem;color:rgba(245,239,230,0.5);letter-spacing:0.06em;">Welcome back, sis ✦</span> <button class="nav-join" onclick="window.location.href='/app.html'">Go to Community</button>`;
-}
-// Also update hero buttons
-const heroCta = document.querySelector(’.hero-cta’);
-if (heroCta) {
-heroCta.innerHTML = `<button class="btn-primary" onclick="window.location.href='/app.html'">Go to Your Community ✦</button>`;
-}
-}
-});
-
-// Floating button scroll
-const floatingBtn = document.getElementById(‘floating-join’);
-window.addEventListener(‘scroll’, () => {
-if (window.scrollY > window.innerHeight * 0.6) {
-floatingBtn.classList.add(‘visible’);
-} else {
-floatingBtn.classList.remove(‘visible’);
-}
-});
-</script>
-
-</body>
-</html>
