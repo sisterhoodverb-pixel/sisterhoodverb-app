@@ -65,7 +65,7 @@
     const joinBtn = document.querySelector('.nav-cta');
     if (joinBtn) {
       joinBtn.textContent = 'My Account';
-      joinBtn.onclick = () => showView('profile', joinBtn);
+      joinBtn.onclick = () => showViewWithProfile('profile', joinBtn);
     }
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.style.display = 'block';
@@ -273,19 +273,19 @@
     }
 
     // Load stats
-    const { count: circleCount } = await _supabase
-      .from('circle_members').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
-    const { count: eventCount } = await _supabase
-      .from('event_registrations').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
-    const { count: postCount } = await _supabase
-      .from('posts').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
+    const { data: circleData } = await _supabase
+      .from('circle_members').select('id').eq('user_id', currentUser.id);
+    const { data: eventData } = await _supabase
+      .from('event_registrations').select('id').eq('user_id', currentUser.id);
+    const { data: postData } = await _supabase
+      .from('posts').select('id').eq('user_id', currentUser.id);
 
     const circleEl = document.getElementById('stat-circles');
     const eventEl = document.getElementById('stat-events');
     const postEl = document.getElementById('stat-posts');
-    if (circleEl) circleEl.textContent = circleCount || 0;
-    if (eventEl) eventEl.textContent = eventCount || 0;
-    if (postEl) postEl.textContent = postCount || 0;
+    if (circleEl) circleEl.textContent = circleData?.length || 0;
+    if (eventEl) eventEl.textContent = eventData?.length || 0;
+    if (postEl) postEl.textContent = postData?.length || 0;
   }
 
   async function saveProfile() {
@@ -1387,7 +1387,7 @@
     <a href="#" onclick="showViewWithProfile('circles', this)">Circles</a>
     <a href="#" onclick="showView('events', this)">Events</a>
     <a href="#" onclick="showView('resources', this)">Resources</a>
-    <a href="#" onclick="showView('profile', this)">Profile</a>
+    <a href="#" onclick="showViewWithProfile('profile', this)">Profile</a>
     <a href="#" class="nav-cta" onclick="openModal(); return false;">Join</a>
     <button class="logout-btn" id="logout-btn" onclick="signOut()">Log Out</button>
   </div>
@@ -1959,7 +1959,7 @@
   <button class="mobile-nav-btn" onclick="showViewWithProfile('circles', this)" id="mob-circles"><span>⭕</span>Circles</button>
   <button class="mobile-nav-btn" onclick="showView('events', this)" id="mob-events"><span>📅</span>Events</button>
   <button class="mobile-nav-btn" onclick="showView('resources', this)" id="mob-resources"><span>📚</span>Library</button>
-  <button class="mobile-nav-btn" onclick="showView('profile', this)" id="mob-profile"><span>👤</span>Profile</button>
+  <button class="mobile-nav-btn" onclick="showViewWithProfile('profile', this)" id="mob-profile"><span>👤</span>Profile</button>
 </div>
 
 <script>
