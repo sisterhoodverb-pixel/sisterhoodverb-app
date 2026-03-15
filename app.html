@@ -284,10 +284,12 @@
     const { count: postCount } = await _supabase
       .from('posts').select('*', { count: 'exact' }).eq('user_id', currentUser.id);
 
-    const stats = document.querySelectorAll('.stat-num');
-    if (stats[0]) stats[0].textContent = circleCount || 0;
-    if (stats[1]) stats[1].textContent = eventCount || 0;
-    if (stats[2]) stats[2].textContent = postCount || 0;
+    const circleEl = document.getElementById('stat-circles');
+    const eventEl = document.getElementById('stat-events');
+    const postEl = document.getElementById('stat-posts');
+    if (circleEl) circleEl.textContent = circleCount || 0;
+    if (eventEl) eventEl.textContent = eventCount || 0;
+    if (postEl) postEl.textContent = postCount || 0;
   }
 
   async function saveProfile() {
@@ -1935,9 +1937,9 @@
     <div class="profile-handle">@sisterhoodverb · Founder & Facilitator</div>
     <div class="profile-bio">Poet, writer, mother, educator, sister. Using creativity and community to hold space for women to be, explore, embrace, and celebrate themselves.</div>
     <div class="profile-stats">
-      <div class="stat"><div class="stat-num">3</div><div class="stat-label">Circles</div></div>
-      <div class="stat"><div class="stat-num">12</div><div class="stat-label">Events</div></div>
-      <div class="stat"><div class="stat-num">84</div><div class="stat-label">Sisters</div></div>
+      <div class="stat"><div class="stat-num" id="stat-circles">0</div><div class="stat-label">Circles</div></div>
+      <div class="stat"><div class="stat-num" id="stat-events">0</div><div class="stat-label">Events</div></div>
+      <div class="stat"><div class="stat-num" id="stat-posts">0</div><div class="stat-label">Posts</div></div>
     </div>
     <div class="profile-tags">
       <span class="profile-tag">Motherhood</span>
