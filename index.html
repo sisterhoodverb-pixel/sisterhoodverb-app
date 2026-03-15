@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -15,87 +14,86 @@
     'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
   );
 
-// ── ALL FUNCTIONS DEFINED EARLY SO BUTTONS CAN USE THEM ──
+  // ── ALL FUNCTIONS DEFINED EARLY SO BUTTONS CAN USE THEM ──
 
-function openAgreements() {
-const modal = document.getElementById(‘agreements-modal’);
-modal.style.display = ‘flex’;
-}
-function closeAgreements() {
-document.getElementById(‘agreements-modal’).style.display = ‘none’;
-}
-function toggleAgreeBtn() {
-document.getElementById(‘agree-btn’).disabled = !document.getElementById(‘agree-check’).checked;
-}
-function handleAgree() {
-closeAgreements();
-setTimeout(() => openLogin(‘signup’), 200);
-}
-function openLogin(mode) {
-const m = mode || ‘login’;
-const modal = document.getElementById(‘auth-modal’);
-modal.style.display = ‘flex’;
-setAuthMode(m);
-}
-function closeAuth() {
-document.getElementById(‘auth-modal’).style.display = ‘none’;
-}
-function setAuthMode(mode) {
-const title = document.getElementById(‘auth-title’);
-const submitBtn = document.getElementById(‘auth-submit’);
-const nameGroup = document.getElementById(‘auth-name-group’);
-const switchEl = document.getElementById(‘auth-switch’);
-if (!title) return;
-if (mode === ‘signup’) {
-title.textContent = ‘Join the Sisterhood’;
-submitBtn.textContent = ‘Create Account’;
-nameGroup.style.display = ‘block’;
-switchEl.innerHTML = ‘Already a member? <a href="#" onclick="openLogin(\'login\'); return false;">Log in</a>’;
-submitBtn.onclick = async () => {
-const name = document.getElementById(‘auth-name’).value;
-const email = document.getElementById(‘auth-email’).value;
-const password = document.getElementById(‘auth-password’).value;
-if (!name || !email || !password) { showToast(‘Please fill in all fields’); return; }
-const { data, error } = await _supabase.auth.signUp({ email, password });
-if (error) { showToast(‘Error: ’ + error.message); return; }
-if (data.user) {
-await _supabase.from(‘profiles’).insert({
-id: data.user.id, name: name,
-handle: email.split(’@’)[0], membership_tier: ‘free’
-});
-closeAuth();
-showToast(‘Welcome! Check your email to confirm ✦’);
-}
-};
-} else {
-title.textContent = ‘Welcome Back, Sis’;
-submitBtn.textContent = ‘Log In’;
-nameGroup.style.display = ‘none’;
-switchEl.innerHTML = ‘New here? <a href="#" onclick="openLogin(\'signup\'); return false;">Join the Sisterhood</a>’;
-submitBtn.onclick = async () => {
-const email = document.getElementById(‘auth-email’).value;
-const password = document.getElementById(‘auth-password’).value;
-if (!email || !password) { showToast(‘Please fill in all fields’); return; }
-const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-if (error) { showToast(’Error: ’ + error.message); return; }
-if (data.session) {
-showToast(‘Welcome back, sis ✦’);
-setTimeout(() => window.location.href = ‘/app.html’, 1000);
-}
-};
-}
-}
-let toastTimer;
-function showToast(msg) {
-const t = document.getElementById(‘toast’);
-if (!t) return;
-t.textContent = msg;
-t.classList.add(‘show’);
-clearTimeout(toastTimer);
-toastTimer = setTimeout(() => t.classList.remove(‘show’), 3000);
-}
+  function openAgreements() {
+    const modal = document.getElementById('agreements-modal');
+    modal.style.display = 'flex';
+  }
+  function closeAgreements() {
+    document.getElementById('agreements-modal').style.display = 'none';
+  }
+  function toggleAgreeBtn() {
+    document.getElementById('agree-btn').disabled = !document.getElementById('agree-check').checked;
+  }
+  function handleAgree() {
+    closeAgreements();
+    setTimeout(() => openLogin('signup'), 200);
+  }
+  function openLogin(mode) {
+    const m = mode || 'login';
+    const modal = document.getElementById('auth-modal');
+    modal.style.display = 'flex';
+    setAuthMode(m);
+  }
+  function closeAuth() {
+    document.getElementById('auth-modal').style.display = 'none';
+  }
+  function setAuthMode(mode) {
+    const title = document.getElementById('auth-title');
+    const submitBtn = document.getElementById('auth-submit');
+    const nameGroup = document.getElementById('auth-name-group');
+    const switchEl = document.getElementById('auth-switch');
+    if (!title) return;
+    if (mode === 'signup') {
+      title.textContent = 'Join the Sisterhood';
+      submitBtn.textContent = 'Create Account';
+      nameGroup.style.display = 'block';
+      switchEl.innerHTML = 'Already a member? <a href="#" onclick="openLogin(\'login\'); return false;">Log in</a>';
+      submitBtn.onclick = async () => {
+        const name = document.getElementById('auth-name').value;
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        if (!name || !email || !password) { showToast('Please fill in all fields'); return; }
+        const { data, error } = await _supabase.auth.signUp({ email, password });
+        if (error) { showToast('Error: ' + error.message); return; }
+        if (data.user) {
+          await _supabase.from('profiles').insert({
+            id: data.user.id, name: name,
+            handle: email.split('@')[0], membership_tier: 'free'
+          });
+          closeAuth();
+          showToast('Welcome! Check your email to confirm ✦');
+        }
+      };
+    } else {
+      title.textContent = 'Welcome Back, Sis';
+      submitBtn.textContent = 'Log In';
+      nameGroup.style.display = 'none';
+      switchEl.innerHTML = 'New here? <a href="#" onclick="openLogin(\'signup\'); return false;">Join the Sisterhood</a>';
+      submitBtn.onclick = async () => {
+        const email = document.getElementById('auth-email').value;
+        const password = document.getElementById('auth-password').value;
+        if (!email || !password) { showToast('Please fill in all fields'); return; }
+        const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) { showToast('Error: ' + error.message); return; }
+        if (data.session) {
+          showToast('Welcome back, sis ✦');
+          setTimeout(() => window.location.href = '/app.html', 1000);
+        }
+      };
+    }
+  }
+  let toastTimer;
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+  }
 </script>
-
 <style>
 :root {
   --terra: #C4622D;
@@ -622,16 +620,13 @@ footer {
   footer { flex-direction: column; text-align: center; padding: 32px 24px; }
 }
 </style>
-
 </head>
 <body>
 
 <!-- TOAST -->
-
 <div class="toast" id="toast"></div>
 
 <!-- AGREEMENTS MODAL -->
-
 <div class="modal-overlay" id="agreements-modal">
   <div class="modal">
     <div class="modal-title">Community Agreements</div>
@@ -681,7 +676,6 @@ footer {
 </div>
 
 <!-- AUTH MODAL -->
-
 <div class="modal-overlay" id="auth-modal">
   <div class="modal">
     <div class="auth-modal-title" id="auth-title">Join the Sisterhood</div>
@@ -705,13 +699,11 @@ footer {
 </div>
 
 <!-- FLOATING JOIN BUTTON -->
-
 <button class="floating-join" id="floating-join" onclick="openAgreements()">
   <span>✦</span> Join Free
 </button>
 
 <!-- NAV -->
-
 <nav>
   <div class="nav-logo">Sisterhood<span>(verb)</span></div>
   <div class="nav-actions">
@@ -721,7 +713,6 @@ footer {
 </nav>
 
 <!-- HERO -->
-
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="hero-ornament">✦ &nbsp; You Are Home &nbsp; ✦</div>
@@ -741,14 +732,12 @@ footer {
 </section>
 
 <!-- QUOTE -->
-
 <section class="quote-section">
   <p class="quote-text">"Sisterhood(verb): loving yourself and your kin with ancestral abundance."</p>
   <div class="quote-author">— Tayllor Oyewole-Davis, Founder</div>
 </section>
 
 <!-- WHAT IS THIS -->
-
 <section class="what-section">
   <div class="what-inner">
     <div>
@@ -792,7 +781,6 @@ footer {
 </section>
 
 <!-- CIRCLES -->
-
 <section class="circles-section">
   <div class="section-header">
     <div class="section-label">Where you belong</div>
@@ -833,7 +821,6 @@ footer {
 </section>
 
 <!-- PRICING -->
-
 <section class="pricing-section">
   <div class="section-label" style="color:var(--terra)">Founding Season</div>
   <h2 class="section-title" style="color:var(--deep);font-family:'Cormorant Garamond',serif;font-size:clamp(2rem,4vw,3rem);font-weight:300;">Simple, honest <em style="color:var(--terra);font-style:italic;">pricing</em></h2>
@@ -858,7 +845,6 @@ footer {
 </section>
 
 <!-- FINAL CTA -->
-
 <section class="final-section">
   <h2 class="final-title">
     Your sisters are
@@ -871,7 +857,6 @@ footer {
 </section>
 
 <!-- FOOTER -->
-
 <footer>
   <div class="footer-logo">Sisterhood<span>(verb)</span> Community</div>
   <div class="footer-links">
@@ -910,6 +895,5 @@ footer {
     }
   });
 </script>
-
 </body>
 </html>
