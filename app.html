@@ -24,15 +24,38 @@
       currentUser = session.user;
       updateNavForUser(currentUser);
       loadFeed();
+      loadJoinedCircles();
     }
     _supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
         currentUser = session.user;
         updateNavForUser(currentUser);
         loadFeed();
+        loadJoinedCircles();
       } else {
         currentUser = null;
         updateNavForGuest();
+      }
+    });
+  }
+
+  async function loadJoinedCircles() {
+    if (!currentUser) return;
+    const { data: memberships } = await _supabase
+      .from('circle_members')
+      .select('circle_name')
+      .eq('user_id', currentUser.id);
+    if (!memberships) return;
+    const joined = memberships.map(m => m.circle_name);
+    document.querySelectorAll('.join-btn').forEach(btn => {
+      const onclickAttr = btn.getAttribute('onclick') || '';
+      const match = onclickAttr.match(/toggleJoin\(this,\s*'([^']+)'\)/);
+      if (match && joined.includes(match[1])) {
+        btn.classList.add('joined');
+        btn.textContent = 'Joined ✦';
+      } else if (match && !joined.includes(match[1])) {
+        btn.classList.remove('joined');
+        btn.textContent = 'Join';
       }
     });
   }
@@ -332,6 +355,27 @@
     selectedGifUrl = null;
     document.getElementById('gif-preview').style.display = 'none';
     document.getElementById('gif-preview-img').src = '';
+  }
+
+  async function loadJoinedCircles() {
+    if (!currentUser) return;
+    const { data: memberships } = await _supabase
+      .from('circle_members')
+      .select('circle_name')
+      .eq('user_id', currentUser.id);
+    if (!memberships) return;
+    const joinedNames = memberships.map(m => m.circle_name);
+    // Update all join buttons on circles page
+    document.querySelectorAll('.join-btn').forEach(btn => {
+      const circleName = btn.getAttribute('onclick')?.match(/toggleJoin\(this,\s*'([^']+)'\)/)?.[1];
+      if (circleName && joinedNames.includes(circleName)) {
+        btn.classList.add('joined');
+        btn.textContent = 'Joined ✦';
+      } else if (circleName) {
+        btn.classList.remove('joined');
+        btn.textContent = 'Join';
+      }
+    });
   }
 
   // ── CIRCLE DATA ──
@@ -2035,16 +2079,21 @@
     const { error: uploadError } = await _supabase.storage
       .from('avatars')
       .upload(filePath, file, { upsert: true });
-    if (uploadError) { showToast('Upload failed — try again'); return; }
+    if (uploadError) { showToast('Upload failed: ' + uploadError.message); return; }
     const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
-    const avatarUrl = data.publicUrl;
-    await _supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
-    // Update display
+    const avatarUrl = data.publicUrl + '?t=' + Date.now();
+    const { error: updateError } = await _supabase
+      .from('profiles')
+      .update({ avatar_url: avatarUrl })
+      .eq('id', currentUser.id);
+    if (updateError) { showToast('Save failed: ' + updateError.message); return; }
     const avatarEl = document.getElementById('profile-avatar-display');
-    avatarEl.style.backgroundImage = `url(${avatarUrl})`;
-    avatarEl.style.backgroundSize = 'cover';
-    avatarEl.style.backgroundPosition = 'center';
-    avatarEl.textContent = '';
+    if (avatarEl) {
+      avatarEl.style.backgroundImage = `url(${avatarUrl})`;
+      avatarEl.style.backgroundSize = 'cover';
+      avatarEl.style.backgroundPosition = 'center';
+      avatarEl.textContent = '';
+    }
     showToast('Profile photo updated ✦');
   }
 
@@ -2057,15 +2106,20 @@
     const { error: uploadError } = await _supabase.storage
       .from('avatars')
       .upload(filePath, file, { upsert: true });
-    if (uploadError) { showToast('Upload failed — try again'); return; }
+    if (uploadError) { showToast('Upload failed: ' + uploadError.message); return; }
     const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
-    const bannerUrl = data.publicUrl;
-    await _supabase.from('profiles').update({ banner_url: bannerUrl }).eq('id', currentUser.id);
-    // Update display
+    const bannerUrl = data.publicUrl + '?t=' + Date.now();
+    const { error: updateError } = await _supabase
+      .from('profiles')
+      .update({ banner_url: bannerUrl })
+      .eq('id', currentUser.id);
+    if (updateError) { showToast('Save failed: ' + updateError.message); return; }
     const bannerEl = document.getElementById('profile-banner');
-    bannerEl.style.backgroundImage = `url(${bannerUrl})`;
-    bannerEl.style.backgroundSize = 'cover';
-    bannerEl.style.backgroundPosition = 'center';
+    if (bannerEl) {
+      bannerEl.style.backgroundImage = `url(${bannerUrl})`;
+      bannerEl.style.backgroundSize = 'cover';
+      bannerEl.style.backgroundPosition = 'center';
+    }
     showToast('Banner photo updated ✦');
   }
 
@@ -2099,6 +2153,9 @@
     if (name === 'profile') {
       loadProfile();
       loadProfilePhotos();
+    }
+    if (name === 'circles') {
+      loadJoinedCircles();
     }
   }
 
