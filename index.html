@@ -9,7 +9,13 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // ── ALL FUNCTIONS DEFINED EARLY SO BUTTONS CAN USE THEM ──
+  // ── SUPABASE INITIALIZED FIRST ──
+  const _supabase = window.supabase.createClient(
+    'https://cqiymqekdtewnorojlus.supabase.co',
+    'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
+  );
+
+// ── ALL FUNCTIONS DEFINED EARLY SO BUTTONS CAN USE THEM ──
 
 function openAgreements() {
 const modal = document.getElementById(‘agreements-modal’);
@@ -876,11 +882,6 @@ footer {
 </footer>
 
 <script>
-  const _supabase = window.supabase.createClient(
-    'https://cqiymqekdtewnorojlus.supabase.co',
-    'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
-  );
-
   // Check if already logged in
   window.addEventListener('load', async () => {
     const { data: { session } } = await _supabase.auth.getSession();
