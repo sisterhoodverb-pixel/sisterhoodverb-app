@@ -66,9 +66,23 @@
       joinBtn.textContent = 'My Account';
       joinBtn.onclick = () => showView('profile', joinBtn);
     }
-    // Show logout button
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.style.display = 'block';
+    // Update composer avatar with real user initial
+    loadUserInitial();
+  }
+
+  async function loadUserInitial() {
+    if (!currentUser) return;
+    const { data: profile } = await _supabase
+      .from('profiles').select('name').eq('id', currentUser.id).single();
+    const name = profile?.name || currentUser.email?.split('@')[0] || 'T';
+    const initial = name.charAt(0).toUpperCase();
+    // Update all composer avatars
+    const composerAvatars = document.querySelectorAll('.post-composer .avatar, #circle-composer-avatar');
+    composerAvatars.forEach(a => a.textContent = initial);
+    // Store name for use in posts
+    window._currentUserName = name;
   }
 
   function updateNavForGuest() {
@@ -134,7 +148,7 @@
     const feed = document.getElementById('feed-posts');
     feed.innerHTML = '';
     posts.forEach((post, i) => {
-      const name = profileMap[post.user_id] || 'Sister';
+      const name = profileMap[post.user_id] || (post.user_id === currentUser?.id ? (window._currentUserName || 'You') : 'Sister');
       const initial = name.charAt(0).toUpperCase();
       const time = timeAgo(post.created_at);
 
@@ -459,7 +473,7 @@
 
     feed.innerHTML = '';
     posts.forEach((post, i) => {
-      const name = profileMap[post.user_id] || 'Sister';
+      const name = profileMap[post.user_id] || (post.user_id === currentUser?.id ? (window._currentUserName || 'You') : 'Sister');
       const initial = name.charAt(0).toUpperCase();
       const time = timeAgo(post.created_at);
       let textContent = post.content || '';
