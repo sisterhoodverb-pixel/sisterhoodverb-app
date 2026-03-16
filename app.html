@@ -273,15 +273,15 @@
     if (profile) {
       document.querySelector('.profile-name').textContent = profile.name || 'Sister';
       document.querySelector('.profile-handle').textContent = profile.handle || '@sister';
-      if (profile.bio) document.querySelector('.profile-bio').textContent = profile.bio;
-      // Update form fields safely by finding them within the profile view
+      document.querySelector('.profile-bio').textContent = profile.bio || 'Tell your sisters a little about yourself...';
       const profileView = document.getElementById('view-profile');
       if (profileView) {
         const inputs = profileView.querySelectorAll('.form-input');
         if (inputs[0]) inputs[0].value = profile.name || '';
+        if (inputs[1]) inputs[1].value = profile.bio || '';
         if (inputs[2]) inputs[2].value = profile.location || '';
         if (inputs[3]) inputs[3].value = currentUser.email || '';
-        if (inputs[1]) inputs[1].value = profile.bio || '';
+        if (inputs[4]) inputs[4].value = profile.membership_tier === 'paid' ? 'Full Member ✦' : 'Free Member';
       }
     }
 
@@ -1938,21 +1938,15 @@
     </div>
   </div>
   <div class="profile-info">
-    <div class="profile-name">Tayllor Oyewole-Davis</div>
-    <div class="profile-handle">@sisterhoodverb · Founder & Facilitator</div>
-    <div class="profile-bio">Poet, writer, mother, educator, sister. Using creativity and community to hold space for women to be, explore, embrace, and celebrate themselves.</div>
+    <div class="profile-name">Sister</div>
+    <div class="profile-handle">@member</div>
+    <div class="profile-bio">Tell your sisters a little about yourself...</div>
     <div class="profile-stats">
       <div class="stat"><div class="stat-num" id="stat-circles">0</div><div class="stat-label">Circles</div></div>
       <div class="stat"><div class="stat-num" id="stat-events">0</div><div class="stat-label">Events</div></div>
       <div class="stat"><div class="stat-num" id="stat-posts">0</div><div class="stat-label">Posts</div></div>
     </div>
-    <div class="profile-tags">
-      <span class="profile-tag">Motherhood</span>
-      <span class="profile-tag">Storytelling</span>
-      <span class="profile-tag">Arts Education</span>
-      <span class="profile-tag">Healing</span>
-      <span class="profile-tag">Los Angeles</span>
-    </div>
+    <div class="profile-tags" id="profile-tags-container"></div>
   </div>
 
   <div style="max-width:720px;margin:0 auto;padding:0 32px 40px;">
@@ -1960,23 +1954,23 @@
     <div class="settings-form" style="padding:0;">
       <div class="form-group">
         <label class="form-label">Display Name</label>
-        <input class="form-input" type="text" value="Tayllor Oyewole-Davis">
+        <input class="form-input" type="text" placeholder="Your name" value="">
       </div>
       <div class="form-group">
         <label class="form-label">Bio</label>
-        <textarea class="form-input" rows="3" style="resize:vertical">Poet, writer, mother, educator, sister.</textarea>
+        <textarea class="form-input" rows="3" style="resize:vertical" placeholder="Tell your sisters about yourself..."></textarea>
       </div>
       <div class="form-group">
         <label class="form-label">Location</label>
-        <input class="form-input" type="text" value="Los Angeles, CA">
+        <input class="form-input" type="text" placeholder="Where are you based?" value="">
       </div>
       <div class="form-group">
         <label class="form-label">Email</label>
-        <input class="form-input" type="email" value="sisterhoodverb@gmail.com">
+        <input class="form-input" type="email" placeholder="your@email.com" value="">
       </div>
       <div class="form-group">
         <label class="form-label">Membership Plan</label>
-        <input class="form-input" type="text" value="Founder Member ✦" readonly style="background:var(--cream);color:var(--terra);font-weight:600;">
+        <input class="form-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--terra);font-weight:600;">
       </div>
       <button class="save-btn" onclick="saveProfile()">Save Changes</button>
     </div>
@@ -2100,14 +2094,14 @@
     if (!currentUser || !input.files[0]) return;
     const file = input.files[0];
     const fileExt = file.name.split('.').pop();
-    const filePath = `${currentUser.id}/avatar.${fileExt}`;
+    const filePath = `${currentUser.id}-avatar.${fileExt}`;
     showToast('Uploading photo...');
     const { error: uploadError } = await _supabase.storage
       .from('avatars')
       .upload(filePath, file, { upsert: true });
     if (uploadError) { showToast('Upload failed: ' + uploadError.message); return; }
     const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
-    const avatarUrl = data.publicUrl + '?t=' + Date.now();
+    const avatarUrl = data.publicUrl;
     const { error: updateError } = await _supabase
       .from('profiles')
       .update({ avatar_url: avatarUrl })
@@ -2116,7 +2110,7 @@
     if (updateError) { showToast('Save failed: ' + updateError.message); return; }
     const avatarEl = document.getElementById('profile-avatar-display');
     if (avatarEl) {
-      avatarEl.style.backgroundImage = `url(${avatarUrl})`;
+      avatarEl.style.backgroundImage = `url(${avatarUrl}?t=${Date.now()})`;
       avatarEl.style.backgroundSize = 'cover';
       avatarEl.style.backgroundPosition = 'center';
       avatarEl.style.overflow = 'hidden';
@@ -2129,14 +2123,14 @@
     if (!currentUser || !input.files[0]) return;
     const file = input.files[0];
     const fileExt = file.name.split('.').pop();
-    const filePath = `${currentUser.id}/banner.${fileExt}`;
+    const filePath = `${currentUser.id}-banner.${fileExt}`;
     showToast('Uploading banner...');
-    const { error: uploadError } = await _supabase.storage
+    const { data: uploadData, error: uploadError } = await _supabase.storage
       .from('avatars')
       .upload(filePath, file, { upsert: true });
     if (uploadError) { showToast('Upload failed: ' + uploadError.message); return; }
     const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
-    const bannerUrl = data.publicUrl + '?t=' + Date.now();
+    const bannerUrl = data.publicUrl;
     const { error: updateError } = await _supabase
       .from('profiles')
       .update({ banner_url: bannerUrl })
@@ -2145,7 +2139,7 @@
     if (updateError) { showToast('Save failed: ' + updateError.message); return; }
     const bannerImg = document.getElementById('profile-banner-img');
     if (bannerImg) {
-      bannerImg.src = bannerUrl;
+      bannerImg.src = bannerUrl + '?t=' + Date.now();
       bannerImg.style.display = 'block';
     }
     showToast('Banner photo updated ✦');
