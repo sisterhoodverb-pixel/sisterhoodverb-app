@@ -162,7 +162,7 @@
     <div class="preview-section" id="preview-section">
       <div class="preview-label">📧 Email Preview</div>
       <div class="preview-email">
-        <div class="preview-from">From: Sisterhood(verb) &lt;sisterhoodverb@gmail.com&gt;</div>
+        <div class="preview-from">From: Sisterhood(verb) &lt;<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="592a302a2d3c2b3136363d2f3c2b3b193e34383035773a3634">[email&#160;protected]</a>&gt;</div>
         <div class="preview-subject" id="preview-subject">—</div>
         <hr style="border:none;border-top:1px solid rgba(196,98,45,0.1);margin:12px 0;">
         <div class="preview-body" id="preview-body">—</div>
@@ -183,14 +183,14 @@
   </div>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
   const SUPABASE_URL = 'https://cqiymqekdtewnorojlus.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381';
   const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/send-daily-email`;
 
   // Change this to your chosen admin password
   const ADMIN_PASSWORD = 'sisterhoodverb2026';
-  let adminSecret = '';
+  let adminSecret = 'sisterhoodverb2026';
   let emailHistory = JSON.parse(localStorage.getItem('sv_email_history') || '[]');
   let totalSent = parseInt(localStorage.getItem('sv_total_sent') || '0');
 
@@ -328,11 +328,4 @@
     }
     list.innerHTML = emailHistory.slice(0, 5).map(h => `
       <div class="history-item">
-        <div class="history-subject">${h.subject}</div>
-        <div class="history-meta">${new Date(h.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} · ${h.sent} sisters</div>
-      </div>
-    `).join('');
-  }
-</script>
-</body>
-</html>
+        <div class="history-subject">${h.s
