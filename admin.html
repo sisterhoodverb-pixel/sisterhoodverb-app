@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sisterhood(verb) — Admin Email</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --terra: #C4622D; --deep: #1C1410; --cream: #F5EFE6;
+    --gold: #D4A853; --sage: #7A8C6E; --warm-white: #FBF7F2;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--warm-white); color: var(--deep); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+
+  .container { max-width: 680px; width: 100%; }
+
+  .header { text-align: center; margin-bottom: 40px; }
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--terra); margin-bottom: 8px; }
+  .logo em { font-style: italic; font-weight: 400; }
+  .subtitle { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(28,20,16,0.4); }
+
+  .card { background: white; border: 1px solid rgba(196,98,45,0.12); border-radius: 6px; padding: 40px; box-shadow: 0 4px 30px rgba(28,20,16,0.06); }
+
+  .section-label { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--terra); margin-bottom: 20px; display: flex; align-items: center; gap: 12px; }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: rgba(196,98,45,0.15); }
+
+  .form-group { margin-bottom: 24px; }
+  .form-label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(28,20,16,0.5); margin-bottom: 8px; font-weight: 500; }
+  .form-input {
+    width: 100%; padding: 12px 16px;
+    border: 1.5px solid rgba(196,98,45,0.2);
+    border-radius: 3px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; color: var(--deep); background: white;
+    outline: none; transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--terra); }
+  textarea.form-input { resize: vertical; min-height: 180px; line-height: 1.7; }
+
+  .prompts { margin-bottom: 24px; }
+  .prompts-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(28,20,16,0.5); margin-bottom: 10px; font-weight: 500; display: block; }
+  .prompt-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .prompt-chip {
+    padding: 6px 14px; border-radius: 20px;
+    border: 1.5px solid rgba(196,98,45,0.2);
+    background: transparent; cursor: pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
+    color: rgba(28,20,16,0.6); transition: all 0.2s;
+  }
+  .prompt-chip:hover { background: var(--cream); border-color: var(--terra); color: var(--terra); }
+
+  .preview-section { background: var(--cream); border-radius: 4px; padding: 24px; margin-bottom: 24px; display: none; }
+  .preview-section.show { display: block; }
+  .preview-label { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--terra); margin-bottom: 16px; font-weight: 600; }
+  .preview-email { background: white; border-radius: 4px; padding: 24px; border: 1px solid rgba(196,98,45,0.1); }
+  .preview-from { font-size: 0.78rem; color: rgba(28,20,16,0.45); margin-bottom: 4px; }
+  .preview-subject { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; margin-bottom: 16px; }
+  .preview-body { font-size: 0.88rem; line-height: 1.8; color: rgba(28,20,16,0.75); white-space: pre-wrap; }
+
+  .actions { display: flex; gap: 12px; }
+  .btn-preview {
+    background: none; border: 1.5px solid var(--terra); color: var(--terra);
+    padding: 12px 24px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 600; cursor: pointer;
+    border-radius: 2px; transition: all 0.2s; flex: 1;
+  }
+  .btn-preview:hover { background: var(--cream); }
+  .btn-send {
+    background: var(--terra); color: white; border: none;
+    padding: 12px 32px; font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; cursor: pointer; border-radius: 2px;
+    transition: background 0.2s; flex: 2;
+  }
+  .btn-send:hover { background: #a8501f; }
+  .btn-send:disabled { background: rgba(196,98,45,0.3); cursor: not-allowed; }
+
+  .status { margin-top: 20px; padding: 16px; border-radius: 3px; display: none; font-size: 0.88rem; line-height: 1.6; }
+  .status.success { background: rgba(122,140,110,0.1); border: 1px solid rgba(122,140,110,0.3); color: var(--sage); display: block; }
+  .status.error { background: rgba(196,98,45,0.08); border: 1px solid rgba(196,98,45,0.2); color: var(--terra); display: block; }
+
+  .login-card { background: white; border: 1px solid rgba(196,98,45,0.12); border-radius: 6px; padding: 40px; box-shadow: 0 4px 30px rgba(28,20,16,0.06); max-width: 400px; margin: 0 auto; }
+  .login-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; margin-bottom: 6px; }
+  .login-sub { font-size: 0.82rem; color: rgba(28,20,16,0.5); margin-bottom: 28px; }
+
+  .history { margin-top: 32px; }
+  .history-item { padding: 14px 0; border-bottom: 1px solid rgba(196,98,45,0.08); }
+  .history-item:last-child { border-bottom: none; }
+  .history-subject { font-size: 0.88rem; font-weight: 600; margin-bottom: 3px; }
+  .history-meta { font-size: 0.75rem; color: rgba(28,20,16,0.4); }
+
+  .stats-row { display: flex; gap: 16px; margin-bottom: 28px; }
+  .stat-box { flex: 1; background: var(--cream); border-radius: 4px; padding: 16px; text-align: center; }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: var(--terra); font-weight: 700; }
+  .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(28,20,16,0.45); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="container" id="login-view">
+  <div class="header">
+    <div class="logo">Sisterhood<em>(verb)</em></div>
+    <div class="subtitle">Admin Panel</div>
+  </div>
+  <div class="login-card">
+    <div class="login-title">Welcome back, Tayllor</div>
+    <div class="login-sub">Enter your admin password to access the email panel</div>
+    <div class="form-group">
+      <label class="form-label">Admin Password</label>
+      <input class="form-input" type="password" id="admin-password" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') login()">
+    </div>
+    <button class="btn-send" style="width:100%;" onclick="login()">Enter ✦</button>
+    <div class="status" id="login-status"></div>
+  </div>
+</div>
+
+<div class="container" id="admin-view" style="display:none;">
+  <div class="header">
+    <div class="logo">Sisterhood<em>(verb)</em></div>
+    <div class="subtitle">Daily Email Admin ✦</div>
+  </div>
+
+  <div class="card">
+    <div class="stats-row" id="stats-row">
+      <div class="stat-box">
+        <div class="stat-num" id="member-count">—</div>
+        <div class="stat-label">Members</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="emails-sent">—</div>
+        <div class="stat-label">Emails Sent</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="last-sent">—</div>
+        <div class="stat-label">Last Sent</div>
+      </div>
+    </div>
+
+    <div class="section-label">Compose Daily Email</div>
+
+    <div class="form-group">
+      <label class="form-label">Subject Line</label>
+      <input class="form-input" type="text" id="email-subject" placeholder="Today's inspiration for your sisters...">
+    </div>
+
+    <div class="prompts">
+      <span class="prompts-label">Quick Prompts — click to use</span>
+      <div class="prompt-chips">
+        <button class="prompt-chip" onclick="usePrompt(this)">✍🏾 Writing prompt</button>
+        <button class="prompt-chip" onclick="usePrompt(this)">🌺 Affirmation</button>
+        <button class="prompt-chip" onclick="usePrompt(this)">💬 Discussion question</button>
+        <button class="prompt-chip" onclick="usePrompt(this)">🙏🏾 Gratitude practice</button>
+        <button class="prompt-chip" onclick="usePrompt(this)">🔥 Challenge of the week</button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Message</label>
+      <textarea class="form-input" id="email-message" placeholder="Write your daily inspiration, prompt, or message for your sisters..."></textarea>
+    </div>
+
+    <div class="preview-section" id="preview-section">
+      <div class="preview-label">📧 Email Preview</div>
+      <div class="preview-email">
+        <div class="preview-from">From: Sisterhood(verb) &lt;sisterhoodverb@gmail.com&gt;</div>
+        <div class="preview-subject" id="preview-subject">—</div>
+        <hr style="border:none;border-top:1px solid rgba(196,98,45,0.1);margin:12px 0;">
+        <div class="preview-body" id="preview-body">—</div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn-preview" onclick="previewEmail()">Preview</button>
+      <button class="btn-send" id="send-btn" onclick="sendEmail()">Send to All Sisters ✦</button>
+    </div>
+
+    <div class="status" id="send-status"></div>
+
+    <div class="history" id="email-history">
+      <div class="section-label" style="margin-top:8px;">Recent Emails</div>
+      <div id="history-list"><div style="font-size:0.82rem;color:rgba(28,20,16,0.4);">No emails sent yet</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://cqiymqekdtewnorojlus.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381';
+  const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/send-daily-email`;
+
+  // Change this to your chosen admin password
+  const ADMIN_PASSWORD = 'sisterhoodverb2026';
+  let adminSecret = '';
+  let emailHistory = JSON.parse(localStorage.getItem('sv_email_history') || '[]');
+  let totalSent = parseInt(localStorage.getItem('sv_total_sent') || '0');
+
+  function login() {
+    const pwd = document.getElementById('admin-password').value;
+    if (pwd === ADMIN_PASSWORD) {
+      adminSecret = pwd;
+      document.getElementById('login-view').style.display = 'none';
+      document.getElementById('admin-view').style.display = 'block';
+      loadStats();
+      renderHistory();
+    } else {
+      const s = document.getElementById('login-status');
+      s.className = 'status error';
+      s.textContent = 'Incorrect password — try again';
+    }
+  }
+
+  async function loadStats() {
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=id`, {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+      });
+      const data = await res.json();
+      document.getElementById('member-count').textContent = data.length || 0;
+    } catch(e) {
+      document.getElementById('member-count').textContent = '—';
+    }
+    document.getElementById('emails-sent').textContent = totalSent;
+    document.getElementById('last-sent').textContent = emailHistory.length > 0
+      ? new Date(emailHistory[0].date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      : 'Never';
+  }
+
+  const promptTemplates = {
+    '✍🏾 Writing prompt': {
+      subject: '✦ Today\'s Writing Prompt from Sisterhood(verb)',
+      message: 'Good morning, sis ✦\n\nToday\'s writing prompt:\n\n"Write about a moment when you chose yourself. What did it cost you? What did it give you?"\n\nTake 10 minutes, find a quiet space, and let the words come. Share your response in the community feed — we\'re here to witness you.\n\nWith love,\nTayllor & the Sisterhood(verb) community'
+    },
+    '🌺 Affirmation': {
+      subject: '🌺 A Morning Affirmation Just for You',
+      message: 'Good morning, sis ✦\n\nToday\'s affirmation:\n\n"I am not behind. I am not too much. I am not too little. I am exactly where I am supposed to be, becoming who I was always meant to be."\n\nSay it out loud. Mean it.\n\nWith love,\nTayllor & the Sisterhood(verb) community'
+    },
+    '💬 Discussion question': {
+      subject: '💬 A Question for Your Sisters Today',
+      message: 'Good morning, sis ✦\n\nThis week\'s discussion question:\n\n"What does rest look like for you right now — and what\'s getting in the way of it?"\n\nHead to the community feed and share your honest answer. You might be surprised how many sisters feel the same.\n\nWith love,\nTayllor & the Sisterhood(verb) community'
+    },
+    '🙏🏾 Gratitude practice': {
+      subject: '🙏🏾 Your Morning Gratitude Practice',
+      message: 'Good morning, sis ✦\n\nBefore you check your phone, before the day takes over — take 2 minutes for this:\n\nName three things:\n1. Something about your body you\'re grateful for\n2. Something hard you survived\n3. Something small that brings you joy\n\nThis is your practice. You deserve it.\n\nWith love,\nTayllor & the Sisterhood(verb) community'
+    },
+    '🔥 Challenge of the week': {
+      subject: '🔥 Your Sisterhood(verb) Challenge This Week',
+      message: 'Good morning, sis ✦\n\nThis week\'s challenge:\n\n"Do one thing this week that is purely for your joy — not productive, not for anyone else, not justified. Just joy."\n\nShare what you did in the community. We want to celebrate you.\n\nWith love,\nTayllor & the Sisterhood(verb) community'
+    }
+  };
+
+  function usePrompt(btn) {
+    const template = promptTemplates[btn.textContent.trim()];
+    if (template) {
+      document.getElementById('email-subject').value = template.subject;
+      document.getElementById('email-message').value = template.message;
+      previewEmail();
+    }
+  }
+
+  function previewEmail() {
+    const subject = document.getElementById('email-subject').value.trim();
+    const message = document.getElementById('email-message').value.trim();
+    if (!subject || !message) {
+      showStatus('send-status', 'error', 'Please fill in both subject and message before previewing');
+      return;
+    }
+    document.getElementById('preview-subject').textContent = subject;
+    document.getElementById('preview-body').textContent = message;
+    document.getElementById('preview-section').classList.add('show');
+    document.getElementById('send-status').style.display = 'none';
+  }
+
+  async function sendEmail() {
+    const subject = document.getElementById('email-subject').value.trim();
+    const message = document.getElementById('email-message').value.trim();
+    if (!subject || !message) {
+      showStatus('send-status', 'error', 'Please fill in both subject and message');
+      return;
+    }
+
+    const btn = document.getElementById('send-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending... ✦';
+    showStatus('send-status', 'success', 'Sending to all sisters — this may take a moment...');
+
+    try {
+      const res = await fetch(EDGE_FUNCTION_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_KEY}` },
+        body: JSON.stringify({ subject, message, adminSecret })
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        totalSent += data.sent;
+        localStorage.setItem('sv_total_sent', totalSent.toString());
+        emailHistory.unshift({ subject, date: new Date().toISOString(), sent: data.sent });
+        localStorage.setItem('sv_email_history', JSON.stringify(emailHistory.slice(0, 20)));
+
+        showStatus('send-status', 'success', `✦ Sent successfully to ${data.sent} sisters! ${data.failed > 0 ? `(${data.failed} failed)` : ''}`);
+        document.getElementById('email-subject').value = '';
+        document.getElementById('email-message').value = '';
+        document.getElementById('preview-section').classList.remove('show');
+        loadStats();
+        renderHistory();
+      } else {
+        showStatus('send-status', 'error', 'Error: ' + (data.error || 'Something went wrong'));
+      }
+    } catch(e) {
+      showStatus('send-status', 'error', 'Could not connect — check your internet connection');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Send to All Sisters ✦';
+  }
+
+  function showStatus(id, type, msg) {
+    const el = document.getElementById(id);
+    el.className = 'status ' + type;
+    el.textContent = msg;
+  }
+
+  function renderHistory() {
+    const list = document.getElementById('history-list');
+    if (emailHistory.length === 0) {
+      list.innerHTML = '<div style="font-size:0.82rem;color:rgba(28,20,16,0.4);">No emails sent yet</div>';
+      return;
+    }
+    list.innerHTML = emailHistory.slice(0, 5).map(h => `
+      <div class="history-item">
+        <div class="history-subject">${h.subject}</div>
+        <div class="history-meta">${new Date(h.date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })} · ${h.sent} sisters</div>
+      </div>
+    `).join('');
+  }
+</script>
+</body>
+</html>
