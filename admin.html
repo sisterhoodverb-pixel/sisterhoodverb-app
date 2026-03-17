@@ -107,9 +107,9 @@
     <div class="login-sub">Enter your admin password to access the email panel</div>
     <div class="form-group">
       <label class="form-label">Admin Password</label>
-      <input class="form-input" type="password" id="admin-password" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') login()">
+      <input class="form-input" type="password" id="admin-password" placeholder="Enter admin password">
     </div>
-    <button class="btn-send" style="width:100%;" onclick="login()">Enter ✦</button>
+    <button class="btn-send" style="width:100%;" id="login-btn">Enter ✦</button>
     <div class="status" id="login-status"></div>
   </div>
 </div>
@@ -171,7 +171,7 @@
 
     <div class="actions">
       <button class="btn-preview" onclick="previewEmail()">Preview</button>
-      <button class="btn-send" id="send-btn" onclick="sendEmail()">Send to All Sisters ✦</button>
+      <button class="btn-send" id="send-btn">Send to All Sisters ✦</button>
     </div>
 
     <div class="status" id="send-status"></div>
@@ -183,7 +183,15 @@
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js">  // Attach event listeners after DOM loads
+  window.addEventListener('load', function() {
+    document.getElementById('login-btn').addEventListener('click', login);
+    document.getElementById('admin-password').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') login();
+    });
+    document.getElementById('send-btn').addEventListener('click', sendEmail);
+  });
+</script><script>
   const SUPABASE_URL = 'https://cqiymqekdtewnorojlus.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381';
   const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/send-daily-email`;
