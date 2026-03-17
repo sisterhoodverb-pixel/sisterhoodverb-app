@@ -9,13 +9,11 @@
 <script src="https://cdn.memberstack.com/scripts/webcomponents/memberstack.js" data-memberstack-app="pk_715b7f282440a2747b11" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // ── SUPABASE CONNECTION ──
   const _supabase = window.supabase.createClient(
     'https://cqiymqekdtewnorojlus.supabase.co',
     'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
   );
 
-  // ── AUTH STATE ──
   let currentUser = null;
 
   async function initAuth() {
@@ -23,7 +21,7 @@
     if (session) {
       currentUser = session.user;
       updateNavForUser(currentUser);
-      await loadUserInitial(); // wait for name before loading feed
+      await loadUserInitial();
       loadFeed();
       loadJoinedCircles();
     }
@@ -44,9 +42,7 @@
   async function loadJoinedCircles() {
     if (!currentUser) return;
     const { data: memberships } = await _supabase
-      .from('circle_members')
-      .select('circle_name')
-      .eq('user_id', currentUser.id);
+      .from('circle_members').select('circle_name').eq('user_id', currentUser.id);
     if (!memberships) return;
     const joined = memberships.map(m => m.circle_name);
     document.querySelectorAll('.join-btn[data-circle]').forEach(btn => {
@@ -69,7 +65,6 @@
     }
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) logoutBtn.style.display = 'block';
-    // Update composer avatar with real user initial
     loadUserInitial();
   }
 
@@ -79,10 +74,8 @@
       .from('profiles').select('name').eq('id', currentUser.id).single();
     const name = profile?.name || currentUser.email?.split('@')[0] || 'T';
     const initial = name.charAt(0).toUpperCase();
-    // Update all composer avatars
     const composerAvatars = document.querySelectorAll('.post-composer .avatar, #circle-composer-avatar');
     composerAvatars.forEach(a => a.textContent = initial);
-    // Store name for use in posts
     window._currentUserName = name;
   }
 
@@ -101,10 +94,8 @@
     if (error) { showToast('Error: ' + error.message); return; }
     if (data.user) {
       await _supabase.from('profiles').insert({
-        id: data.user.id,
-        name: name,
-        handle: '@' + email.split('@')[0],
-        membership_tier: 'free'
+        id: data.user.id, name: name,
+        handle: '@' + email.split('@')[0], membership_tier: 'free'
       });
       showToast('Welcome to the Sisterhood ✦');
       closeAuthModal();
@@ -114,16 +105,13 @@
   async function signIn(email, password) {
     const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
     if (error) { showToast('Error: ' + error.message); return; }
-    // Create profile if it doesn't exist yet
     if (data.user) {
       const { data: existing } = await _supabase
         .from('profiles').select('id').eq('id', data.user.id).single();
       if (!existing) {
         await _supabase.from('profiles').insert({
-          id: data.user.id,
-          name: email.split('@')[0],
-          handle: '@' + email.split('@')[0],
-          membership_tier: 'free'
+          id: data.user.id, name: email.split('@')[0],
+          handle: '@' + email.split('@')[0], membership_tier: 'free'
         });
       }
     }
@@ -140,33 +128,25 @@
   // ── FEED ──
   async function loadFeed() {
     const { data: posts, error } = await _supabase
-      .from('posts')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(20);
-
+      .from('posts').select('*').order('created_at', { ascending: false }).limit(20);
     if (error) { console.log('Feed error:', error); return; }
     if (!posts || posts.length === 0) return;
 
-    // Load profile names separately
     const userIds = [...new Set(posts.map(p => p.user_id).filter(Boolean))];
     let profileMap = {};
     if (userIds.length > 0) {
       const { data: profiles } = await _supabase
-        .from('profiles')
-        .select('id, name')
-        .in('id', userIds);
-      if (profiles) profiles.forEach(p => profileMap[p.id] = p.name);
+        .from('profiles').select('id, name, avatar_url').in('id', userIds);
+      if (profiles) profiles.forEach(p => profileMap[p.id] = p);
     }
 
     const feed = document.getElementById('feed-posts');
     feed.innerHTML = '';
     posts.forEach((post, i) => {
-      const name = profileMap[post.user_id] || (post.user_id === currentUser?.id ? (window._currentUserName || 'You') : 'Sister');
+      const profile = profileMap[post.user_id];
+      const name = profile?.name || (post.user_id === currentUser?.id ? (window._currentUserName || 'You') : 'Sister');
       const initial = name.charAt(0).toUpperCase();
       const time = timeAgo(post.created_at);
-
-      // Parse GIF from content
       let textContent = post.content || '';
       let gifHtml = '';
       const gifMatch = textContent.match(/\[gif:(.*?)\]/);
@@ -175,14 +155,21 @@
         textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
       }
 
+      let avatarHtml = '';
+      if (profile?.avatar_url) {
+        avatarHtml = `<div class="avatar member-avatar-btn" onclick="openMemberProfile('${post.user_id}')" style="background-image:url('${profile.avatar_url}');background-size:cover;background-position:center;cursor:pointer;"></div>`;
+      } else {
+        avatarHtml = `<div class="avatar member-avatar-btn" onclick="openMemberProfile('${post.user_id}')" style="background:linear-gradient(135deg,var(--terra),var(--gold));cursor:pointer;">${initial}</div>`;
+      }
+
       const card = document.createElement('div');
       card.className = 'feed-card';
       card.style.animationDelay = (i * 0.1) + 's';
       card.innerHTML = `
         <div class="card-header">
-          <div class="avatar" style="background:linear-gradient(135deg,var(--terra),var(--gold))">${initial}</div>
+          ${avatarHtml}
           <div class="card-meta">
-            <div class="card-name">${name}</div>
+            <div class="card-name member-name-btn" onclick="openMemberProfile('${post.user_id}')" style="cursor:pointer;">${name}</div>
             <div class="card-time">${time}</div>
           </div>
           <span class="card-tag">${post.tag || 'Community'}</span>
@@ -201,16 +188,9 @@
     if (!currentUser) { openAuthModal('login'); return; }
     showToast('Sharing... ✦');
     const { data, error } = await _supabase.from('posts').insert({
-      user_id: currentUser.id,
-      content: content,
-      tag: 'Community',
-      likes: 0
+      user_id: currentUser.id, content: content, tag: 'Community', likes: 0
     }).select();
-    if (error) {
-      console.log('Post error:', error);
-      showToast('Could not post: ' + error.message);
-      return;
-    }
+    if (error) { showToast('Could not post: ' + error.message); return; }
     showToast('Shared with your sisters ✦');
     loadFeed();
   }
@@ -226,38 +206,110 @@
     }
   }
 
+  // ── MEMBER PROFILE MODAL ──
+  async function openMemberProfile(userId) {
+    if (!userId) return;
+    const modal = document.getElementById('member-profile-modal');
+    modal.classList.add('open');
+    document.getElementById('mp-loading').style.display = 'block';
+    document.getElementById('mp-content').style.display = 'none';
+
+    // Fetch profile
+    const { data: profile } = await _supabase
+      .from('profiles').select('*').eq('id', userId).single();
+
+    // Fetch circles
+    const { data: circles } = await _supabase
+      .from('circle_members').select('circle_name').eq('user_id', userId);
+
+    // Fetch posts
+    const { data: posts } = await _supabase
+      .from('posts').select('*').eq('user_id', userId)
+      .order('created_at', { ascending: false }).limit(5);
+
+    document.getElementById('mp-loading').style.display = 'none';
+    document.getElementById('mp-content').style.display = 'block';
+
+    const name = profile?.name || 'Sister';
+    const handle = profile?.handle || '';
+    const bio = profile?.bio || '';
+    const initial = name.charAt(0).toUpperCase();
+
+    // Banner
+    const bannerEl = document.getElementById('mp-banner');
+    bannerEl.style.background = 'linear-gradient(135deg, #1C1410, #C4622D)';
+    if (profile?.banner_url) {
+      bannerEl.style.backgroundImage = `url('${profile.banner_url}')`;
+      bannerEl.style.backgroundSize = 'cover';
+      bannerEl.style.backgroundPosition = 'center';
+    }
+
+    // Avatar
+    const avatarEl = document.getElementById('mp-avatar');
+    avatarEl.textContent = initial;
+    avatarEl.style.backgroundImage = '';
+    if (profile?.avatar_url) {
+      avatarEl.style.backgroundImage = `url('${profile.avatar_url}')`;
+      avatarEl.style.backgroundSize = 'cover';
+      avatarEl.style.backgroundPosition = 'center';
+      avatarEl.textContent = '';
+    }
+
+    document.getElementById('mp-name').textContent = name;
+    document.getElementById('mp-handle').textContent = handle ? (handle.startsWith('@') ? handle : '@' + handle) : '';
+    document.getElementById('mp-bio').textContent = bio || 'No bio yet.';
+
+    // Circles
+    const circlesEl = document.getElementById('mp-circles');
+    if (circles && circles.length > 0) {
+      circlesEl.innerHTML = circles.map(c =>
+        `<span class="profile-tag">${c.circle_name}</span>`
+      ).join('');
+    } else {
+      circlesEl.innerHTML = '<span style="font-size:0.82rem;color:rgba(28,20,16,0.4);">No circles joined yet</span>';
+    }
+
+    // Posts
+    const postsEl = document.getElementById('mp-posts');
+    if (posts && posts.length > 0) {
+      postsEl.innerHTML = posts.map(post => {
+        let textContent = post.content || '';
+        const gifMatch = textContent.match(/\[gif:(.*?)\]/);
+        if (gifMatch) textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
+        return `<div class="mp-post-item">
+          <div class="mp-post-text">${textContent || '[GIF]'}</div>
+          <div class="mp-post-time">${timeAgo(post.created_at)}</div>
+        </div>`;
+      }).join('');
+    } else {
+      postsEl.innerHTML = '<div style="font-size:0.82rem;color:rgba(28,20,16,0.4);padding:12px 0;">No posts yet</div>';
+    }
+  }
+
+  function closeMemberProfile() {
+    document.getElementById('member-profile-modal').classList.remove('open');
+  }
+
   // ── CIRCLES ──
   async function joinCircleDB(circleName, btn) {
     if (!currentUser) { openAuthModal('login'); return; }
     const joined = btn.classList.contains('joined');
     if (!joined) {
-      await _supabase.from('circle_members').insert({
-        user_id: currentUser.id,
-        circle_name: circleName
-      });
-      btn.classList.add('joined');
-      btn.textContent = 'Joined ✦';
+      await _supabase.from('circle_members').insert({ user_id: currentUser.id, circle_name: circleName });
+      btn.classList.add('joined'); btn.textContent = 'Joined ✦';
       showToast('Joined ' + circleName + ' ✦');
     } else {
-      await _supabase.from('circle_members')
-        .delete()
-        .eq('user_id', currentUser.id)
-        .eq('circle_name', circleName);
-      btn.classList.remove('joined');
-      btn.textContent = 'Join';
+      await _supabase.from('circle_members').delete()
+        .eq('user_id', currentUser.id).eq('circle_name', circleName);
+      btn.classList.remove('joined'); btn.textContent = 'Join';
       showToast('Left ' + circleName);
     }
   }
 
-  // ── EVENT REGISTRATION ──
   async function registerEventDB(eventName, btn) {
     if (!currentUser) { openAuthModal('login'); return; }
-    await _supabase.from('event_registrations').insert({
-      user_id: currentUser.id,
-      event_name: eventName
-    });
-    btn.classList.add('registered');
-    btn.textContent = 'Registered ✦';
+    await _supabase.from('event_registrations').insert({ user_id: currentUser.id, event_name: eventName });
+    btn.classList.add('registered'); btn.textContent = 'Registered ✦';
     showToast('Registered for ' + eventName + ' ✦');
   }
 
@@ -265,11 +317,7 @@
   async function loadProfile() {
     if (!currentUser) return;
     const { data: profile } = await _supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', currentUser.id)
-      .single();
-
+      .from('profiles').select('*').eq('id', currentUser.id).single();
     if (profile) {
       document.querySelector('.profile-name').textContent = profile.name || 'Sister';
       document.querySelector('.profile-handle').textContent = profile.handle || '@sister';
@@ -284,15 +332,9 @@
         if (inputs[4]) inputs[4].value = profile.membership_tier === 'paid' ? 'Full Member ✦' : 'Free Member';
       }
     }
-
-    // Load stats
-    const { data: circleData } = await _supabase
-      .from('circle_members').select('id').eq('user_id', currentUser.id);
-    const { data: eventData } = await _supabase
-      .from('event_registrations').select('id').eq('user_id', currentUser.id);
-    const { data: postData } = await _supabase
-      .from('posts').select('id').eq('user_id', currentUser.id);
-
+    const { data: circleData } = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
+    const { data: eventData } = await _supabase.from('event_registrations').select('id').eq('user_id', currentUser.id);
+    const { data: postData } = await _supabase.from('posts').select('id').eq('user_id', currentUser.id);
     const circleEl = document.getElementById('stat-circles');
     const eventEl = document.getElementById('stat-events');
     const postEl = document.getElementById('stat-posts');
@@ -361,21 +403,17 @@
       return;
     }
     grid.innerHTML = gifs.map(gif => `
-      <img class="gif-item"
-        src="${gif.images.fixed_height_small.url}"
+      <img class="gif-item" src="${gif.images.fixed_height_small.url}"
         data-full="${gif.images.fixed_height.url}"
-        onclick="selectGif('${gif.images.fixed_height.url}')"
-        alt="${gif.title}">`
+        onclick="selectGif('${gif.images.fixed_height.url}')" alt="${gif.title}">`
     ).join('');
   }
 
   function selectGif(url) {
     selectedGifUrl = url;
     const preview = document.getElementById('gif-preview');
-    const previewImg = document.getElementById('gif-preview-img');
-    previewImg.src = url;
+    document.getElementById('gif-preview-img').src = url;
     preview.style.display = 'block';
-    // Close picker
     document.getElementById('gif-picker').classList.remove('open');
     document.getElementById('gif-btn').classList.remove('active');
     showToast('GIF selected ✦');
@@ -391,10 +429,10 @@
   const circleData = {
     'Motherhood Speaks': { icon: '🌺', desc: 'A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.', bg: 'linear-gradient(135deg, #1C1410, #C4622D)' },
     'Writers Block? I Think Not!': { icon: '✍🏾', desc: 'Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.', bg: 'linear-gradient(135deg, #1C1410, #2d5a3d)' },
-    'Burnout to Bloom': { icon: '🔥', desc: 'For educators, organizers, activists, and artists trying to exist in the world and keep your cup full. We get it. We got you.', bg: 'linear-gradient(135deg, #1C1410, #8B4513)' },
+    'Burnout to Bloom': { icon: '🔥', desc: 'For educators, organizers, activists, and artists trying to exist in the world and keep your cup full.', bg: 'linear-gradient(135deg, #1C1410, #8B4513)' },
     'Speak Poet!': { icon: '🎤', desc: 'For slam poets, performers, and spoken word artists looking for space to share your work and connect with poets who get it.', bg: 'linear-gradient(135deg, #1C1410, #2d1f3d)' },
-    'Healing As We Hustle': { icon: '💼', desc: 'Divesting from oppressive systems doesn\'t mean we don\'t get to follow our dreams. Space for entrepreneurs to connect, network, and get support.', bg: 'linear-gradient(135deg, #1C1410, #3d2b5c)' },
-    'The Travel Girlies': { icon: '✈️', desc: 'Trip tips, resources, warnings, and storytelling. Whether your passport is booked and busy or the plans are still living in the group chat.', bg: 'linear-gradient(135deg, #1C1410, #1a3a4a)' }
+    'Healing As We Hustle': { icon: '💼', desc: 'Space for entrepreneurs to connect, network, and get support.', bg: 'linear-gradient(135deg, #1C1410, #3d2b5c)' },
+    'The Travel Girlies': { icon: '✈️', desc: 'Trip tips, resources, warnings, and storytelling.', bg: 'linear-gradient(135deg, #1C1410, #1a3a4a)' }
   };
 
   let currentCircle = null;
@@ -404,36 +442,23 @@
   async function openCircle(name) {
     currentCircle = name;
     const data = circleData[name] || { icon: '✦', desc: '', bg: 'var(--deep)' };
-
-    // Update header
     document.getElementById('circle-detail-icon').textContent = data.icon;
     document.getElementById('circle-detail-name').textContent = name;
     document.getElementById('circle-detail-desc').textContent = data.desc;
     document.getElementById('circle-detail-header').style.background = data.bg;
-
-    // Check if joined
     if (currentUser) {
       const { data: membership } = await _supabase
-        .from('circle_members')
-        .select('id')
-        .eq('user_id', currentUser.id)
-        .eq('circle_name', name)
-        .single();
+        .from('circle_members').select('id')
+        .eq('user_id', currentUser.id).eq('circle_name', name).single();
       circleIsJoined = !!membership;
       const joinBtn = document.getElementById('circle-detail-join-btn');
       joinBtn.textContent = circleIsJoined ? 'Joined ✦' : 'Join Circle';
       joinBtn.className = circleIsJoined ? 'circle-join-btn joined' : 'circle-join-btn';
       document.getElementById('circle-composer').style.display = circleIsJoined ? 'block' : 'none';
     }
-
-    // Get member count
-    const { count } = await _supabase
-      .from('circle_members')
-      .select('*', { count: 'exact' })
-      .eq('circle_name', name);
+    const { count } = await _supabase.from('circle_members')
+      .select('*', { count: 'exact' }).eq('circle_name', name);
     document.getElementById('circle-detail-count').textContent = (count || 0) + ' sisters';
-
-    // Load circle feed
     loadCircleFeed(name);
     showView('circle-detail', null);
   }
@@ -441,34 +466,26 @@
   async function loadCircleFeed(circleName) {
     const feed = document.getElementById('circle-feed-posts');
     feed.innerHTML = '<div class="circle-empty"><span class="circle-empty-icon">✦</span>Loading posts...</div>';
-
     const { data: posts, error } = await _supabase
-      .from('posts')
-      .select('*')
-      .eq('circle', circleName)
-      .order('created_at', { ascending: false })
-      .limit(30);
-
+      .from('posts').select('*').eq('circle', circleName)
+      .order('created_at', { ascending: false }).limit(30);
     if (error || !posts || posts.length === 0) {
       feed.innerHTML = `<div class="circle-empty">
         <span class="circle-empty-icon">${circleData[circleName]?.icon || '✦'}</span>
-        No posts yet — be the first to share in this Circle!
-      </div>`;
+        No posts yet — be the first to share in this Circle!</div>`;
       return;
     }
-
-    // Load profile names
     const userIds = [...new Set(posts.map(p => p.user_id).filter(Boolean))];
     let profileMap = {};
     if (userIds.length > 0) {
       const { data: profiles } = await _supabase
-        .from('profiles').select('id, name').in('id', userIds);
-      if (profiles) profiles.forEach(p => profileMap[p.id] = p.name);
+        .from('profiles').select('id, name, avatar_url').in('id', userIds);
+      if (profiles) profiles.forEach(p => profileMap[p.id] = p);
     }
-
     feed.innerHTML = '';
     posts.forEach((post, i) => {
-      const name = profileMap[post.user_id] || (post.user_id === currentUser?.id ? (window._currentUserName || 'You') : 'Sister');
+      const profile = profileMap[post.user_id];
+      const name = profile?.name || (post.user_id === currentUser?.id ? (window._currentUserName || 'You') : 'Sister');
       const initial = name.charAt(0).toUpperCase();
       const time = timeAgo(post.created_at);
       let textContent = post.content || '';
@@ -478,14 +495,20 @@
         gifHtml = `<img src="${gifMatch[1]}" style="max-width:100%;border-radius:4px;margin-top:10px;max-height:200px;object-fit:cover;" alt="GIF">`;
         textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
       }
+      let avatarHtml = '';
+      if (profile?.avatar_url) {
+        avatarHtml = `<div class="avatar member-avatar-btn" onclick="openMemberProfile('${post.user_id}')" style="background-image:url('${profile.avatar_url}');background-size:cover;background-position:center;cursor:pointer;"></div>`;
+      } else {
+        avatarHtml = `<div class="avatar member-avatar-btn" onclick="openMemberProfile('${post.user_id}')" style="background:linear-gradient(135deg,var(--terra),var(--gold));cursor:pointer;">${initial}</div>`;
+      }
       const card = document.createElement('div');
       card.className = 'feed-card';
       card.style.animationDelay = (i * 0.1) + 's';
       card.innerHTML = `
         <div class="card-header">
-          <div class="avatar" style="background:linear-gradient(135deg,var(--terra),var(--gold))">${initial}</div>
+          ${avatarHtml}
           <div class="card-meta">
-            <div class="card-name">${name}</div>
+            <div class="card-name member-name-btn" onclick="openMemberProfile('${post.user_id}')" style="cursor:pointer;">${name}</div>
             <div class="card-time">${time}</div>
           </div>
         </div>
@@ -504,16 +527,12 @@
     const btn = document.getElementById('circle-detail-join-btn');
     if (!circleIsJoined) {
       await _supabase.from('circle_members').insert({ user_id: currentUser.id, circle_name: currentCircle });
-      circleIsJoined = true;
-      btn.textContent = 'Joined ✦';
-      btn.className = 'circle-join-btn joined';
+      circleIsJoined = true; btn.textContent = 'Joined ✦'; btn.className = 'circle-join-btn joined';
       document.getElementById('circle-composer').style.display = 'block';
       showToast('Joined ' + currentCircle + ' ✦');
     } else {
       await _supabase.from('circle_members').delete().eq('user_id', currentUser.id).eq('circle_name', currentCircle);
-      circleIsJoined = false;
-      btn.textContent = 'Join Circle';
-      btn.className = 'circle-join-btn';
+      circleIsJoined = false; btn.textContent = 'Join Circle'; btn.className = 'circle-join-btn';
       document.getElementById('circle-composer').style.display = 'none';
       showToast('Left ' + currentCircle);
     }
@@ -527,15 +546,11 @@
     const content = text + (selectedCircleGifUrl ? `\n[gif:${selectedCircleGifUrl}]` : '');
     showToast('Sharing... ✦');
     const { error } = await _supabase.from('posts').insert({
-      user_id: currentUser.id,
-      content: content,
-      circle: currentCircle,
-      tag: currentCircle,
-      likes: 0
+      user_id: currentUser.id, content: content,
+      circle: currentCircle, tag: currentCircle, likes: 0
     });
     if (error) { showToast('Could not post: ' + error.message); return; }
-    ta.value = '';
-    removeCircleGif();
+    ta.value = ''; removeCircleGif();
     showToast('Shared with the circle ✦');
     loadCircleFeed(currentCircle);
   }
@@ -543,11 +558,8 @@
   function toggleCircleGifPicker() {
     const picker = document.getElementById('circle-gif-picker');
     const btn = document.getElementById('circle-gif-btn');
-    picker.classList.toggle('open');
-    btn.classList.toggle('active');
-    if (picker.classList.contains('open')) {
-      document.getElementById('circle-gif-search').focus();
-    }
+    picker.classList.toggle('open'); btn.classList.toggle('active');
+    if (picker.classList.contains('open')) document.getElementById('circle-gif-search').focus();
   }
 
   async function searchCircleGifs() {
@@ -561,21 +573,17 @@
       grid.innerHTML = '';
       data.data.forEach(gif => {
         const img = document.createElement('img');
-        img.className = 'gif-item';
-        img.src = gif.images.fixed_height_small.url;
+        img.className = 'gif-item'; img.src = gif.images.fixed_height_small.url;
         img.onclick = () => selectCircleGif(gif.images.fixed_height.url);
         grid.appendChild(img);
       });
-    } catch (e) {
-      grid.innerHTML = '<div class="gif-loading">Could not load GIFs</div>';
-    }
+    } catch (e) { grid.innerHTML = '<div class="gif-loading">Could not load GIFs</div>'; }
   }
 
   function selectCircleGif(url) {
     selectedCircleGifUrl = url;
-    const preview = document.getElementById('circle-gif-preview');
     document.getElementById('circle-gif-preview-img').src = url;
-    preview.style.display = 'block';
+    document.getElementById('circle-gif-preview').style.display = 'block';
     document.getElementById('circle-gif-picker').classList.remove('open');
     document.getElementById('circle-gif-btn').classList.remove('active');
     showToast('GIF selected ✦');
@@ -587,10 +595,8 @@
     document.getElementById('circle-gif-preview-img').src = '';
   }
 
-  // ── HELPERS ──
   function timeAgo(dateStr) {
-    const now = new Date();
-    const date = new Date(dateStr);
+    const now = new Date(); const date = new Date(dateStr);
     const diff = Math.floor((now - date) / 1000);
     if (diff < 60) return 'Just now';
     if (diff < 3600) return Math.floor(diff/60) + ' min ago';
@@ -598,17 +604,13 @@
     return Math.floor(diff/86400) + ' days ago';
   }
 
-  // ── AUTH MODAL ──
   function openAuthModal(mode = 'signup') {
     closeModal();
-    const modal = document.getElementById('auth-modal');
-    modal.classList.add('open');
+    document.getElementById('auth-modal').classList.add('open');
     setAuthMode(mode);
   }
 
-  function closeAuthModal() {
-    document.getElementById('auth-modal').classList.remove('open');
-  }
+  function closeAuthModal() { document.getElementById('auth-modal').classList.remove('open'); }
 
   function setAuthMode(mode) {
     const title = document.getElementById('auth-title');
@@ -639,330 +641,127 @@
     }
   }
 
-  // Init on load
   window.addEventListener('load', initAuth);
 </script>
 <style>
   :root {
-    --terra: #C4622D;
-    --deep: #1C1410;
-    --cream: #F5EFE6;
-    --gold: #D4A853;
-    --sage: #7A8C6E;
-    --blush: #E8C4A0;
-    --warm-white: #FBF7F2;
+    --terra: #C4622D; --deep: #1C1410; --cream: #F5EFE6;
+    --gold: #D4A853; --sage: #7A8C6E; --blush: #E8C4A0; --warm-white: #FBF7F2;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--warm-white);
-    color: var(--deep);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* ── GRAIN OVERLAY ── */
+  body { font-family: 'DM Sans', sans-serif; background: var(--warm-white); color: var(--deep); min-height: 100vh; overflow-x: hidden; }
   body::before {
-    content: '';
-    position: fixed; inset: 0;
+    content: ''; position: fixed; inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
     pointer-events: none; z-index: 1000; opacity: 0.4;
   }
-
-  /* ── NAV ── */
   nav {
     position: fixed; top: 0; left: 0; right: 0;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 40px;
-    background: rgba(251,247,242,0.92);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(196,98,45,0.12);
-    z-index: 100;
+    padding: 18px 40px; background: rgba(251,247,242,0.92);
+    backdrop-filter: blur(12px); border-bottom: 1px solid rgba(196,98,45,0.12); z-index: 100;
   }
-  .nav-logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.1rem; font-weight: 700;
-    color: var(--terra);
-    letter-spacing: 0.02em;
-  }
+  .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--terra); letter-spacing: 0.02em; }
   .nav-logo span { font-style: italic; font-weight: 400; }
   .nav-links { display: flex; gap: 32px; align-items: center; }
-  .nav-links a {
-    text-decoration: none; color: var(--deep);
-    font-size: 0.85rem; font-weight: 500;
-    letter-spacing: 0.04em; text-transform: uppercase;
-    opacity: 0.7; transition: opacity 0.2s;
-  }
+  .nav-links a { text-decoration: none; color: var(--deep); font-size: 0.85rem; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; transition: opacity 0.2s; }
   .nav-links a:hover { opacity: 1; }
   .nav-links a.active { color: var(--terra); opacity: 1; }
-  .nav-cta {
-    background: var(--terra); color: white !important;
-    padding: 8px 20px; border-radius: 2px;
-    opacity: 1 !important; font-weight: 500 !important;
-    transition: background 0.2s !important;
-  }
+  .nav-cta { background: var(--terra); color: white !important; padding: 8px 20px; border-radius: 2px; opacity: 1 !important; font-weight: 500 !important; transition: background 0.2s !important; }
   .nav-cta:hover { background: #a8501f !important; }
   .hamburger { display: none; cursor: pointer; flex-direction: column; gap: 5px; }
   .hamburger span { width: 24px; height: 2px; background: var(--deep); display: block; transition: 0.3s; }
-
-  /* ── VIEWS ── */
   .view { display: none; padding-top: 72px; min-height: 100vh; }
   .view.active { display: block; }
-
-  /* ══════════════════════════════════
-     HOME / FEED
-  ══════════════════════════════════ */
-  .home-hero {
-    background: var(--deep);
-    padding: 80px 40px 60px;
-    position: relative; overflow: hidden;
-  }
-  .home-hero::after {
-    content: '';
-    position: absolute; bottom: -2px; left: 0; right: 0; height: 40px;
-    background: var(--warm-white);
-    clip-path: ellipse(55% 100% at 50% 100%);
-  }
-  .hero-greeting {
-    font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--gold); margin-bottom: 12px;
-  }
-  .hero-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    color: var(--cream); line-height: 1.15;
-    max-width: 600px; margin-bottom: 20px;
-  }
+  .home-hero { background: var(--deep); padding: 80px 40px 60px; position: relative; overflow: hidden; }
+  .home-hero::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 40px; background: var(--warm-white); clip-path: ellipse(55% 100% at 50% 100%); }
+  .hero-greeting { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
+  .hero-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 5vw, 3.5rem); color: var(--cream); line-height: 1.15; max-width: 600px; margin-bottom: 20px; }
   .hero-title em { color: var(--gold); font-style: italic; }
-  .hero-sub {
-    color: rgba(245,239,230,0.85); font-size: 0.95rem;
-    max-width: 480px; line-height: 1.7;
-  }
-  .hero-accent {
-    position: absolute; right: 40px; top: 50%;
-    transform: translateY(-50%);
-    width: 180px; height: 180px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(196,98,45,0.3), transparent 70%);
-    border: 1px solid rgba(212,168,83,0.2);
-  }
-
+  .hero-sub { color: rgba(245,239,230,0.85); font-size: 0.95rem; max-width: 480px; line-height: 1.7; }
+  .hero-accent { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(196,98,45,0.3), transparent 70%); border: 1px solid rgba(212,168,83,0.2); }
   .feed-section { padding: 48px 40px; max-width: 900px; margin: 0 auto; }
-  .section-label {
-    font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
-    color: var(--terra); margin-bottom: 24px;
-    display: flex; align-items: center; gap: 12px;
-  }
+  .section-label { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--terra); margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
   .section-label::after { content: ''; flex: 1; height: 1px; background: rgba(196,98,45,0.2); }
-
-  .post-composer {
-    background: white;
-    border: 1px solid rgba(196,98,45,0.15);
-    border-radius: 4px; padding: 20px;
-    margin-bottom: 32px;
-    box-shadow: 0 2px 20px rgba(28,20,16,0.04);
-  }
+  .post-composer { background: white; border: 1px solid rgba(196,98,45,0.15); border-radius: 4px; padding: 20px; margin-bottom: 32px; box-shadow: 0 2px 20px rgba(28,20,16,0.04); }
   .composer-top { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
-  .avatar {
-    width: 40px; height: 40px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--terra), var(--gold));
-    display: flex; align-items: center; justify-content: center;
-    color: white; font-weight: 700; font-size: 0.85rem;
-    flex-shrink: 0; font-family: 'Playfair Display', serif;
-  }
-  .composer-input {
-    flex: 1; border: none; outline: none;
-    font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
-    color: var(--deep); resize: none;
-    background: transparent; line-height: 1.6;
-    placeholder-color: #999;
-  }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--terra), var(--gold)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; font-family: 'Playfair Display', serif; }
+  .composer-input { flex: 1; border: none; outline: none; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--deep); resize: none; background: transparent; line-height: 1.6; }
   .composer-actions { display: flex; justify-content: space-between; align-items: center; }
   .composer-tools { display: flex; gap: 8px; }
-  .tool-btn {
-    background: none; border: none; cursor: pointer;
-    padding: 6px 10px; border-radius: 2px;
-    font-size: 0.8rem; color: rgba(28,20,16,0.5);
-    transition: all 0.2s; font-family: 'DM Sans', sans-serif;
-  }
-  .tool-btn:hover { background: var(--cream); color: var(--terra); }
-  .tool-btn.active { background: var(--cream); color: var(--terra); }
-
-  /* ── GIF PICKER ── */
-  .gif-picker {
-    display: none; margin-top: 12px;
-    border: 1px solid rgba(196,98,45,0.2);
-    border-radius: 4px; overflow: hidden;
-    background: var(--cream);
-  }
+  .tool-btn { background: none; border: none; cursor: pointer; padding: 6px 10px; border-radius: 2px; font-size: 0.8rem; color: rgba(28,20,16,0.5); transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+  .tool-btn:hover, .tool-btn.active { background: var(--cream); color: var(--terra); }
+  .gif-picker { display: none; margin-top: 12px; border: 1px solid rgba(196,98,45,0.2); border-radius: 4px; overflow: hidden; background: var(--cream); }
   .gif-picker.open { display: block; }
-  .gif-search-bar {
-    display: flex; gap: 8px; padding: 10px;
-    border-bottom: 1px solid rgba(196,98,45,0.1);
-  }
-  .gif-search-input {
-    flex: 1; padding: 8px 12px; border: 1.5px solid rgba(196,98,45,0.2);
-    border-radius: 3px; font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem; color: var(--deep); outline: none;
-    background: white;
-  }
+  .gif-search-bar { display: flex; gap: 8px; padding: 10px; border-bottom: 1px solid rgba(196,98,45,0.1); }
+  .gif-search-input { flex: 1; padding: 8px 12px; border: 1.5px solid rgba(196,98,45,0.2); border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--deep); outline: none; background: white; }
   .gif-search-input:focus { border-color: var(--terra); }
-  .gif-search-btn {
-    background: var(--terra); color: white; border: none;
-    padding: 8px 16px; border-radius: 3px; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; font-size: 0.82rem;
-    font-weight: 500; transition: background 0.2s;
-  }
+  .gif-search-btn { background: var(--terra); color: white; border: none; padding: 8px 16px; border-radius: 3px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; transition: background 0.2s; }
   .gif-search-btn:hover { background: #a8501f; }
-  .gif-grid {
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    gap: 4px; padding: 8px; max-height: 200px; overflow-y: auto;
-  }
-  .gif-item {
-    width: 100%; aspect-ratio: 1; object-fit: cover;
-    border-radius: 3px; cursor: pointer; transition: opacity 0.2s;
-  }
+  .gif-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 8px; max-height: 200px; overflow-y: auto; }
+  .gif-item { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 3px; cursor: pointer; transition: opacity 0.2s; }
   .gif-item:hover { opacity: 0.8; }
-  .gif-loading {
-    text-align: center; padding: 20px;
-    font-size: 0.82rem; color: rgba(28,20,16,0.5);
-  }
-  .gif-preview {
-    margin-top: 10px; position: relative; display: none;
-  }
-  .gif-preview img {
-    max-width: 100%; border-radius: 4px;
-    max-height: 200px; object-fit: cover;
-  }
-  .gif-remove {
-    position: absolute; top: 6px; right: 6px;
-    background: rgba(28,20,16,0.7); color: white;
-    border: none; border-radius: 50%; width: 24px; height: 24px;
-    cursor: pointer; font-size: 0.8rem; display: flex;
-    align-items: center; justify-content: center;
-  }
-  .tool-btn {
-    background: none; border: none; cursor: pointer;
-    padding: 6px 10px; border-radius: 2px;
-    font-size: 0.8rem; color: rgba(28,20,16,0.5);
-    transition: all 0.2s; font-family: 'DM Sans', sans-serif;
-  }
-  .tool-btn:hover { background: var(--cream); color: var(--terra); }
-  .post-btn {
-    background: var(--terra); color: white;
-    border: none; cursor: pointer;
-    padding: 9px 22px; border-radius: 2px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
-    font-weight: 500; letter-spacing: 0.04em;
-    transition: background 0.2s;
-  }
+  .gif-loading { text-align: center; padding: 20px; font-size: 0.82rem; color: rgba(28,20,16,0.5); }
+  .gif-preview { margin-top: 10px; position: relative; display: none; }
+  .gif-preview img { max-width: 100%; border-radius: 4px; max-height: 200px; object-fit: cover; }
+  .gif-remove { position: absolute; top: 6px; right: 6px; background: rgba(28,20,16,0.7); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; }
+  .post-btn { background: var(--terra); color: white; border: none; cursor: pointer; padding: 9px 22px; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.04em; transition: background 0.2s; }
   .post-btn:hover { background: #a8501f; }
-
-  .feed-card {
-    background: white;
-    border: 1px solid rgba(196,98,45,0.1);
-    border-radius: 4px; padding: 24px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 20px rgba(28,20,16,0.04);
-    animation: fadeUp 0.4s ease both;
-  }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+  .feed-card { background: white; border: 1px solid rgba(196,98,45,0.1); border-radius: 4px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 20px rgba(28,20,16,0.04); animation: fadeUp 0.4s ease both; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
   .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
   .card-meta { flex: 1; }
-  .card-name {
-    font-weight: 600; font-size: 0.9rem; color: var(--deep);
-    font-family: 'Playfair Display', serif;
-  }
+  .card-name { font-weight: 600; font-size: 0.9rem; color: var(--deep); font-family: 'Playfair Display', serif; transition: color 0.2s; }
+  .card-name:hover { color: var(--terra); }
   .card-time { font-size: 0.75rem; color: rgba(28,20,16,0.45); margin-top: 2px; }
-  .card-tag {
-    font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase;
-    padding: 4px 10px; border-radius: 20px;
-    background: var(--cream); color: var(--terra); font-weight: 500;
-  }
+  .card-tag { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; background: var(--cream); color: var(--terra); font-weight: 500; }
   .card-body { font-size: 0.93rem; line-height: 1.75; color: rgba(28,20,16,0.8); margin-bottom: 18px; }
   .card-body strong { color: var(--terra); font-weight: 600; }
   .card-footer { display: flex; gap: 20px; padding-top: 14px; border-top: 1px solid rgba(196,98,45,0.08); }
-  .react-btn {
-    background: none; border: none; cursor: pointer;
-    display: flex; align-items: center; gap: 6px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
-    color: rgba(28,20,16,0.5); transition: all 0.2s; padding: 4px 0;
-  }
-  .react-btn:hover { color: var(--terra); }
-  .react-btn.liked { color: var(--terra); }
+  .react-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: rgba(28,20,16,0.5); transition: all 0.2s; padding: 4px 0; }
+  .react-btn:hover, .react-btn.liked { color: var(--terra); }
 
-  /* ══════════════════════════════════
-     CIRCLES
-  ══════════════════════════════════ */
-  .circles-hero {
-    padding: 60px 40px 40px;
-    background: linear-gradient(160deg, var(--cream) 0%, var(--warm-white) 100%);
-    border-bottom: 1px solid rgba(196,98,45,0.1);
-  }
-  .page-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(1.8rem, 4vw, 2.8rem);
-    line-height: 1.2; margin-bottom: 10px;
-  }
+  /* ── MEMBER PROFILE MODAL ── */
+  .member-profile-modal { max-width: 520px; padding: 0; overflow: hidden; }
+  .mp-banner { height: 120px; background: linear-gradient(135deg, #1C1410, #C4622D); position: relative; }
+  .mp-close-btn { position: absolute; top: 12px; right: 12px; background: rgba(28,20,16,0.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+  .mp-close-btn:hover { background: rgba(28,20,16,0.9); }
+  .mp-avatar-wrap { margin: -36px 0 0 24px; position: relative; width: fit-content; margin-bottom: 12px; }
+  .mp-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--terra), var(--gold)); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.6rem; font-weight: 700; font-family: 'Playfair Display', serif; border: 3px solid white; box-shadow: 0 4px 16px rgba(28,20,16,0.2); }
+  .mp-body { padding: 0 24px 24px; }
+  .mp-name { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 2px; }
+  .mp-handle { color: var(--terra); font-size: 0.82rem; margin-bottom: 10px; }
+  .mp-bio { font-size: 0.88rem; color: rgba(28,20,16,0.7); line-height: 1.7; margin-bottom: 20px; }
+  .mp-section-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--terra); margin-bottom: 10px; font-weight: 600; padding-bottom: 6px; border-bottom: 1px solid rgba(196,98,45,0.12); }
+  .mp-circles { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .mp-posts { margin-bottom: 8px; }
+  .mp-post-item { padding: 12px 0; border-bottom: 1px solid rgba(196,98,45,0.08); }
+  .mp-post-item:last-child { border-bottom: none; }
+  .mp-post-text { font-size: 0.86rem; color: rgba(28,20,16,0.75); line-height: 1.6; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .mp-post-time { font-size: 0.72rem; color: rgba(28,20,16,0.4); }
+  .mp-loading { padding: 40px; text-align: center; color: rgba(28,20,16,0.4); font-size: 0.88rem; }
+
+  .circles-hero { padding: 60px 40px 40px; background: linear-gradient(160deg, var(--cream) 0%, var(--warm-white) 100%); border-bottom: 1px solid rgba(196,98,45,0.1); }
+  .page-title { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); line-height: 1.2; margin-bottom: 10px; }
   .page-sub { color: rgba(28,20,16,0.6); font-size: 0.95rem; line-height: 1.7; max-width: 500px; }
-
   .circles-grid { padding: 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
-  .circle-card {
-    border-radius: 4px; overflow: hidden;
-    border: 1px solid rgba(196,98,45,0.12);
-    background: white;
-    box-shadow: 0 2px 20px rgba(28,20,16,0.05);
-    transition: transform 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-  }
+  .circle-card { border-radius: 4px; overflow: hidden; border: 1px solid rgba(196,98,45,0.12); background: white; box-shadow: 0 2px 20px rgba(28,20,16,0.05); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
   .circle-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(28,20,16,0.1); }
-  .circle-banner {
-    height: 90px; position: relative;
-    display: flex; align-items: center; justify-content: center;
-  }
+  .circle-banner { height: 90px; position: relative; display: flex; align-items: center; justify-content: center; }
   .circle-icon { font-size: 2.4rem; }
   .circle-body { padding: 20px; }
-  .circle-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.05rem; font-weight: 700; margin-bottom: 6px;
-  }
+  .circle-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
   .circle-desc { font-size: 0.83rem; color: rgba(28,20,16,0.6); line-height: 1.6; margin-bottom: 14px; }
   .circle-meta { display: flex; justify-content: space-between; align-items: center; }
   .circle-members { font-size: 0.75rem; color: rgba(28,20,16,0.45); }
-  .join-btn {
-    background: none; border: 1.5px solid var(--terra);
-    color: var(--terra); padding: 6px 16px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
-    font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-    cursor: pointer; border-radius: 2px; transition: all 0.2s;
-  }
+  .join-btn { background: none; border: 1.5px solid var(--terra); color: var(--terra); padding: 6px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.2s; }
   .join-btn:hover, .join-btn.joined { background: var(--terra); color: white; }
-
-  /* ══════════════════════════════════
-     EVENTS
-  ══════════════════════════════════ */
   .events-layout { display: grid; grid-template-columns: 1fr 320px; gap: 0; max-width: 1100px; margin: 0 auto; }
   .events-main { padding: 40px; border-right: 1px solid rgba(196,98,45,0.1); }
   .events-sidebar { padding: 40px 32px; }
-  .event-card {
-    display: flex; gap: 20px; padding: 22px;
-    background: white; border: 1px solid rgba(196,98,45,0.1);
-    border-radius: 4px; margin-bottom: 14px;
-    transition: box-shadow 0.2s; cursor: pointer;
-    box-shadow: 0 1px 12px rgba(28,20,16,0.04);
-  }
+  .event-card { display: flex; gap: 20px; padding: 22px; background: white; border: 1px solid rgba(196,98,45,0.1); border-radius: 4px; margin-bottom: 14px; transition: box-shadow 0.2s; cursor: pointer; box-shadow: 0 1px 12px rgba(28,20,16,0.04); }
   .event-card:hover { box-shadow: 0 6px 24px rgba(28,20,16,0.09); }
-  .event-date {
-    min-width: 56px; text-align: center;
-    background: var(--deep); color: var(--cream);
-    padding: 10px 8px; border-radius: 3px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-  }
+  .event-date { min-width: 56px; text-align: center; background: var(--deep); color: var(--cream); padding: 10px 8px; border-radius: 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
   .date-month { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold); }
   .date-day { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; line-height: 1; }
   .event-info { flex: 1; }
@@ -970,122 +769,44 @@
   .event-meta { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
   .event-detail { font-size: 0.78rem; color: rgba(28,20,16,0.5); display: flex; align-items: center; gap: 4px; }
   .event-desc { font-size: 0.85rem; color: rgba(28,20,16,0.65); line-height: 1.6; margin-bottom: 12px; }
-  .event-register {
-    background: var(--terra); color: white; border: none;
-    padding: 8px 20px; cursor: pointer; font-family: 'DM Sans', sans-serif;
-    font-size: 0.8rem; font-weight: 500; border-radius: 2px; transition: background 0.2s;
-  }
+  .event-register { background: var(--terra); color: white; border: none; padding: 8px 20px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500; border-radius: 2px; transition: background 0.2s; }
   .event-register:hover { background: #a8501f; }
   .event-register.registered { background: var(--sage); }
-
   .mini-cal { background: white; border: 1px solid rgba(196,98,45,0.1); border-radius: 4px; padding: 20px; margin-bottom: 20px; }
   .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
   .cal-title { font-family: 'Playfair Display', serif; font-size: 0.95rem; font-weight: 700; }
   .cal-nav { background: none; border: none; cursor: pointer; color: var(--terra); font-size: 1rem; padding: 4px 8px; }
   .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
   .cal-day-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(28,20,16,0.4); padding: 4px 0; }
-  .cal-day {
-    padding: 6px 4px; border-radius: 50%; font-size: 0.8rem;
-    cursor: pointer; transition: all 0.15s;
-  }
+  .cal-day { padding: 6px 4px; border-radius: 50%; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
   .cal-day:hover { background: var(--cream); }
   .cal-day.has-event { background: var(--blush); color: var(--terra); font-weight: 600; }
   .cal-day.today { background: var(--terra); color: white; font-weight: 700; }
-
-  /* ══════════════════════════════════
-     RESOURCES
-  ══════════════════════════════════ */
   .resources-layout { padding: 40px; max-width: 1000px; margin: 0 auto; }
   .resources-filter { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px; }
-  .filter-chip {
-    padding: 8px 18px; border-radius: 20px;
-    border: 1.5px solid rgba(196,98,45,0.25);
-    background: transparent; cursor: pointer;
-    font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
-    font-weight: 500; color: rgba(28,20,16,0.6);
-    transition: all 0.2s;
-  }
+  .filter-chip { padding: 8px 18px; border-radius: 20px; border: 1.5px solid rgba(196,98,45,0.25); background: transparent; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500; color: rgba(28,20,16,0.6); transition: all 0.2s; }
   .filter-chip:hover, .filter-chip.active { background: var(--terra); color: white; border-color: var(--terra); }
-
   .resources-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
-  .resource-card {
-    background: white; border: 1px solid rgba(196,98,45,0.1);
-    border-radius: 4px; overflow: hidden;
-    box-shadow: 0 1px 12px rgba(28,20,16,0.04);
-    transition: transform 0.2s, box-shadow 0.2s;
-    cursor: pointer;
-  }
+  .resource-card { background: white; border: 1px solid rgba(196,98,45,0.1); border-radius: 4px; overflow: hidden; box-shadow: 0 1px 12px rgba(28,20,16,0.04); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
   .resource-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(28,20,16,0.09); }
-  .resource-thumb {
-    height: 100px; display: flex; align-items: center; justify-content: center;
-    font-size: 2.5rem; position: relative;
-  }
-  .resource-type {
-    position: absolute; top: 10px; right: 10px;
-    font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em;
-    padding: 3px 8px; border-radius: 10px; font-weight: 600;
-    background: rgba(255,255,255,0.9);
-  }
+  .resource-thumb { height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; position: relative; }
+  .resource-type { position: absolute; top: 10px; right: 10px; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em; padding: 3px 8px; border-radius: 10px; font-weight: 600; background: rgba(255,255,255,0.9); }
   .resource-body { padding: 16px; }
   .resource-title { font-family: 'Playfair Display', serif; font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
   .resource-desc { font-size: 0.8rem; color: rgba(28,20,16,0.6); line-height: 1.6; margin-bottom: 12px; }
   .resource-footer { display: flex; justify-content: space-between; align-items: center; }
   .resource-author { font-size: 0.72rem; color: rgba(28,20,16,0.45); }
-  .resource-access {
-    font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--terra); cursor: pointer;
-  }
-
-  /* ══════════════════════════════════
-     PROFILE
-  ══════════════════════════════════ */
+  .resource-access { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--terra); cursor: pointer; }
   .profile-layout { max-width: 720px; margin: 0 auto; padding: 40px; }
-  .profile-banner {
-    height: 160px; border-radius: 4px; margin-bottom: -50px;
-    background: linear-gradient(135deg, var(--deep) 0%, #3d2b1f 50%, var(--terra) 100%);
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    position: relative; overflow: hidden; cursor: pointer;
-  }
-  .photo-upload-overlay {
-    position: absolute; inset: 0;
-    background: rgba(28,20,16,0.5);
-    display: flex; align-items: center; justify-content: center;
-    opacity: 0; transition: opacity 0.2s;
-    font-size: 0.8rem; color: white; letter-spacing: 0.08em;
-    text-transform: uppercase; gap: 8px;
-  }
+  .profile-banner { height: 160px; border-radius: 4px; margin-bottom: -50px; background: linear-gradient(135deg, var(--deep) 0%, #3d2b1f 50%, var(--terra) 100%); background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; overflow: hidden; cursor: pointer; }
+  .photo-upload-overlay { position: absolute; inset: 0; background: rgba(28,20,16,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; font-size: 0.8rem; color: white; letter-spacing: 0.08em; text-transform: uppercase; gap: 8px; }
   .profile-banner:hover .photo-upload-overlay { opacity: 1; }
-  .avatar-upload-btn {
-    position: absolute; bottom: 0; right: -4px;
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--terra); color: white;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.7rem; border: 2px solid var(--warm-white);
-    cursor: pointer; transition: background 0.2s;
-  }
+  .avatar-upload-btn { position: absolute; bottom: 0; right: -4px; width: 28px; height: 28px; border-radius: 50%; background: var(--terra); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; border: 2px solid var(--warm-white); cursor: pointer; transition: background 0.2s; }
   .avatar-upload-btn:hover { background: #a8501f; }
   input[type="file"] { display: none; }
-  .profile-avatar-wrap {
-    position: relative; margin-left: 32px; margin-bottom: 16px;
-    width: fit-content;
-  }
-  .profile-avatar {
-    width: 90px; height: 90px; border-radius: 50%;
-    background: linear-gradient(135deg, var(--terra), var(--gold));
-    display: flex; align-items: center; justify-content: center;
-    color: white; font-size: 2rem; font-weight: 700;
-    font-family: 'Playfair Display', serif;
-    border: 4px solid var(--warm-white);
-    box-shadow: 0 4px 20px rgba(28,20,16,0.2);
-  }
-  .profile-badge {
-    position: absolute; bottom: 4px; right: -4px;
-    width: 26px; height: 26px; border-radius: 50%;
-    background: var(--gold); display: flex; align-items: center; justify-content: center;
-    font-size: 0.75rem; border: 2px solid var(--warm-white);
-  }
+  .profile-avatar-wrap { position: relative; margin-left: 32px; margin-bottom: 16px; width: fit-content; }
+  .profile-avatar { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, var(--terra), var(--gold)); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 700; font-family: 'Playfair Display', serif; border: 4px solid var(--warm-white); box-shadow: 0 4px 20px rgba(28,20,16,0.2); }
+  .profile-badge { position: absolute; bottom: 4px; right: -4px; width: 26px; height: 26px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; border: 2px solid var(--warm-white); }
   .profile-info { padding: 0 32px; margin-bottom: 32px; }
   .profile-name { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
   .profile-handle { color: var(--terra); font-size: 0.85rem; margin-bottom: 10px; }
@@ -1095,231 +816,106 @@
   .stat-num { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--terra); }
   .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(28,20,16,0.45); }
   .profile-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-  .profile-tag {
-    padding: 5px 14px; border-radius: 20px;
-    background: var(--cream); color: var(--deep);
-    font-size: 0.78rem; font-weight: 500;
-  }
-
-  .profile-section-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1rem; font-weight: 700;
-    margin-bottom: 16px; padding-bottom: 10px;
-    border-bottom: 1px solid rgba(196,98,45,0.15);
-  }
-
+  .profile-tag { padding: 5px 14px; border-radius: 20px; background: var(--cream); color: var(--deep); font-size: 0.78rem; font-weight: 500; }
+  .profile-section-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(196,98,45,0.15); }
   .settings-form { padding: 0 32px; }
   .form-group { margin-bottom: 20px; }
   .form-label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(28,20,16,0.5); margin-bottom: 8px; font-weight: 500; }
-  .form-input {
-    width: 100%; padding: 12px 16px;
-    border: 1.5px solid rgba(196,98,45,0.2);
-    border-radius: 3px; font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem; color: var(--deep); background: white;
-    outline: none; transition: border-color 0.2s;
-  }
+  .form-input { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(196,98,45,0.2); border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--deep); background: white; outline: none; transition: border-color 0.2s; }
   .form-input:focus { border-color: var(--terra); }
-  .save-btn {
-    background: var(--terra); color: white; border: none;
-    padding: 12px 32px; font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem; font-weight: 600; letter-spacing: 0.06em;
-    text-transform: uppercase; cursor: pointer; border-radius: 2px;
-    transition: background 0.2s;
-  }
+  .save-btn { background: var(--terra); color: white; border: none; padding: 12px 32px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; }
   .save-btn:hover { background: #a8501f; }
-
-  /* ── MOBILE NAV ── */
-  .mobile-nav {
-    display: none;
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: rgba(251,247,242,0.96);
-    backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(196,98,45,0.12);
-    padding: 10px 20px 16px;
-    justify-content: space-around;
-    z-index: 100;
-  }
-  .mobile-nav-btn {
-    background: none; border: none; cursor: pointer;
-    display: flex; flex-direction: column; align-items: center; gap: 4px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.65rem;
-    text-transform: uppercase; letter-spacing: 0.08em;
-    color: rgba(28,20,16,0.45); transition: color 0.2s;
-  }
+  .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(251,247,242,0.96); backdrop-filter: blur(12px); border-top: 1px solid rgba(196,98,45,0.12); padding: 10px 20px 16px; justify-content: space-around; z-index: 100; }
+  .mobile-nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: 'DM Sans', sans-serif; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(28,20,16,0.45); transition: color 0.2s; }
   .mobile-nav-btn.active { color: var(--terra); }
   .mobile-nav-btn span:first-child { font-size: 1.2rem; }
-
-  /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
-    nav { padding: 14px 20px; }
-    .nav-links { display: none; }
-    .hamburger { display: flex; }
-    .home-hero, .feed-section, .circles-grid, .events-main,
-    .events-sidebar, .resources-layout, .profile-layout { padding: 28px 20px; }
-    .events-layout { grid-template-columns: 1fr; }
-    .events-sidebar { display: none; }
-    .hero-accent { display: none; }
-    .mobile-nav { display: flex; }
-    .view { padding-bottom: 70px; }
-    .profile-info, .settings-form { padding: 0 16px; }
+    nav { padding: 14px 20px; } .nav-links { display: none; } .hamburger { display: flex; }
+    .home-hero, .feed-section, .circles-grid, .events-main, .events-sidebar, .resources-layout, .profile-layout { padding: 28px 20px; }
+    .events-layout { grid-template-columns: 1fr; } .events-sidebar { display: none; }
+    .hero-accent { display: none; } .mobile-nav { display: flex; }
+    .view { padding-bottom: 70px; } .profile-info, .settings-form { padding: 0 16px; }
   }
-
-  /* ── AUTH MODAL ── */
   .auth-modal { max-width: 420px; }
   .auth-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
   .auth-sub { font-size: 0.85rem; color: var(--terra); margin-bottom: 24px; }
   .auth-switch { text-align: center; font-size: 0.82rem; color: rgba(28,20,16,0.5); margin-top: 16px; }
   .auth-switch a { color: var(--terra); text-decoration: none; font-weight: 600; }
-
-  /* ── LOGOUT BTN ── */
-  .logout-btn {
-    background: none; border: 1.5px solid rgba(196,98,45,0.3);
-    color: var(--terra); padding: 6px 14px; border-radius: 2px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
-    font-weight: 500; cursor: pointer; display: none;
-    transition: all 0.2s;
-  }
+  .logout-btn { background: none; border: 1.5px solid rgba(196,98,45,0.3); color: var(--terra); padding: 6px 14px; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500; cursor: pointer; display: none; transition: all 0.2s; }
   .logout-btn:hover { background: var(--terra); color: white; }
-
-  /* ── CIRCLE DETAIL VIEW ── */
-  .circle-detail-header {
-    background: var(--deep); padding: 60px 40px 40px;
-    position: relative; overflow: hidden;
-  }
-  .circle-detail-back {
-    background: none; border: 1px solid rgba(245,239,230,0.2);
-    color: var(--cream); padding: 8px 16px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.78rem;
-    cursor: pointer; border-radius: 2px; margin-bottom: 24px;
-    display: inline-flex; align-items: center; gap: 6px;
-    transition: all 0.2s;
-  }
+  .circle-detail-header { background: var(--deep); padding: 60px 40px 40px; position: relative; overflow: hidden; }
+  .circle-detail-back { background: none; border: 1px solid rgba(245,239,230,0.2); color: var(--cream); padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; cursor: pointer; border-radius: 2px; margin-bottom: 24px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
   .circle-detail-back:hover { border-color: var(--cream); }
   .circle-detail-icon { font-size: 2.5rem; margin-bottom: 12px; display: block; }
-  .circle-detail-name {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(1.6rem, 4vw, 2.4rem);
-    color: var(--cream); margin-bottom: 10px;
-  }
-  .circle-detail-desc {
-    color: rgba(245,239,230,0.65); font-size: 0.95rem;
-    line-height: 1.7; max-width: 560px; margin-bottom: 20px;
-  }
-  .circle-detail-meta {
-    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  }
-  .circle-detail-count {
-    font-size: 0.78rem; color: rgba(245,239,230,0.4);
-    letter-spacing: 0.06em;
-  }
-  .circle-join-btn {
-    background: var(--terra); color: white; border: none;
-    padding: 10px 24px; font-family: 'DM Sans', sans-serif;
-    font-size: 0.82rem; font-weight: 600; letter-spacing: 0.06em;
-    text-transform: uppercase; cursor: pointer; border-radius: 2px;
-    transition: background 0.2s;
-  }
+  .circle-detail-name { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); color: var(--cream); margin-bottom: 10px; }
+  .circle-detail-desc { color: rgba(245,239,230,0.65); font-size: 0.95rem; line-height: 1.7; max-width: 560px; margin-bottom: 20px; }
+  .circle-detail-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .circle-detail-count { font-size: 0.78rem; color: rgba(245,239,230,0.4); letter-spacing: 0.06em; }
+  .circle-join-btn { background: var(--terra); color: white; border: none; padding: 10px 24px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; }
   .circle-join-btn:hover { background: #a8501f; }
   .circle-join-btn.joined { background: var(--sage); }
   .circle-feed { padding: 40px; max-width: 700px; margin: 0 auto; }
-  .circle-empty {
-    text-align: center; padding: 60px 20px;
-    color: rgba(28,20,16,0.4); font-size: 0.9rem; line-height: 1.8;
-  }
+  .circle-empty { text-align: center; padding: 60px 20px; color: rgba(28,20,16,0.4); font-size: 0.9rem; line-height: 1.8; }
   .circle-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(28,20,16,0.7);
-    z-index: 500; display: none; align-items: center; justify-content: center;
-    padding: 20px;
-  }
+  .modal-overlay { position: fixed; inset: 0; background: rgba(28,20,16,0.7); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; }
   .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--warm-white); border-radius: 6px;
-    max-width: 560px; width: 100%; max-height: 85vh;
-    overflow-y: auto; padding: 40px;
-    box-shadow: 0 20px 60px rgba(28,20,16,0.3);
-  }
-  .modal-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.5rem; font-weight: 700;
-    margin-bottom: 6px; color: var(--deep);
-  }
+  .modal { background: var(--warm-white); border-radius: 6px; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 40px; box-shadow: 0 20px 60px rgba(28,20,16,0.3); }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; color: var(--deep); }
   .modal-sub { font-size: 0.85rem; color: var(--terra); margin-bottom: 24px; letter-spacing: 0.04em; }
-  .agreement-item {
-    display: flex; gap: 14px; margin-bottom: 18px;
-    padding-bottom: 18px; border-bottom: 1px solid rgba(196,98,45,0.1);
-  }
+  .agreement-item { display: flex; gap: 14px; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(196,98,45,0.1); }
   .agreement-item:last-of-type { border-bottom: none; }
-  .agreement-num {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--terra); color: white;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-top: 2px;
-  }
+  .agreement-num { width: 28px; height: 28px; border-radius: 50%; background: var(--terra); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
   .agreement-text strong { display: block; font-size: 0.9rem; margin-bottom: 4px; color: var(--deep); }
   .agreement-text p { font-size: 0.82rem; color: rgba(28,20,16,0.65); line-height: 1.6; }
   .modal-check { display: flex; gap: 10px; align-items: flex-start; margin: 24px 0 20px; }
   .modal-check input { margin-top: 3px; accent-color: var(--terra); width: 16px; height: 16px; }
   .modal-check label { font-size: 0.85rem; color: var(--deep); line-height: 1.5; cursor: pointer; }
-  .modal-agree-btn {
-    width: 100%; padding: 14px; background: var(--terra); color: white;
-    border: none; font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
-    font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
-    cursor: pointer; border-radius: 2px; transition: background 0.2s;
-  }
+  .modal-agree-btn { width: 100%; padding: 14px; background: var(--terra); color: white; border: none; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; }
   .modal-agree-btn:hover { background: #a8501f; }
   .modal-agree-btn:disabled { background: rgba(196,98,45,0.3); cursor: not-allowed; }
   .modal-cancel { text-align: center; margin-top: 12px; }
   .modal-cancel button { background: none; border: none; color: rgba(28,20,16,0.45); font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
-
-  .toast {
-    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
-    background: var(--deep); color: var(--cream);
-    padding: 12px 24px; border-radius: 3px; font-size: 0.85rem;
-    opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 200;
-    white-space: nowrap;
-  }
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--deep); color: var(--cream); padding: 12px 24px; border-radius: 3px; font-size: 0.85rem; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 200; white-space: nowrap; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* ── MEMBERSHIP BANNER ── */
-  .membership-banner {
-    background: linear-gradient(135deg, var(--terra), #a8501f);
-    padding: 20px 40px; display: flex; align-items: center; justify-content: space-between;
-    gap: 20px;
-  }
+  .membership-banner { background: linear-gradient(135deg, var(--terra), #a8501f); padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
   .membership-text { color: white; }
   .membership-text strong { font-family: 'Playfair Display', serif; font-size: 1rem; display: block; margin-bottom: 4px; }
   .membership-text span { font-size: 0.82rem; opacity: 0.85; }
-  .membership-cta {
-    background: white; color: var(--terra); border: none;
-    padding: 10px 24px; font-family: 'DM Sans', sans-serif;
-    font-size: 0.82rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
-    cursor: pointer; border-radius: 2px; white-space: nowrap; transition: opacity 0.2s;
-    flex-shrink: 0;
-  }
+  .membership-cta { background: white; color: var(--terra); border: none; padding: 10px 24px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px; white-space: nowrap; transition: opacity 0.2s; flex-shrink: 0; }
   .membership-cta:hover { opacity: 0.9; }
-
-  /* ── QUOTE CARD ── */
-  .quote-card {
-    background: var(--deep); color: var(--cream);
-    padding: 32px; border-radius: 4px; margin-bottom: 16px;
-    position: relative; overflow: hidden;
-  }
-  .quote-card::before {
-    content: '"';
-    font-family: 'Playfair Display', serif; font-size: 8rem;
-    color: rgba(212,168,83,0.15); position: absolute;
-    top: -20px; left: 16px; line-height: 1;
-  }
-  .quote-text {
-    font-family: 'Playfair Display', serif; font-size: 1.1rem;
-    font-style: italic; line-height: 1.7; margin-bottom: 14px;
-    position: relative; z-index: 1;
-  }
+  .quote-card { background: var(--deep); color: var(--cream); padding: 32px; border-radius: 4px; margin-bottom: 16px; position: relative; overflow: hidden; }
+  .quote-card::before { content: '"'; font-family: 'Playfair Display', serif; font-size: 8rem; color: rgba(212,168,83,0.15); position: absolute; top: -20px; left: 16px; line-height: 1; }
+  .quote-text { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-style: italic; line-height: 1.7; margin-bottom: 14px; position: relative; z-index: 1; }
   .quote-author { font-size: 0.78rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; }
 </style>
 </head>
 <body>
+
+<!-- MEMBER PROFILE MODAL -->
+<div class="modal-overlay" id="member-profile-modal" onclick="if(event.target===this)closeMemberProfile()">
+  <div class="modal member-profile-modal" style="padding:0;">
+    <div class="mp-banner" id="mp-banner">
+      <button class="mp-close-btn" onclick="closeMemberProfile()">✕</button>
+    </div>
+    <div id="mp-loading" class="mp-loading">Loading profile... ✦</div>
+    <div id="mp-content" style="display:none;">
+      <div style="padding:0 24px;">
+        <div class="mp-avatar-wrap">
+          <div class="mp-avatar" id="mp-avatar">S</div>
+        </div>
+      </div>
+      <div class="mp-body">
+        <div class="mp-name" id="mp-name">Sister</div>
+        <div class="mp-handle" id="mp-handle"></div>
+        <div class="mp-bio" id="mp-bio"></div>
+        <div class="mp-section-title">Circles</div>
+        <div class="mp-circles" id="mp-circles"></div>
+        <div class="mp-section-title">Recent Posts</div>
+        <div class="mp-posts" id="mp-posts"></div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- AUTH MODAL -->
 <div class="modal-overlay" id="auth-modal">
@@ -1349,47 +945,12 @@
   <div class="modal">
     <div class="modal-title">Community Agreements</div>
     <div class="modal-sub">Before you join, please read and agree to our community agreements ✦</div>
-
-    <div class="agreement-item">
-      <div class="agreement-num">1</div>
-      <div class="agreement-text">
-        <strong>Safe Space / Safe Place</strong>
-        <p>Vulnerability and honesty are honored here by not tearing down our sisters but building them up in every interaction.</p>
-      </div>
-    </div>
-    <div class="agreement-item">
-      <div class="agreement-num">2</div>
-      <div class="agreement-text">
-        <strong>This is a No Judgement Zone</strong>
-        <p>Please refrain from judging someone's words, work, or offering an opinion without an invitation to do so.</p>
-      </div>
-    </div>
-    <div class="agreement-item">
-      <div class="agreement-num">3</div>
-      <div class="agreement-text">
-        <strong>Assume Best Intentions</strong>
-        <p>If someone's actions or words gives you pause, then do just that — pause before responding or reporting.</p>
-      </div>
-    </div>
-    <div class="agreement-item">
-      <div class="agreement-num">4</div>
-      <div class="agreement-text">
-        <strong>0 Tolerance Policy</strong>
-        <p>This is an affirming space. Bigotry, discrimination, or harm of any kind will not be tolerated.</p>
-      </div>
-    </div>
-    <div class="agreement-item">
-      <div class="agreement-num">5</div>
-      <div class="agreement-text">
-        <strong>What is Said Here Stays Here</strong>
-        <p>This space is by us for us. Please protect it by not sharing what you see here without written permission.</p>
-      </div>
-    </div>
-
-    <div class="modal-check">
-      <input type="checkbox" id="agree-check" onchange="toggleAgreeBtn()">
-      <label for="agree-check">I have read and agree to the Sisterhood(verb) Community Agreements</label>
-    </div>
+    <div class="agreement-item"><div class="agreement-num">1</div><div class="agreement-text"><strong>Safe Space / Safe Place</strong><p>Vulnerability and honesty are honored here by not tearing down our sisters but building them up in every interaction.</p></div></div>
+    <div class="agreement-item"><div class="agreement-num">2</div><div class="agreement-text"><strong>This is a No Judgement Zone</strong><p>Please refrain from judging someone's words, work, or offering an opinion without an invitation to do so.</p></div></div>
+    <div class="agreement-item"><div class="agreement-num">3</div><div class="agreement-text"><strong>Assume Best Intentions</strong><p>If someone's actions or words gives you pause, then do just that — pause before responding or reporting.</p></div></div>
+    <div class="agreement-item"><div class="agreement-num">4</div><div class="agreement-text"><strong>0 Tolerance Policy</strong><p>This is an affirming space. Bigotry, discrimination, or harm of any kind will not be tolerated.</p></div></div>
+    <div class="agreement-item"><div class="agreement-num">5</div><div class="agreement-text"><strong>What is Said Here Stays Here</strong><p>This space is by us for us. Please protect it by not sharing what you see here without written permission.</p></div></div>
+    <div class="modal-check"><input type="checkbox" id="agree-check" onchange="toggleAgreeBtn()"><label for="agree-check">I have read and agree to the Sisterhood(verb) Community Agreements</label></div>
     <button class="modal-agree-btn" id="agree-btn" disabled onclick="handleAgree()">I Agree — Join the Sisterhood</button>
     <div class="modal-cancel"><button onclick="closeModal()">Not right now</button></div>
   </div>
@@ -1407,15 +968,12 @@
     <a href="#" class="nav-cta" onclick="openModal(); return false;">Join</a>
     <button class="logout-btn" id="logout-btn" onclick="signOut()">Log Out</button>
   </div>
-  <div class="hamburger" onclick="toggleMobile()">
-    <span></span><span></span><span></span>
-  </div>
+  <div class="hamburger" onclick="toggleMobile()"><span></span><span></span><span></span></div>
 </nav>
 
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- ════ HOME ════ -->
+<!-- HOME -->
 <div class="view active" id="view-home">
   <div class="home-hero">
     <div class="hero-greeting">Welcome home, Sister ✦</div>
@@ -1423,35 +981,21 @@
     <p class="hero-sub">A space to be seen, speak freely, and practice sisterhood — not just talk about it.</p>
     <div class="hero-accent"></div>
   </div>
-
   <div class="membership-banner">
-    <div class="membership-text">
-      <strong>Upgrade to Full Member</strong>
-      <span>Unlock all Circles, workshop recordings, and 1:1 mentorship access</span>
-    </div>
+    <div class="membership-text"><strong>Upgrade to Full Member</strong><span>Unlock all Circles, workshop recordings, and 1:1 mentorship access</span></div>
     <button class="membership-cta" onclick="openModal()">Explore Plans</button>
   </div>
-
   <div class="feed-section">
     <div class="section-label">Community Feed</div>
-
     <div class="post-composer">
       <div class="composer-top">
         <div class="avatar">T</div>
         <textarea class="composer-input" rows="2" placeholder="What's on your heart today, sister?"></textarea>
       </div>
-      <div class="gif-preview" id="gif-preview">
-        <img id="gif-preview-img" src="" alt="Selected GIF">
-        <button class="gif-remove" onclick="removeGif()">✕</button>
-      </div>
+      <div class="gif-preview" id="gif-preview"><img id="gif-preview-img" src="" alt="Selected GIF"><button class="gif-remove" onclick="removeGif()">✕</button></div>
       <div class="gif-picker" id="gif-picker">
-        <div class="gif-search-bar">
-          <input class="gif-search-input" id="gif-search-input" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter') searchGifs()">
-          <button class="gif-search-btn" onclick="searchGifs()">Search</button>
-        </div>
-        <div class="gif-grid" id="gif-grid">
-          <div class="gif-loading">Search for a GIF above ✦</div>
-        </div>
+        <div class="gif-search-bar"><input class="gif-search-input" id="gif-search-input" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter') searchGifs()"><button class="gif-search-btn" onclick="searchGifs()">Search</button></div>
+        <div class="gif-grid" id="gif-grid"><div class="gif-loading">Search for a GIF above ✦</div></div>
       </div>
       <div class="composer-actions">
         <div class="composer-tools">
@@ -1463,12 +1007,10 @@
         <button class="post-btn" onclick="postToFeed()">Share</button>
       </div>
     </div>
-
     <div class="quote-card">
       <p class="quote-text">Sisterhood(verb): loving yourself and your kin with ancestral abundance.</p>
       <div class="quote-author">— Tayllor Oyewole-Davis, Founder</div>
     </div>
-
     <div style="background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:32px;margin-bottom:24px;box-shadow:0 2px 20px rgba(28,20,16,0.04);">
       <div class="section-label" style="margin-bottom:16px;">Our Why</div>
       <p style="font-family:'Playfair Display',serif;font-size:1.15rem;font-style:italic;color:var(--deep);margin-bottom:14px;line-height:1.6;">Sisterhood is a practice.</p>
@@ -1481,449 +1023,100 @@
         <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.6;"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0;">✦</span>People feel resourced — not extracted from</li>
       </ul>
     </div>
-
     <div id="feed-posts">
       <div class="feed-card">
-        <div class="card-header">
-          <div class="avatar" style="background: linear-gradient(135deg, #7A8C6E, #C4622D);">A</div>
-          <div class="card-meta">
-            <div class="card-name">Amara W.</div>
-            <div class="card-time">2 hours ago</div>
-          </div>
-          <span class="card-tag">Motherhood</span>
-        </div>
-        <div class="card-body">
-          Just finished the <strong>Motherhood Speaks</strong> workshop and I am undone in the best way. I didn't realize how much I'd been carrying silently until I finally had a room — even a virtual one — where I was allowed to put it down.
-        </div>
-        <div class="card-footer">
-          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>14</span></button>
-          <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>3 replies</span></button>
-          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-        </div>
+        <div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#7A8C6E,#C4622D);">A</div><div class="card-meta"><div class="card-name">Amara W.</div><div class="card-time">2 hours ago</div></div><span class="card-tag">Motherhood</span></div>
+        <div class="card-body">Just finished the <strong>Motherhood Speaks</strong> workshop and I am undone in the best way. I didn't realize how much I'd been carrying silently until I finally had a room — even a virtual one — where I was allowed to put it down.</div>
+        <div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>14</span></button><button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>3 replies</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div>
       </div>
-
       <div class="feed-card" style="animation-delay:0.1s">
-        <div class="card-header">
-          <div class="avatar" style="background: linear-gradient(135deg, #D4A853, #C4622D);">N</div>
-          <div class="card-meta">
-            <div class="card-name">Nia R.</div>
-            <div class="card-time">Yesterday</div>
-          </div>
-          <span class="card-tag">Creative</span>
-        </div>
-        <div class="card-body">
-          Sharing my writing prompt response from Circle this week — "Write the letter your 13-year-old self needed to receive." I've never cried so hard or felt so free at the same time. Thank you for this space. 🌺
-        </div>
-        <div class="card-footer">
-          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>27</span></button>
-          <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>8 replies</span></button>
-          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-        </div>
+        <div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#D4A853,#C4622D);">N</div><div class="card-meta"><div class="card-name">Nia R.</div><div class="card-time">Yesterday</div></div><span class="card-tag">Creative</span></div>
+        <div class="card-body">Sharing my writing prompt response from Circle this week — "Write the letter your 13-year-old self needed to receive." I've never cried so hard or felt so free at the same time. Thank you for this space. 🌺</div>
+        <div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>27</span></button><button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>8 replies</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div>
       </div>
-
       <div class="feed-card" style="animation-delay:0.2s">
-        <div class="card-header">
-          <div class="avatar" style="background: linear-gradient(135deg, #C4622D, #1C1410);">S</div>
-          <div class="card-meta">
-            <div class="card-name">Simone T.</div>
-            <div class="card-time">2 days ago</div>
-          </div>
-          <span class="card-tag">Wellness</span>
-        </div>
-        <div class="card-body">
-          Reminder to us all: rest is <strong>resistance</strong>. You don't have to earn your stillness. You are allowed to pause without producing. That's the whole point of this sisterhood — we hold each other in the becoming, not just the doing.
-        </div>
-        <div class="card-footer">
-          <button class="react-btn" onclick="toggleLike(this)">🫂 <span>42</span></button>
-          <button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>12 replies</span></button>
-          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-        </div>
+        <div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#C4622D,#1C1410);">S</div><div class="card-meta"><div class="card-name">Simone T.</div><div class="card-time">2 days ago</div></div><span class="card-tag">Wellness</span></div>
+        <div class="card-body">Reminder to us all: rest is <strong>resistance</strong>. You don't have to earn your stillness. You are allowed to pause without producing.</div>
+        <div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>42</span></button><button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>12 replies</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- ════ CIRCLES ════ -->
+<!-- CIRCLES -->
 <div class="view" id="view-circles">
-  <div class="circles-hero">
-    <div class="section-label" style="margin-bottom:12px">Your Spaces</div>
-    <h1 class="page-title">Find Your Circle</h1>
-    <p class="page-sub">Intimate groups where the real conversations happen. Each Circle is a practice space — not a performance.</p>
-  </div>
+  <div class="circles-hero"><div class="section-label" style="margin-bottom:12px">Your Spaces</div><h1 class="page-title">Find Your Circle</h1><p class="page-sub">Intimate groups where the real conversations happen. Each Circle is a practice space — not a performance.</p></div>
   <div class="circles-grid">
-    <div class="circle-card" onclick="openCircle('Motherhood Speaks')" style="cursor:pointer;">
-      <div class="circle-banner" style="background: linear-gradient(135deg, #F5EFE6, #E8C4A0);">
-        <span class="circle-icon">🌺</span>
-      </div>
-      <div class="circle-body">
-        <div class="circle-name">Motherhood Speaks</div>
-        <div class="circle-desc">A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.</div>
-        <div class="circle-meta">
-          <span class="circle-members">48 sisters</span>
-          <button class="join-btn joined" data-circle="Motherhood Speaks" onclick="event.stopPropagation(); toggleJoin(this, 'Motherhood Speaks')">Joined ✦</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="circle-card" onclick="openCircle('Writers Block? I Think Not!')" style="cursor:pointer;">
-      <div class="circle-banner" style="background: linear-gradient(135deg, #E8F0E4, #c5d9be);">
-        <span class="circle-icon">✍🏾</span>
-      </div>
-      <div class="circle-body">
-        <div class="circle-name">Writers Block? I Think Not!</div>
-        <div class="circle-desc">A space for creative writers, poets, and scribes to stay connected to the craft and themselves. Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div>
-        <div class="circle-meta">
-          <button class="join-btn" data-circle="Writers Block? I Think Not!" onclick="event.stopPropagation(); toggleJoin(this, 'Writers Block? I Think Not!')">Join</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="circle-card" onclick="openCircle('Burnout to Bloom')" style="cursor:pointer;">
-      <div class="circle-banner" style="background: linear-gradient(135deg, #F5EFE6, #ddc9b0);">
-        <span class="circle-icon">🔥</span>
-      </div>
-      <div class="circle-body">
-        <div class="circle-name">Burnout to Bloom</div>
-        <div class="circle-desc">Are you an educator, community organizer, activist, or artist trying to exist in the world and keep your cup full? This space is for you to vent, seek advice, find community care, and share — so you can enjoy life and have something left for yourself. We get it. We got you.</div>
-        <div class="circle-meta">
-          <button class="join-btn" data-circle="Burnout to Bloom" onclick="event.stopPropagation(); toggleJoin(this, 'Burnout to Bloom')">Join</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="circle-card" onclick="openCircle('Speak Poet!')" style="cursor:pointer;">
-      <div class="circle-banner" style="background: linear-gradient(135deg, #1C1410, #3d2b1f);">
-        <span class="circle-icon">🎤</span>
-      </div>
-      <div class="circle-body">
-        <div class="circle-name">Speak Poet!</div>
-        <div class="circle-desc">This is for the slam poets, performers, and spoken word artists looking for space to share your work, network, and connect with poets who get it. And trust us — we get it!</div>
-        <div class="circle-meta">
-          <button class="join-btn" data-circle="Speak Poet!" onclick="event.stopPropagation(); toggleJoin(this, 'Speak Poet!')">Join</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="circle-card" onclick="openCircle('Healing As We Hustle')" style="cursor:pointer;">
-      <div class="circle-banner" style="background: linear-gradient(135deg, #2d1f3d, #5c3d7a);">
-        <span class="circle-icon">💼</span>
-      </div>
-      <div class="circle-body">
-        <div class="circle-name">Healing As We Hustle</div>
-        <div class="circle-desc">Divesting from oppressive systems doesn't mean we don't get to follow our dreams. This space is for entrepreneurs to connect, network, and get support as we go big or go home.</div>
-        <div class="circle-meta">
-          <span class="circle-members">0 sisters</span>
-          <button class="join-btn" data-circle="Healing As We Hustle" onclick="event.stopPropagation(); toggleJoin(this, 'Healing As We Hustle')">Join</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="circle-card" onclick="openCircle('The Travel Girlies')" style="cursor:pointer;">
-      <div class="circle-banner" style="background: linear-gradient(135deg, #1a3a4a, #2d6a8a);">
-        <span class="circle-icon">✈️</span>
-      </div>
-      <div class="circle-body">
-        <div class="circle-name">The Travel Girlies</div>
-        <div class="circle-desc">Trip tips, resources, warnings, and storytelling. Whether your passport is booked and busy or the plans are still living in the group chat — you're welcome here.</div>
-        <div class="circle-meta">
-          <span class="circle-members">0 sisters</span>
-          <button class="join-btn" data-circle="The Travel Girlies" onclick="event.stopPropagation(); toggleJoin(this, 'The Travel Girlies')">Join</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="circle-card" style="border: 1.5px dashed rgba(196,98,45,0.3); background: var(--cream);">
-        <div class="circle-banner" style="background: transparent; height: 70px;">
-          <span class="circle-icon">✦</span>
-        </div>
-        <div class="circle-body">
-          <div class="circle-name" style="color:var(--terra)">Start a Circle</div>
-        <div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the Sisterhood(verb) team.</div>
-        <div class="circle-meta">
-          <span class="circle-members">Members only</span>
-          <button class="join-btn" onclick="showToast('Proposal form opening...')">Propose</button>
-        </div>
-      </div>
-    </div>
+    <div class="circle-card" onclick="openCircle('Motherhood Speaks')"><div class="circle-banner" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);"><span class="circle-icon">🌺</span></div><div class="circle-body"><div class="circle-name">Motherhood Speaks</div><div class="circle-desc">A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.</div><div class="circle-meta"><span class="circle-members">48 sisters</span><button class="join-btn joined" data-circle="Motherhood Speaks" onclick="event.stopPropagation();toggleJoin(this,'Motherhood Speaks')">Joined ✦</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('Writers Block? I Think Not!')"><div class="circle-banner" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be);"><span class="circle-icon">✍🏾</span></div><div class="circle-body"><div class="circle-name">Writers Block? I Think Not!</div><div class="circle-desc">Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div><div class="circle-meta"><button class="join-btn" data-circle="Writers Block? I Think Not!" onclick="event.stopPropagation();toggleJoin(this,'Writers Block? I Think Not!')">Join</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('Burnout to Bloom')"><div class="circle-banner" style="background:linear-gradient(135deg,#F5EFE6,#ddc9b0);"><span class="circle-icon">🔥</span></div><div class="circle-body"><div class="circle-name">Burnout to Bloom</div><div class="circle-desc">For educators, organizers, activists, and artists trying to exist in the world and keep your cup full.</div><div class="circle-meta"><button class="join-btn" data-circle="Burnout to Bloom" onclick="event.stopPropagation();toggleJoin(this,'Burnout to Bloom')">Join</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('Speak Poet!')"><div class="circle-banner" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);"><span class="circle-icon">🎤</span></div><div class="circle-body"><div class="circle-name">Speak Poet!</div><div class="circle-desc">For slam poets, performers, and spoken word artists looking for space to share your work and connect.</div><div class="circle-meta"><button class="join-btn" data-circle="Speak Poet!" onclick="event.stopPropagation();toggleJoin(this,'Speak Poet!')">Join</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('Healing As We Hustle')"><div class="circle-banner" style="background:linear-gradient(135deg,#2d1f3d,#5c3d7a);"><span class="circle-icon">💼</span></div><div class="circle-body"><div class="circle-name">Healing As We Hustle</div><div class="circle-desc">Space for entrepreneurs to connect, network, and get support as we go big or go home.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="Healing As We Hustle" onclick="event.stopPropagation();toggleJoin(this,'Healing As We Hustle')">Join</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('The Travel Girlies')"><div class="circle-banner" style="background:linear-gradient(135deg,#1a3a4a,#2d6a8a);"><span class="circle-icon">✈️</span></div><div class="circle-body"><div class="circle-name">The Travel Girlies</div><div class="circle-desc">Trip tips, resources, warnings, and storytelling. Booked and busy or still in the group chat — you're welcome here.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="The Travel Girlies" onclick="event.stopPropagation();toggleJoin(this,'The Travel Girlies')">Join</button></div></div></div>
+    <div class="circle-card" style="border:1.5px dashed rgba(196,98,45,0.3);background:var(--cream);"><div class="circle-banner" style="background:transparent;height:70px;"><span class="circle-icon">✦</span></div><div class="circle-body"><div class="circle-name" style="color:var(--terra)">Start a Circle</div><div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the Sisterhood(verb) team.</div><div class="circle-meta"><span class="circle-members">Members only</span><button class="join-btn" onclick="showToast('Proposal form opening...')">Propose</button></div></div></div>
   </div>
 </div>
 
-<!-- ════ CIRCLE DETAIL ════ -->
+<!-- CIRCLE DETAIL -->
 <div class="view" id="view-circle-detail">
   <div class="circle-detail-header" id="circle-detail-header">
-    <button class="circle-detail-back" onclick="showViewWithProfile('circles', null)">← Back to Circles</button>
+    <button class="circle-detail-back" onclick="showViewWithProfile('circles',null)">← Back to Circles</button>
     <span class="circle-detail-icon" id="circle-detail-icon">🌺</span>
     <h1 class="circle-detail-name" id="circle-detail-name">Circle Name</h1>
     <p class="circle-detail-desc" id="circle-detail-desc">Circle description</p>
-    <div class="circle-detail-meta">
-      <span class="circle-detail-count" id="circle-detail-count">0 sisters</span>
-      <button class="circle-join-btn" id="circle-detail-join-btn" onclick="toggleCircleDetailJoin()">Join Circle</button>
-    </div>
+    <div class="circle-detail-meta"><span class="circle-detail-count" id="circle-detail-count">0 sisters</span><button class="circle-join-btn" id="circle-detail-join-btn" onclick="toggleCircleDetailJoin()">Join Circle</button></div>
   </div>
   <div class="circle-feed">
     <div class="post-composer" id="circle-composer" style="display:none;">
-      <div class="composer-top">
-        <div class="avatar" id="circle-composer-avatar">T</div>
-        <textarea class="composer-input" id="circle-composer-input" rows="2" placeholder="Share with your sisters..."></textarea>
-      </div>
+      <div class="composer-top"><div class="avatar" id="circle-composer-avatar">T</div><textarea class="composer-input" id="circle-composer-input" rows="2" placeholder="Share with your sisters..."></textarea></div>
       <div class="composer-actions">
-        <div class="composer-tools">
-          <button class="tool-btn" id="circle-gif-btn" onclick="toggleCircleGifPicker()">GIF 🎬</button>
-        </div>
+        <div class="composer-tools"><button class="tool-btn" id="circle-gif-btn" onclick="toggleCircleGifPicker()">GIF 🎬</button></div>
         <button class="post-btn" onclick="postToCircle()">Share</button>
       </div>
       <div class="gif-picker" id="circle-gif-picker">
-        <div class="gif-search-bar">
-          <input class="gif-search-input" id="circle-gif-search" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter') searchCircleGifs()">
-          <button class="gif-search-btn" onclick="searchCircleGifs()">Search</button>
-        </div>
-        <div class="gif-grid" id="circle-gif-grid">
-          <div class="gif-loading">Search for a GIF above ✦</div>
-        </div>
+        <div class="gif-search-bar"><input class="gif-search-input" id="circle-gif-search" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter') searchCircleGifs()"><button class="gif-search-btn" onclick="searchCircleGifs()">Search</button></div>
+        <div class="gif-grid" id="circle-gif-grid"><div class="gif-loading">Search for a GIF above ✦</div></div>
       </div>
-      <div class="gif-preview" id="circle-gif-preview">
-        <img id="circle-gif-preview-img" src="" alt="Selected GIF">
-        <button class="gif-remove" onclick="removeCircleGif()">✕</button>
-      </div>
+      <div class="gif-preview" id="circle-gif-preview"><img id="circle-gif-preview-img" src="" alt="Selected GIF"><button class="gif-remove" onclick="removeCircleGif()">✕</button></div>
     </div>
     <div id="circle-feed-posts"></div>
   </div>
 </div>
 
-<!-- ════ EVENTS ════ -->
+<!-- EVENTS -->
 <div class="view" id="view-events">
-  <div class="circles-hero">
-    <div class="section-label" style="margin-bottom:12px">Gatherings</div>
-    <h1 class="page-title">Upcoming Events</h1>
-    <p class="page-sub">Workshops, dialogues, and ceremonies. Every gathering is an invitation to come as you are.</p>
-  </div>
+  <div class="circles-hero"><div class="section-label" style="margin-bottom:12px">Gatherings</div><h1 class="page-title">Upcoming Events</h1><p class="page-sub">Workshops, dialogues, and ceremonies. Every gathering is an invitation to come as you are.</p></div>
   <div class="events-layout">
     <div class="events-main">
       <div class="section-label">Upcoming</div>
-
-      <div class="event-card">
-        <div class="event-date">
-          <span class="date-month">Mar</span>
-          <span class="date-day">18</span>
-        </div>
-        <div class="event-info">
-          <div class="event-title">Motherhood Speaks — Session 2</div>
-          <div class="event-meta">
-            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
-            <span class="event-detail">📍 Virtual (Zoom)</span>
-            <span class="event-detail">💰 Members only</span>
-          </div>
-          <div class="event-desc">Week 2 of our Motherhood Speaks series. A space to share your wins, losses, resources, hopes, and fears with moms who get it.</div>
-          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
-        </div>
-      </div>
-
-      <div class="event-card">
-        <div class="event-date">
-          <span class="date-month">Mar</span>
-          <span class="date-day">25</span>
-        </div>
-        <div class="event-info">
-          <div class="event-title">Motherhood Speaks — Session 3</div>
-          <div class="event-meta">
-            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
-            <span class="event-detail">📍 Virtual (Zoom)</span>
-            <span class="event-detail">💰 Members only</span>
-          </div>
-          <div class="event-desc">Week 3 of our Wednesday series. Come as you are, bring what you carry.</div>
-          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
-        </div>
-      </div>
-
-      <div class="event-card">
-        <div class="event-date">
-          <span class="date-month">Apr</span>
-          <span class="date-day">1</span>
-        </div>
-        <div class="event-info">
-          <div class="event-title">Motherhood Speaks — Session 4</div>
-          <div class="event-meta">
-            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
-            <span class="event-detail">📍 Virtual (Zoom)</span>
-            <span class="event-detail">💰 Members only</span>
-          </div>
-          <div class="event-desc">Week 4 of our Wednesday series. We're going deeper — bring your whole self.</div>
-          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
-        </div>
-      </div>
-
-      <div class="event-card">
-        <div class="event-date">
-          <span class="date-month">Apr</span>
-          <span class="date-day">8</span>
-        </div>
-        <div class="event-info">
-          <div class="event-title">Motherhood Speaks — Session 5 (Finale)</div>
-          <div class="event-meta">
-            <span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span>
-            <span class="event-detail">📍 Virtual (Zoom)</span>
-            <span class="event-detail">💰 Members only</span>
-          </div>
-          <div class="event-desc">The final Wednesday gathering of this series. We celebrate, reflect, and send each other off rooted and full.</div>
-          <button class="event-register" onclick="registerEvent(this, this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
-        </div>
-      </div>
-
-      <div class="event-card">
-        <div class="event-date">
-          <span class="date-month">Sum</span>
-          <span class="date-day" style="font-size:1.1rem;">2026</span>
-        </div>
-        <div class="event-info">
-          <div class="event-title">Sisterhood Speaks — Launching Summer 2026 🌸</div>
-          <div class="event-meta">
-            <span class="event-detail">📍 TBD</span>
-            <span class="event-detail">💰 Stay tuned</span>
-          </div>
-          <div class="event-desc">Something big is coming. Sisterhood Speaks is launching Summer 2026 — join the community now to be the first to know.</div>
-          <button class="event-register" onclick="showToast('Stay tuned — announcements coming soon ✦')">Notify Me</button>
-        </div>
-      </div>
+      <div class="event-card"><div class="event-date"><span class="date-month">Mar</span><span class="date-day">18</span></div><div class="event-info"><div class="event-title">Motherhood Speaks — Session 2</div><div class="event-meta"><span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span><span class="event-detail">📍 Virtual (Zoom)</span><span class="event-detail">💰 Members only</span></div><div class="event-desc">Week 2 of our Motherhood Speaks series. A space to share your wins, losses, resources, hopes, and fears with moms who get it.</div><button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button></div></div>
+      <div class="event-card"><div class="event-date"><span class="date-month">Mar</span><span class="date-day">25</span></div><div class="event-info"><div class="event-title">Motherhood Speaks — Session 3</div><div class="event-meta"><span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span><span class="event-detail">📍 Virtual (Zoom)</span><span class="event-detail">💰 Members only</span></div><div class="event-desc">Week 3 of our Wednesday series. Come as you are, bring what you carry.</div><button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button></div></div>
+      <div class="event-card"><div class="event-date"><span class="date-month">Apr</span><span class="date-day">1</span></div><div class="event-info"><div class="event-title">Motherhood Speaks — Session 4</div><div class="event-meta"><span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span><span class="event-detail">📍 Virtual (Zoom)</span><span class="event-detail">💰 Members only</span></div><div class="event-desc">Week 4 of our Wednesday series. We're going deeper — bring your whole self.</div><button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button></div></div>
+      <div class="event-card"><div class="event-date"><span class="date-month">Apr</span><span class="date-day">8</span></div><div class="event-info"><div class="event-title">Motherhood Speaks — Session 5 (Finale)</div><div class="event-meta"><span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span><span class="event-detail">📍 Virtual (Zoom)</span><span class="event-detail">💰 Members only</span></div><div class="event-desc">The final Wednesday gathering of this series. We celebrate, reflect, and send each other off rooted and full.</div><button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button></div></div>
+      <div class="event-card"><div class="event-date"><span class="date-month">Sum</span><span class="date-day" style="font-size:1.1rem;">2026</span></div><div class="event-info"><div class="event-title">Sisterhood Speaks — Launching Summer 2026 🌸</div><div class="event-meta"><span class="event-detail">📍 TBD</span><span class="event-detail">💰 Stay tuned</span></div><div class="event-desc">Something big is coming. Join the community now to be the first to know.</div><button class="event-register" onclick="showToast('Stay tuned — announcements coming soon ✦')">Notify Me</button></div></div>
     </div>
-
     <div class="events-sidebar">
-      <div class="mini-cal">
-        <div class="cal-header">
-          <div class="cal-title">March 2026</div>
-          <button class="cal-nav">‹</button>
-          <button class="cal-nav">›</button>
-        </div>
-        <div class="cal-grid">
-          <div class="cal-day-label">S</div><div class="cal-day-label">M</div><div class="cal-day-label">T</div><div class="cal-day-label">W</div><div class="cal-day-label">T</div><div class="cal-day-label">F</div><div class="cal-day-label">S</div>
-          <div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day">1</div>
-          <div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div>
-          <div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day today">11</div><div class="cal-day has-event">12</div><div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day">15</div>
-          <div class="cal-day">16</div><div class="cal-day">17</div><div class="cal-day has-event">18</div><div class="cal-day">19</div><div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div>
-          <div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day has-event">25</div><div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div>
-          <div class="cal-day">30</div><div class="cal-day">31</div>
-        </div>
-      </div>
-
-      <div style="background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:20px;">
-        <div class="profile-section-title">Host a Workshop</div>
-        <p style="font-size:0.83rem;color:rgba(28,20,16,0.6);line-height:1.6;margin-bottom:14px;">Are you an educator, healer, or artist? Propose a workshop to our community.</p>
-        <button class="save-btn" style="width:100%;padding:10px;" onclick="showToast('Proposal form coming soon ✦')">Propose Event</button>
-      </div>
+      <div class="mini-cal"><div class="cal-header"><div class="cal-title">March 2026</div><button class="cal-nav">‹</button><button class="cal-nav">›</button></div><div class="cal-grid"><div class="cal-day-label">S</div><div class="cal-day-label">M</div><div class="cal-day-label">T</div><div class="cal-day-label">W</div><div class="cal-day-label">T</div><div class="cal-day-label">F</div><div class="cal-day-label">S</div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day">1</div><div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day today">17</div><div class="cal-day has-event">18</div><div class="cal-day">19</div><div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day has-event">25</div><div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div><div class="cal-day">31</div></div></div>
+      <div style="background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:20px;"><div class="profile-section-title">Host a Workshop</div><p style="font-size:0.83rem;color:rgba(28,20,16,0.6);line-height:1.6;margin-bottom:14px;">Are you an educator, healer, or artist? Propose a workshop to our community.</p><button class="save-btn" style="width:100%;padding:10px;" onclick="showToast('Proposal form coming soon ✦')">Propose Event</button></div>
     </div>
   </div>
 </div>
 
-<!-- ════ RESOURCES ════ -->
+<!-- RESOURCES -->
 <div class="view" id="view-resources">
-  <div class="circles-hero">
-    <div class="section-label" style="margin-bottom:12px">Library</div>
-    <h1 class="page-title">Resources & Tools</h1>
-    <p class="page-sub">Recordings, writing guides, facilitation tools, and curated reading for your practice.</p>
-  </div>
+  <div class="circles-hero"><div class="section-label" style="margin-bottom:12px">Library</div><h1 class="page-title">Resources & Tools</h1><p class="page-sub">Recordings, writing guides, facilitation tools, and curated reading for your practice.</p></div>
   <div class="resources-layout">
-    <div class="resources-filter">
-      <button class="filter-chip active" onclick="filterRes(this)">All</button>
-      <button class="filter-chip" onclick="filterRes(this)">Workshops</button>
-      <button class="filter-chip" onclick="filterRes(this)">Writing Prompts</button>
-      <button class="filter-chip" onclick="filterRes(this)">Guides</button>
-      <button class="filter-chip" onclick="filterRes(this)">Audio</button>
-      <button class="filter-chip" onclick="filterRes(this)">Reading</button>
-    </div>
+    <div class="resources-filter"><button class="filter-chip active" onclick="filterRes(this)">All</button><button class="filter-chip" onclick="filterRes(this)">Workshops</button><button class="filter-chip" onclick="filterRes(this)">Writing Prompts</button><button class="filter-chip" onclick="filterRes(this)">Guides</button><button class="filter-chip" onclick="filterRes(this)">Audio</button><button class="filter-chip" onclick="filterRes(this)">Reading</button></div>
     <div class="resources-grid">
-      <div class="resource-card">
-        <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">
-          📋
-          <span class="resource-type" style="color:var(--terra);">Recap</span>
-        </div>
-        <div class="resource-body">
-          <div class="resource-title">Motherhood Speaks — Session Recap</div>
-          <div class="resource-desc">A written recap of key themes, reflections, and takeaways from each Motherhood Speaks session. Coming after our first gathering.</div>
-          <div class="resource-footer">
-            <span class="resource-author">by Tayllor Oyewole-Davis</span>
-            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="resource-card">
-        <div class="resource-thumb" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be);">
-          📓
-          <span class="resource-type" style="color:var(--sage);">Journal</span>
-        </div>
-        <div class="resource-body">
-          <div class="resource-title">52 Weeks of Healing — The Journal</div>
-          <div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and creative healing. Free for paying members. Available for purchase for non-members.</div>
-          <div class="resource-footer">
-            <span class="resource-author">Sisterhood(verb)</span>
-            <span class="resource-access" style="color:var(--terra); font-weight:600;">Members Free · Buy →</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="resource-card">
-        <div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);">
-          🎙
-          <span class="resource-type" style="color:var(--gold);">Audio</span>
-        </div>
-        <div class="resource-body">
-          <div class="resource-title">River Meditation (Guided Meditation)</div>
-          <div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div>
-          <div class="resource-footer">
-            <span class="resource-author">by Tayllor Oyewole-Davis</span>
-            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="resource-card">
-        <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#f0e0ca);">
-          📖
-          <span class="resource-type" style="color:#8B6914;">Reading</span>
-        </div>
-        <div class="resource-body">
-          <div class="resource-title">Community Care Reading List</div>
-          <div class="resource-desc">Curated books on collective healing, Black feminist thought, creative practice, and care work.</div>
-          <div class="resource-footer">
-            <span class="resource-author">Sisterhood(verb)</span>
-            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="resource-card">
-        <div class="resource-thumb" style="background:linear-gradient(135deg,#eee8f5,#d9c8f0);">
-          🗺
-          <span class="resource-type" style="color:#6B3FA0;">Guide</span>
-        </div>
-        <div class="resource-body">
-          <div class="resource-title">What They Don't Tell You About Building Community</div>
-          <div class="resource-desc">A raw, honest guide to the real work of building connected, resilient communities from the inside out.</div>
-          <div class="resource-footer">
-            <span class="resource-author">by Tayllor Oyewole-Davis</span>
-            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="resource-card">
-        <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">
-          🎤
-          <span class="resource-type" style="color:var(--terra);">Workshop</span>
-        </div>
-        <div class="resource-body">
-          <div class="resource-title">Poetry Workshop Recording</div>
-          <div class="resource-desc">Full workshop recording for spoken word artists and poets ready to deepen their practice and find their stage voice.</div>
-          <div class="resource-footer">
-            <span class="resource-author">by Tayllor Oyewole-Davis</span>
-            <span class="resource-access" style="color:var(--sage);">Coming Soon</span>
-          </div>
-        </div>
-      </div>
+      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">📋<span class="resource-type" style="color:var(--terra);">Recap</span></div><div class="resource-body"><div class="resource-title">Motherhood Speaks — Session Recap</div><div class="resource-desc">A written recap of key themes, reflections, and takeaways from each Motherhood Speaks session.</div><div class="resource-footer"><span class="resource-author">by Tayllor Oyewole-Davis</span><span class="resource-access" style="color:var(--sage);">Coming Soon</span></div></div></div>
+      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be);">📓<span class="resource-type" style="color:var(--sage);">Journal</span></div><div class="resource-body"><div class="resource-title">52 Weeks of Healing — The Journal</div><div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and creative healing.</div><div class="resource-footer"><span class="resource-author">Sisterhood(verb)</span><span class="resource-access" style="color:var(--terra);font-weight:600;">Members Free · Buy →</span></div></div></div>
+      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);">🎙<span class="resource-type" style="color:var(--gold);">Audio</span></div><div class="resource-body"><div class="resource-title">River Meditation (Guided Meditation)</div><div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div><div class="resource-footer"><span class="resource-author">by Tayllor Oyewole-Davis</span><span class="resource-access" style="color:var(--sage);">Coming Soon</span></div></div></div>
+      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#f0e0ca);">📖<span class="resource-type" style="color:#8B6914;">Reading</span></div><div class="resource-body"><div class="resource-title">Community Care Reading List</div><div class="resource-desc">Curated books on collective healing, Black feminist thought, creative practice, and care work.</div><div class="resource-footer"><span class="resource-author">Sisterhood(verb)</span><span class="resource-access" style="color:var(--sage);">Coming Soon</span></div></div></div>
     </div>
   </div>
 </div>
 
-<!-- ════ PROFILE ════ -->
+<!-- PROFILE -->
 <div class="view" id="view-profile">
   <div style="max-width:720px;margin:0 auto;padding:32px 40px 0;">
     <div class="profile-banner" id="profile-banner" onclick="document.getElementById('banner-upload').click()">
@@ -1946,32 +1139,15 @@
       <div class="stat"><div class="stat-num" id="stat-events">0</div><div class="stat-label">Events</div></div>
       <div class="stat"><div class="stat-num" id="stat-posts">0</div><div class="stat-label">Posts</div></div>
     </div>
-    <div class="profile-tags" id="profile-tags-container"></div>
   </div>
-
   <div style="max-width:720px;margin:0 auto;padding:0 32px 40px;">
     <div class="profile-section-title" style="margin-bottom:20px">Edit Profile</div>
     <div class="settings-form" style="padding:0;">
-      <div class="form-group">
-        <label class="form-label">Display Name</label>
-        <input class="form-input" type="text" placeholder="Your name" value="">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Bio</label>
-        <textarea class="form-input" rows="3" style="resize:vertical" placeholder="Tell your sisters about yourself..."></textarea>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Location</label>
-        <input class="form-input" type="text" placeholder="Where are you based?" value="">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Email</label>
-        <input class="form-input" type="email" placeholder="your@email.com" value="">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Membership Plan</label>
-        <input class="form-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--terra);font-weight:600;">
-      </div>
+      <div class="form-group"><label class="form-label">Display Name</label><input class="form-input" type="text" placeholder="Your name" value=""></div>
+      <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" rows="3" style="resize:vertical" placeholder="Tell your sisters about yourself..."></textarea></div>
+      <div class="form-group"><label class="form-label">Location</label><input class="form-input" type="text" placeholder="Where are you based?" value=""></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="your@email.com" value=""></div>
+      <div class="form-group"><label class="form-label">Membership Plan</label><input class="form-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--terra);font-weight:600;"></div>
       <button class="save-btn" onclick="saveProfile()">Save Changes</button>
     </div>
   </div>
@@ -1979,49 +1155,28 @@
 
 <!-- MOBILE NAV -->
 <div class="mobile-nav">
-  <button class="mobile-nav-btn active" onclick="showView('home', this)" id="mob-home"><span>🏠</span>Home</button>
-  <button class="mobile-nav-btn" onclick="showViewWithProfile('circles', this)" id="mob-circles"><span>⭕</span>Circles</button>
-  <button class="mobile-nav-btn" onclick="showView('events', this)" id="mob-events"><span>📅</span>Events</button>
-  <button class="mobile-nav-btn" onclick="showView('resources', this)" id="mob-resources"><span>📚</span>Library</button>
-  <button class="mobile-nav-btn" onclick="showViewWithProfile('profile', this)" id="mob-profile"><span>👤</span>Profile</button>
+  <button class="mobile-nav-btn active" onclick="showView('home',this)" id="mob-home"><span>🏠</span>Home</button>
+  <button class="mobile-nav-btn" onclick="showViewWithProfile('circles',this)" id="mob-circles"><span>⭕</span>Circles</button>
+  <button class="mobile-nav-btn" onclick="showView('events',this)" id="mob-events"><span>📅</span>Events</button>
+  <button class="mobile-nav-btn" onclick="showView('resources',this)" id="mob-resources"><span>📚</span>Library</button>
+  <button class="mobile-nav-btn" onclick="showViewWithProfile('profile',this)" id="mob-profile"><span>👤</span>Profile</button>
 </div>
 
 <script>
-  function openModal() {
-    document.getElementById('agreements-modal').classList.add('open');
-  }
-  function closeModal() {
-    document.getElementById('agreements-modal').classList.remove('open');
-  }
-  function handleAgree() {
-    document.getElementById('agreements-modal').classList.remove('open');
-    // Small delay to let agreements modal close before opening auth modal
-    setTimeout(() => {
-      openAuthModal('signup');
-    }, 200);
-  }
-  function toggleAgreeBtn() {
-    const checked = document.getElementById('agree-check').checked;
-    document.getElementById('agree-btn').disabled = !checked;
-  }
+  function openModal() { document.getElementById('agreements-modal').classList.add('open'); }
+  function closeModal() { document.getElementById('agreements-modal').classList.remove('open'); }
+  function handleAgree() { document.getElementById('agreements-modal').classList.remove('open'); setTimeout(() => openAuthModal('signup'), 200); }
+  function toggleAgreeBtn() { document.getElementById('agree-btn').disabled = !document.getElementById('agree-check').checked; }
 
   const views = ['home','circles','events','resources','profile','circle-detail'];
 
   function showView(name, el) {
-    views.forEach(v => {
-      document.getElementById('view-'+v).classList.remove('active');
-    });
+    views.forEach(v => document.getElementById('view-'+v).classList.remove('active'));
     document.getElementById('view-'+name).classList.add('active');
-
-    // Desktop nav
     document.querySelectorAll('.nav-links a:not(.nav-cta)').forEach(a => a.classList.remove('active'));
-    // Mobile nav
     document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('mob-'+name)?.classList.add('active');
-
-    if (el && !el.classList.contains('mobile-nav-btn') && !el.classList.contains('nav-cta')) {
-      el.classList.add('active');
-    }
+    if (el && !el.classList.contains('mobile-nav-btn') && !el.classList.contains('nav-cta')) el.classList.add('active');
     window.scrollTo(0,0);
     return false;
   }
@@ -2029,8 +1184,7 @@
   let toastTimer;
   function showToast(msg) {
     const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
+    t.textContent = msg; t.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
   }
@@ -2048,9 +1202,8 @@
   }
 
   function toggleJoin(btn, circleName) {
-    if (circleName) {
-      joinCircleDB(circleName, btn);
-    } else {
+    if (circleName) joinCircleDB(circleName, btn);
+    else {
       const joined = btn.classList.contains('joined');
       btn.classList.toggle('joined');
       btn.textContent = joined ? 'Join' : 'Joined ✦';
@@ -2059,13 +1212,8 @@
   }
 
   function registerEvent(btn, eventName) {
-    if (eventName) {
-      registerEventDB(eventName, btn);
-    } else {
-      btn.classList.add('registered');
-      btn.textContent = 'Registered ✦';
-      showToast('You\'re registered! Check your email ✦');
-    }
+    if (eventName) registerEventDB(eventName, btn);
+    else { btn.classList.add('registered'); btn.textContent = 'Registered ✦'; showToast('You\'re registered! Check your email ✦'); }
   }
 
   function filterRes(btn) {
@@ -2080,42 +1228,24 @@
     if (!text && !selectedGifUrl) { showToast('Write something first ✦'); return; }
     if (!currentUser) { openAuthModal('login'); return; }
     const content = text + (selectedGifUrl ? `\n[gif:${selectedGifUrl}]` : '');
-    savePost(content);
-    ta.value = '';
-    removeGif();
+    savePost(content); ta.value = ''; removeGif();
   }
 
-  function toggleMobile() {
-    showToast('Mobile menu — use bottom nav');
-  }
+  function toggleMobile() { showToast('Mobile menu — use bottom nav'); }
 
-  // ── PHOTO UPLOADS ──
   async function uploadAvatar(input) {
     if (!currentUser || !input.files[0]) return;
     const file = input.files[0];
     const fileExt = file.name.split('.').pop();
     const filePath = `${currentUser.id}-avatar.${fileExt}`;
     showToast('Uploading photo...');
-    const { error: uploadError } = await _supabase.storage
-      .from('avatars')
-      .upload(filePath, file, { upsert: true });
+    const { error: uploadError } = await _supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
     if (uploadError) { showToast('Upload failed: ' + uploadError.message); return; }
     const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
     const avatarUrl = data.publicUrl;
-    const { error: updateError } = await _supabase
-      .from('profiles')
-      .update({ avatar_url: avatarUrl })
-      .eq('id', currentUser.id)
-      .select();
-    if (updateError) { showToast('Save failed: ' + updateError.message); return; }
+    await _supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
     const avatarEl = document.getElementById('profile-avatar-display');
-    if (avatarEl) {
-      avatarEl.style.backgroundImage = `url(${avatarUrl}?t=${Date.now()})`;
-      avatarEl.style.backgroundSize = 'cover';
-      avatarEl.style.backgroundPosition = 'center';
-      avatarEl.style.overflow = 'hidden';
-      avatarEl.textContent = '';
-    }
+    if (avatarEl) { avatarEl.style.backgroundImage = `url(${avatarUrl}?t=${Date.now()})`; avatarEl.style.backgroundSize = 'cover'; avatarEl.style.backgroundPosition = 'center'; avatarEl.style.overflow = 'hidden'; avatarEl.textContent = ''; }
     showToast('Profile photo updated ✦');
   }
 
@@ -2125,62 +1255,34 @@
     const fileExt = file.name.split('.').pop();
     const filePath = `${currentUser.id}-banner.${fileExt}`;
     showToast('Uploading banner...');
-    const { data: uploadData, error: uploadError } = await _supabase.storage
-      .from('avatars')
-      .upload(filePath, file, { upsert: true });
+    const { error: uploadError } = await _supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
     if (uploadError) { showToast('Upload failed: ' + uploadError.message); return; }
     const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
     const bannerUrl = data.publicUrl;
-    const { error: updateError } = await _supabase
-      .from('profiles')
-      .update({ banner_url: bannerUrl })
-      .eq('id', currentUser.id)
-      .select();
-    if (updateError) { showToast('Save failed: ' + updateError.message); return; }
+    await _supabase.from('profiles').update({ banner_url: bannerUrl }).eq('id', currentUser.id);
     const bannerImg = document.getElementById('profile-banner-img');
-    if (bannerImg) {
-      bannerImg.src = bannerUrl + '?t=' + Date.now();
-      bannerImg.style.display = 'block';
-    }
+    if (bannerImg) { bannerImg.src = bannerUrl + '?t=' + Date.now(); bannerImg.style.display = 'block'; }
     showToast('Banner photo updated ✦');
   }
 
-  // Load profile photos when profile loads
   async function loadProfilePhotos() {
     if (!currentUser) return;
-    const { data: profile } = await _supabase
-      .from('profiles').select('avatar_url, banner_url').eq('id', currentUser.id).single();
+    const { data: profile } = await _supabase.from('profiles').select('avatar_url, banner_url').eq('id', currentUser.id).single();
     if (profile?.avatar_url) {
       const avatarEl = document.getElementById('profile-avatar-display');
-      if (avatarEl) {
-        avatarEl.style.backgroundImage = `url(${profile.avatar_url})`;
-        avatarEl.style.backgroundSize = 'cover';
-        avatarEl.style.backgroundPosition = 'center';
-        avatarEl.style.overflow = 'hidden';
-        avatarEl.textContent = '';
-      }
+      if (avatarEl) { avatarEl.style.backgroundImage = `url(${profile.avatar_url})`; avatarEl.style.backgroundSize = 'cover'; avatarEl.style.backgroundPosition = 'center'; avatarEl.style.overflow = 'hidden'; avatarEl.textContent = ''; }
     }
     if (profile?.banner_url) {
       const bannerImg = document.getElementById('profile-banner-img');
-      if (bannerImg) {
-        bannerImg.src = profile.banner_url;
-        bannerImg.style.display = 'block';
-      }
+      if (bannerImg) { bannerImg.src = profile.banner_url; bannerImg.style.display = 'block'; }
     }
   }
 
-  // Load profile view with photos
   function showViewWithProfile(name, el) {
     showView(name, el);
-    if (name === 'profile') {
-      loadProfile();
-      loadProfilePhotos();
-    }
-    if (name === 'circles') {
-      loadJoinedCircles();
-    }
+    if (name === 'profile') { loadProfile(); loadProfilePhotos(); }
+    if (name === 'circles') loadJoinedCircles();
   }
-
 </script>
 </body>
 </html>
