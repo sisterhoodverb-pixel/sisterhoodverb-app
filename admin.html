@@ -181,9 +181,9 @@ function doSend() {
   fetch(FN, {
     method: 'POST',
     // ✅ FIX 2: added apikey header
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SKEY, 'apikey': SKEY },
+    headers: { 'Content-Type': 'application/json' },
     // ✅ FIX 1: changed adminSecret → secret
-    body: JSON.stringify({ subject: s, message: b, secret: SECRET })
+    body: JSON.stringify({ subject: s, message: b })
   }).then(function(r) { return r.json(); }).then(function(d) {
     if (d.success) {
       showMsg('msg-send', 'ok', 'Sent to ' + d.sent + ' sisters! ✦');
