@@ -183,7 +183,8 @@
   </div>
 </div>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js">  // Attach event listeners after DOM loads
+<script>
+  // Attach event listeners after DOM loads
   window.addEventListener('load', function() {
     document.getElementById('login-btn').addEventListener('click', login);
     document.getElementById('admin-password').addEventListener('keydown', function(e) {
@@ -191,7 +192,7 @@
     });
     document.getElementById('send-btn').addEventListener('click', sendEmail);
   });
-</script><script>
+
   const SUPABASE_URL = 'https://cqiymqekdtewnorojlus.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381';
   const EDGE_FUNCTION_URL = `${SUPABASE_URL}/functions/v1/send-daily-email`;
