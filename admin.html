@@ -1,111 +1,228 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { SmtpClient } from "https://deno.land/x/smtp@v0.7.0/mod.ts";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SV Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--terra:#C4622D;--deep:#1C1410;--cream:#F5EFE6;--gold:#D4A853;--sage:#7A8C6E;--warm:#FBF7F2}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--warm);color:var(--deep);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.wrap{max-width:660px;width:100%}
+.hdr{text-align:center;margin-bottom:36px}
+.logo{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--terra)}
+.logo em{font-style:italic;font-weight:400}
+.sub{font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(28,20,16,0.4);margin-top:6px}
+.card{background:white;border:1px solid rgba(196,98,45,0.12);border-radius:6px;padding:40px;box-shadow:0 4px 30px rgba(28,20,16,0.06)}
+.label{display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500}
+.inp{width:100%;padding:12px 16px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--deep);background:white;outline:none;transition:border-color 0.2s}
+.inp:focus{border-color:var(--terra)}
+textarea.inp{resize:vertical;min-height:160px;line-height:1.7}
+.grp{margin-bottom:22px}
+.btn-main{background:var(--terra);color:white;border:none;padding:13px 28px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s;width:100%}
+.btn-main:hover{background:#a8501f}
+.btn-main:disabled{background:rgba(196,98,45,0.3);cursor:not-allowed}
+.btn-sec{background:none;border:1.5px solid var(--terra);color:var(--terra);padding:13px 28px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;border-radius:2px;transition:all 0.2s;flex:1}
+.btn-sec:hover{background:var(--cream)}
+.row{display:flex;gap:12px}
+.msg{margin-top:16px;padding:14px;border-radius:3px;font-size:0.85rem;line-height:1.6;display:none}
+.msg.ok{background:rgba(122,140,110,0.1);border:1px solid rgba(122,140,110,0.3);color:var(--sage);display:block}
+.msg.err{background:rgba(196,98,45,0.08);border:1px solid rgba(196,98,45,0.2);color:var(--terra);display:block}
+.sec-lbl{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.sec-lbl::after{content:'';flex:1;height:1px;background:rgba(196,98,45,0.15)}
+.stats{display:flex;gap:14px;margin-bottom:28px}
+.stat{flex:1;background:var(--cream);border-radius:4px;padding:16px;text-align:center}
+.stat-n{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--terra);font-weight:700}
+.stat-l{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.45);margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.chip{padding:6px 14px;border-radius:20px;border:1.5px solid rgba(196,98,45,0.2);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.78rem;color:rgba(28,20,16,0.6);transition:all 0.2s}
+.chip:hover{background:var(--cream);border-color:var(--terra);color:var(--terra)}
+.prev{background:var(--cream);border-radius:4px;padding:22px;margin-bottom:20px;display:none}
+.prev.show{display:block}
+.prev-lbl{font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:14px;font-weight:600}
+.prev-box{background:white;border-radius:4px;padding:20px;border:1px solid rgba(196,98,45,0.1)}
+.prev-from{font-size:0.76rem;color:rgba(28,20,16,0.4);margin-bottom:4px}
+.prev-subj{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:12px}
+.prev-body{font-size:0.86rem;line-height:1.8;color:rgba(28,20,16,0.7);white-space:pre-wrap}
+#v-login{display:block}
+#v-admin{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="logo">Sisterhood<em>(verb)</em></div>
+    <div class="sub">Admin Panel</div>
+  </div>
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  <div id="v-login">
+    <div class="card" style="max-width:400px;margin:0 auto;">
+      <div class="grp">
+        <label class="label">Admin Password</label>
+        <input class="inp" type="password" id="pw" placeholder="Enter password">
+      </div>
+      <button class="btn-main" id="btn-login">Enter the Portal ✦</button>
+      <div class="msg" id="msg-login"></div>
+    </div>
+  </div>
+
+  <div id="v-admin">
+    <div class="card">
+      <div class="stats">
+        <div class="stat"><div class="stat-n" id="n-members">—</div><div class="stat-l">Members</div></div>
+        <div class="stat"><div class="stat-n" id="n-sent">0</div><div class="stat-l">Emails Sent</div></div>
+        <div class="stat"><div class="stat-n" id="n-last">Never</div><div class="stat-l">Last Sent</div></div>
+      </div>
+
+      <div class="sec-lbl">Compose Daily Email</div>
+
+      <div class="grp">
+        <label class="label">Subject Line</label>
+        <input class="inp" type="text" id="subj" placeholder="Today's inspiration for your sisters...">
+      </div>
+
+      <div class="grp">
+        <label class="label">Quick Prompts — click to use</label>
+        <div class="chips">
+          <button class="chip" id="c1">Writing Prompt</button>
+          <button class="chip" id="c2">Affirmation</button>
+          <button class="chip" id="c3">Discussion Question</button>
+          <button class="chip" id="c4">Gratitude Practice</button>
+          <button class="chip" id="c5">Weekly Challenge</button>
+        </div>
+      </div>
+
+      <div class="grp">
+        <label class="label">Message</label>
+        <textarea class="inp" id="body" placeholder="Write your daily inspiration, prompt, or message..."></textarea>
+      </div>
+
+      <div class="prev" id="preview">
+        <div class="prev-lbl">Email Preview</div>
+        <div class="prev-box">
+          <div class="prev-from">From: Sisterhood(verb)</div>
+          <div class="prev-subj" id="prev-subj"></div>
+          <hr style="border:none;border-top:1px solid rgba(196,98,45,0.1);margin:10px 0;">
+          <div class="prev-body" id="prev-body"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <button class="btn-sec" id="btn-prev">Preview</button>
+        <button class="btn-main" style="flex:2;" id="btn-send">Send to All Sisters ✦</button>
+      </div>
+      <div class="msg" id="msg-send"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var SURL = 'https' + '://' + 'cqiymqekdtewnorojlus.supabase.co';
+var SKEY = 'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381';
+var FN = SURL + '/functions/v1/send-daily-email';
+var PWD = 'sisteradmin2026';
+var SECRET = 'sisteradmin2026';
+var totalSent = 0;
+
+var prompts = {
+  'c1': { s: 'Today\'s Writing Prompt from Sisterhood(verb)', b: 'Good morning, sis\n\nToday\'s writing prompt:\n\n"Write about a moment when you chose yourself. What did it cost you? What did it give you?"\n\nTake 10 minutes and let the words come. Share in the community feed.\n\nWith love,\nTayllor' },
+  'c2': { s: 'A Morning Affirmation Just for You', b: 'Good morning, sis\n\nToday\'s affirmation:\n\n"I am not behind. I am not too much. I am not too little. I am exactly where I am supposed to be."\n\nSay it out loud. Mean it.\n\nWith love,\nTayllor' },
+  'c3': { s: 'A Question for Your Sisters Today', b: 'Good morning, sis\n\nThis week\'s discussion question:\n\n"What does rest look like for you right now — and what\'s getting in the way of it?"\n\nShare your answer in the community feed.\n\nWith love,\nTayllor' },
+  'c4': { s: 'Your Morning Gratitude Practice', b: 'Good morning, sis\n\nBefore the day takes over, take 2 minutes:\n\n1. Something about your body you\'re grateful for\n2. Something hard you survived\n3. Something small that brings you joy\n\nThis is your practice.\n\nWith love,\nTayllor' },
+  'c5': { s: 'Your Sisterhood(verb) Challenge This Week', b: 'Good morning, sis\n\nThis week\'s challenge:\n\n"Do one thing this week that is purely for your joy — not productive, not for anyone else. Just joy."\n\nShare what you did in the community.\n\nWith love,\nTayllor' }
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+function showMsg(id, type, txt) {
+  var el = document.getElementById(id);
+  el.className = 'msg ' + type;
+  el.textContent = txt;
+}
+
+function doLogin() {
+  var val = document.getElementById('pw').value;
+  if (val === PWD) {
+    document.getElementById('v-login').style.display = 'none';
+    document.getElementById('v-admin').style.display = 'block';
+    loadStats();
+  } else {
+    showMsg('msg-login', 'err', 'Incorrect password — try again');
   }
+}
 
-  try {
-    const body = await req.json();
-    const { secret, subject, message } = body;
+function loadStats() {
+  fetch(SURL + '/rest/v1/profiles?select=id', {
+    headers: { 'apikey': SKEY, 'Authorization': 'Bearer ' + SKEY }
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    document.getElementById('n-members').textContent = d.length || 0;
+  }).catch(function() {
+    document.getElementById('n-members').textContent = '—';
+  });
+}
 
-    // Auth check
-    if (secret !== Deno.env.get("ADMIN_SECRET")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+function doPreview() {
+  var s = document.getElementById('subj').value.trim();
+  var b = document.getElementById('body').value.trim();
+  if (!s || !b) { showMsg('msg-send', 'err', 'Fill in subject and message first'); return; }
+  document.getElementById('prev-subj').textContent = s;
+  document.getElementById('prev-body').textContent = b;
+  document.getElementById('preview').className = 'prev show';
+  document.getElementById('msg-send').className = 'msg';
+}
+
+function doSend() {
+  var s = document.getElementById('subj').value.trim();
+  var b = document.getElementById('body').value.trim();
+  if (!s || !b) { showMsg('msg-send', 'err', 'Fill in subject and message first'); return; }
+  var btn = document.getElementById('btn-send');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  showMsg('msg-send', 'ok', 'Sending to all sisters — please wait...');
+  fetch(FN, {
+    method: 'POST',
+    // ✅ FIX 2: added apikey header
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SKEY, 'apikey': SKEY },
+    // ✅ FIX 1: changed adminSecret → secret
+    body: JSON.stringify({ subject: s, message: b, secret: SECRET })
+  }).then(function(r) { return r.json(); }).then(function(d) {
+    if (d.success) {
+      showMsg('msg-send', 'ok', 'Sent to ' + d.sent + ' sisters! ✦');
+      document.getElementById('subj').value = '';
+      document.getElementById('body').value = '';
+      document.getElementById('preview').className = 'prev';
+      totalSent += d.sent;
+      document.getElementById('n-sent').textContent = totalSent;
+      document.getElementById('n-last').textContent = 'Today';
+    } else {
+      showMsg('msg-send', 'err', 'Error: ' + (d.error || 'Something went wrong'));
     }
+    btn.disabled = false;
+    btn.textContent = 'Send to All Sisters ✦';
+  }).catch(function(e) {
+    showMsg('msg-send', 'err', 'Connection error — try again');
+    btn.disabled = false;
+    btn.textContent = 'Send to All Sisters ✦';
+  });
+}
 
-    if (!subject || !message) {
-      return new Response(JSON.stringify({ error: "Missing subject or message" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Init Supabase with service role to fetch member emails
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-
-    if (authError) {
-      return new Response(JSON.stringify({ error: "Auth error: " + authError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const emails = authUsers.users
-      .filter((u) => u.email)
-      .map((u) => u.email!);
-
-    if (emails.length === 0) {
-      return new Response(JSON.stringify({ error: "No member emails found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Connect to Gmail SMTP
-    const client = new SmtpClient();
-    await client.connectTLS({
-      hostname: "smtp.gmail.com",
-      port: 465,
-      username: Deno.env.get("GMAIL_USER")!,
-      password: Deno.env.get("GMAIL_APP_PASSWORD")!,
-    });
-
-    let sent = 0;
-    let failed = 0;
-
-    for (const email of emails) {
-      try {
-        await client.send({
-          from: Deno.env.get("GMAIL_USER")!,
-          to: email,
-          subject: subject,
-          content: message,
-          html: `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:32px;">
-            <h2 style="color:#C4622D;font-family:Georgia,serif;">✦ Sisterhood(verb)</h2>
-            <div style="line-height:1.8;font-size:15px;color:#1C1410;">${message.replace(/\n/g, "<br>")}</div>
-            <hr style="margin-top:32px;border:none;border-top:1px solid #eee;">
-            <p style="color:#999;font-size:12px;">You're receiving this as a member of the Sisterhood(verb) community.</p>
-          </div>`,
-        });
-        sent++;
-        console.log("Sent to: " + email);
-      } catch (e) {
-        console.error("Failed to send to " + email + ": " + e.message);
-        failed++;
-      }
-    }
-
-    await client.close();
-
-    return new Response(
-      JSON.stringify({ success: true, sent, failed }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
-
-  } catch (err) {
-    console.error("Unexpected error:", err.message);
-    return new Response(JSON.stringify({ error: "Unexpected error: " + err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+function usePrompt(id) {
+  var p = prompts[id];
+  if (p) {
+    document.getElementById('subj').value = p.s;
+    document.getElementById('body').value = p.b;
+    doPreview();
   }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('btn-login').addEventListener('click', doLogin);
+  document.getElementById('pw').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('btn-prev').addEventListener('click', doPreview);
+  document.getElementById('btn-send').addEventListener('click', doSend);
+  ['c1','c2','c3','c4','c5'].forEach(function(id) {
+    document.getElementById(id).addEventListener('click', function() { usePrompt(id); });
+  });
 });
+</script>
+</body>
+</html>
