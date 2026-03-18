@@ -891,6 +891,37 @@
 </head>
 <body>
 
+<!-- CIRCLE PROPOSAL MODAL -->
+<div class="modal-overlay" id="proposal-modal" onclick="if(event.target===this)closeProposalModal()">
+  <div class="modal" style="max-width:500px;">
+    <div class="modal-title">Propose a Circle ✦</div>
+    <div class="modal-sub">Share your vision — we'll be in touch to co-facilitate</div>
+    <div class="form-group">
+      <label class="form-label">Circle Name</label>
+      <input class="form-input" id="prop-name" type="text" placeholder="What would you call it?">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description — What is it about?</label>
+      <textarea class="form-input" id="prop-desc" rows="3" style="resize:vertical" placeholder="Describe the space you want to hold..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Why do you want to host this?</label>
+      <textarea class="form-input" id="prop-why" rows="3" style="resize:vertical" placeholder="What draws you to facilitating this circle?"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <input class="form-input" id="prop-contact-name" type="text" placeholder="Your name">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Your Email or Phone</label>
+      <input class="form-input" id="prop-contact" type="text" placeholder="How should we reach you?">
+    </div>
+    <button class="modal-agree-btn" id="prop-submit-btn" onclick="submitProposal()">Submit My Proposal ✦</button>
+    <div class="modal-cancel"><button onclick="closeProposalModal()">Not right now</button></div>
+    <div class="msg" id="prop-msg" style="margin-top:12px;"></div>
+  </div>
+</div>
+
 <!-- MEMBER PROFILE MODAL -->
 <div class="modal-overlay" id="member-profile-modal" onclick="if(event.target===this)closeMemberProfile()">
   <div class="modal member-profile-modal" style="padding:0;">
@@ -1053,7 +1084,7 @@
     <div class="circle-card" onclick="openCircle('Speak Poet!')"><div class="circle-banner" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);"><span class="circle-icon">🎤</span></div><div class="circle-body"><div class="circle-name">Speak Poet!</div><div class="circle-desc">For slam poets, performers, and spoken word artists looking for space to share your work and connect.</div><div class="circle-meta"><button class="join-btn" data-circle="Speak Poet!" onclick="event.stopPropagation();toggleJoin(this,'Speak Poet!')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('Healing As We Hustle')"><div class="circle-banner" style="background:linear-gradient(135deg,#2d1f3d,#5c3d7a);"><span class="circle-icon">💼</span></div><div class="circle-body"><div class="circle-name">Healing As We Hustle</div><div class="circle-desc">Space for entrepreneurs to connect, network, and get support as we go big or go home.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="Healing As We Hustle" onclick="event.stopPropagation();toggleJoin(this,'Healing As We Hustle')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('The Travel Girlies')"><div class="circle-banner" style="background:linear-gradient(135deg,#1a3a4a,#2d6a8a);"><span class="circle-icon">✈️</span></div><div class="circle-body"><div class="circle-name">The Travel Girlies</div><div class="circle-desc">Trip tips, resources, warnings, and storytelling. Booked and busy or still in the group chat — you're welcome here.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="The Travel Girlies" onclick="event.stopPropagation();toggleJoin(this,'The Travel Girlies')">Join</button></div></div></div>
-    <div class="circle-card" style="border:1.5px dashed rgba(196,98,45,0.3);background:var(--cream);"><div class="circle-banner" style="background:transparent;height:70px;"><span class="circle-icon">✦</span></div><div class="circle-body"><div class="circle-name" style="color:var(--terra)">Start a Circle</div><div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the Sisterhood(verb) team.</div><div class="circle-meta"><span class="circle-members">Members only</span><button class="join-btn" onclick="showToast('Proposal form opening...')">Propose</button></div></div></div>
+    <div class="circle-card" style="border:1.5px dashed rgba(196,98,45,0.3);background:var(--cream);"><div class="circle-banner" style="background:transparent;height:70px;"><span class="circle-icon">✦</span></div><div class="circle-body"><div class="circle-name" style="color:var(--terra)">Start a Circle</div><div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the Sisterhood(verb) team.</div><div class="circle-meta"><span class="circle-members">Members only</span><button class="join-btn" onclick="openProposalModal()">Propose</button></div></div></div>
   </div>
 </div>
 
@@ -1282,6 +1313,92 @@
     showView(name, el);
     if (name === 'profile') { loadProfile(); loadProfilePhotos(); }
     if (name === 'circles') loadJoinedCircles();
+  }
+
+  function openProposalModal() {
+    if (!currentUser) { openAuthModal("login"); return; }
+    document.getElementById("proposal-modal").classList.add("open");
+    // Pre-fill name if we have it
+    if (window._currentUserName) {
+      document.getElementById("prop-contact-name").value = window._currentUserName;
+    }
+    if (currentUser?.email) {
+      document.getElementById("prop-contact").value = currentUser.email;
+    }
+  }
+
+  function closeProposalModal() {
+    document.getElementById("proposal-modal").classList.remove("open");
+    document.getElementById("prop-msg").className = "msg";
+  }
+
+  async function submitProposal() {
+    const circleName = document.getElementById("prop-name").value.trim();
+    const desc = document.getElementById("prop-desc").value.trim();
+    const why = document.getElementById("prop-why").value.trim();
+    const contactName = document.getElementById("prop-contact-name").value.trim();
+    const contact = document.getElementById("prop-contact").value.trim();
+
+    if (!circleName || !desc || !why || !contactName || !contact) {
+      const msg = document.getElementById("prop-msg");
+      msg.className = "msg err";
+      msg.style.display = "block";
+      msg.textContent = "Please fill in all fields before submitting.";
+      return;
+    }
+
+    const btn = document.getElementById("prop-submit-btn");
+    btn.disabled = true;
+    btn.textContent = "Submitting...";
+
+    const subject = "New Circle Proposal: " + circleName;
+    const message = "A member has proposed a new Circle!
+
+" +
+      "Circle Name: " + circleName + "
+
+" +
+      "Description:
+" + desc + "
+
+" +
+      "Why they want to host it:
+" + why + "
+
+" +
+      "Submitted by: " + contactName + "
+" +
+      "Contact: " + contact;
+
+    try {
+      const res = await fetch("https://cqiymqekdtewnorojlus.supabase.co/functions/v1/send-daily-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject, message, proposalOnly: true })
+      });
+      const data = await res.json();
+      const msg = document.getElementById("prop-msg");
+      msg.style.display = "block";
+      msg.className = "msg ok";
+      msg.textContent = "Your proposal has been sent! We’ll be in touch soon ✨";
+      btn.textContent = "Submitted ✔";
+      // Clear form after 3 seconds and close
+      setTimeout(() => {
+        document.getElementById("prop-name").value = "";
+        document.getElementById("prop-desc").value = "";
+        document.getElementById("prop-why").value = "";
+        closeProposalModal();
+        btn.disabled = false;
+        btn.textContent = "Submit My Proposal ✦";
+      }, 3000);
+    } catch (e) {
+      const msg = document.getElementById("prop-msg");
+      msg.style.display = "block";
+      msg.className = "msg err";
+      msg.textContent = "Could not send — please try again.";
+      btn.disabled = false;
+      btn.textContent = "Submit My Proposal ✦";
+    }
   }
 </script>
 </body>
