@@ -177,9 +177,20 @@
         <div class="card-body">${textContent}${gifHtml}</div>
         <div class="card-footer">
           <button class="react-btn" onclick="toggleLike(this, '${post.id}')">🫂 <span>${post.likes || 0}</span></button>
-          <button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button>
+          <button class="react-btn" onclick="toggleReplies('${post.id}', this)">💬 <span>Reply</span></button>
           <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-        </div>`;
+        </div>
+        <div id="replies-${post.id}" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(196,98,45,0.08);"></div>\`;
+      const isQuestion = post.tag === 'Question';
+      if (isQuestion) {
+        card.style.borderColor = 'rgba(212,168,83,0.5)';
+        card.style.borderLeftWidth = '3px';
+        card.style.borderLeftColor = 'var(--gold)';
+        const tagEl = card.querySelector('.card-tag');
+        if (tagEl) { tagEl.style.background = 'linear-gradient(135deg,var(--gold),#b8860b)'; tagEl.style.color = 'white'; tagEl.textContent = '❓ Question'; }
+        const bodyEl = card.querySelector('.card-body');
+        if (bodyEl) { bodyEl.style.fontFamily = 'Playfair Display,serif'; bodyEl.style.fontStyle = 'italic'; bodyEl.style.fontSize = '1rem'; }
+      }
       feed.insertBefore(card, feed.firstChild);
     });
   }
@@ -355,6 +366,86 @@
     loadProfile();
   }
 
+  // ── QUESTION MODE ──
+  let isQuestionMode = false;
+
+  function toggleQuestionMode() {
+    isQuestionMode = !isQuestionMode;
+    const btn = document.getElementById('question-btn');
+    const ta = document.querySelector('#view-home .composer-input');
+    const postBtn = document.querySelector('#view-home .post-btn');
+    if (isQuestionMode) {
+      btn.classList.add('active');
+      btn.style.color = 'var(--gold)';
+      ta.placeholder = 'Ask your sisters a question...';
+      postBtn.textContent = 'Ask ♦';
+    } else {
+      btn.classList.remove('active');
+      btn.style.color = '';
+      ta.placeholder = "What\'s on your heart today, sister?";
+      postBtn.textContent = 'Share';
+    }
+  }
+
+  // ── REPLIES ──
+  async function loadReplies(postId, container) {
+    container.innerHTML = '<div style="font-size:0.8rem;color:rgba(28,20,16,0.4);padding:8px 0;">Loading replies...</div>';
+    const { data: replies } = await _supabase
+      .from('post_replies').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+    const userIds = replies ? [...new Set(replies.map(r => r.user_id).filter(Boolean))] : [];
+    let profileMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await _supabase.from('profiles').select('id, name, avatar_url').in('id', userIds);
+      if (profiles) profiles.forEach(p => profileMap[p.id] = p);
+    }
+    container.innerHTML = '';
+    if (replies && replies.length > 0) {
+      replies.forEach(reply => {
+        const profile = profileMap[reply.user_id];
+        const name = profile?.name || 'Sister';
+        const initial = name.charAt(0).toUpperCase();
+        const avatarHtml = profile?.avatar_url
+          ? `<div class="avatar" style="width:28px;height:28px;font-size:0.65rem;background-image:url('${profile.avatar_url}');background-size:cover;background-position:center;flex-shrink:0;"></div>`
+          : `<div class="avatar" style="width:28px;height:28px;font-size:0.65rem;background:linear-gradient(135deg,var(--terra),var(--gold));flex-shrink:0;">${initial}</div>`;
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;';
+        div.innerHTML = avatarHtml + '<div style="flex:1;background:var(--cream);border-radius:4px;padding:10px 12px;"><div style="font-size:0.78rem;font-weight:600;font-family:Playfair Display,serif;margin-bottom:3px;">' + name + '</div><div style="font-size:0.84rem;color:rgba(28,20,16,0.8);line-height:1.6;">' + reply.content + '</div><div style="font-size:0.7rem;color:rgba(28,20,16,0.4);margin-top:4px;">' + timeAgo(reply.created_at) + '</div></div>';
+        container.appendChild(div);
+      });
+    } else {
+      container.innerHTML = '<div style="font-size:0.82rem;color:rgba(28,20,16,0.4);padding:8px 0;">No replies yet — be the first to respond ♦</div>';
+    }
+    const initial = window._currentUserName ? window._currentUserName.charAt(0).toUpperCase() : 'S';
+    const replyComposer = document.createElement('div');
+    replyComposer.style.cssText = 'display:flex;gap:10px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(196,98,45,0.1);';
+    replyComposer.innerHTML = '<div class="avatar" style="width:28px;height:28px;font-size:0.65rem;background:linear-gradient(135deg,var(--terra),var(--gold));flex-shrink:0;">' + initial + '</div><div style="flex:1;display:flex;gap:8px;"><input type="text" placeholder="Write a reply..." id="reply-input-' + postId + '" style="flex:1;padding:8px 12px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:DM Sans,sans-serif;font-size:0.84rem;outline:none;" onkeydown="if(event.key==='Enter')submitReply('' + postId + '',this,document.getElementById('replies-' + postId + ''))"><button onclick="submitReply('' + postId + '',document.getElementById('reply-input-' + postId + ''),document.getElementById('replies-' + postId + ''))" style="background:var(--terra);color:white;border:none;padding:8px 14px;border-radius:2px;cursor:pointer;font-size:0.78rem;font-weight:600;font-family:DM Sans,sans-serif;white-space:nowrap;">Reply ♦</button></div>';
+    container.appendChild(replyComposer);
+  }
+
+  async function submitReply(postId, input, container) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const content = input.value.trim();
+    if (!content) return;
+    input.value = '';
+    const { error } = await _supabase.from('post_replies').insert({ post_id: postId, user_id: currentUser.id, content: content });
+    if (error) { showToast('Could not post reply: ' + error.message); return; }
+    loadReplies(postId, container);
+  }
+
+  function toggleReplies(postId, btn) {
+    const container = document.getElementById('replies-' + postId);
+    if (!container) return;
+    const isOpen = container.style.display !== 'none';
+    if (isOpen) {
+      container.style.display = 'none';
+      btn.querySelector('span').textContent = 'Reply';
+    } else {
+      container.style.display = 'block';
+      btn.querySelector('span').textContent = 'Hide';
+      loadReplies(postId, container);
+    }
+  }
+
   // ── GIF PICKER ──
   const GIPHY_KEY = 'AgkjTleIOrzAZS8xROMk5MBOhC87TO4v';
   let selectedGifUrl = null;
@@ -515,9 +606,10 @@
         <div class="card-body">${textContent}${gifHtml}</div>
         <div class="card-footer">
           <button class="react-btn" onclick="toggleLike(this, '${post.id}')">🫂 <span>${post.likes || 0}</span></button>
-          <button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button>
+          <button class="react-btn" onclick="toggleReplies('${post.id}', this)">💬 <span>Reply</span></button>
           <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-        </div>`;
+        </div>
+        <div id="replies-${post.id}" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(196,98,45,0.08);"></div>`;
       feed.appendChild(card);
     });
   }
@@ -1034,6 +1126,7 @@
           <button class="tool-btn" onclick="showToast('Voice notes coming soon')">🎙 Voice</button>
           <button class="tool-btn" onclick="showToast('Prompts loaded')">✨ Prompt</button>
           <button class="tool-btn" id="gif-btn" onclick="toggleGifPicker()">GIF 🎬</button>
+          <button class="tool-btn" id="question-btn" onclick="toggleQuestionMode()" style="border:1.5px solid transparent;">❓ Question</button>
         </div>
         <button class="post-btn" onclick="postToFeed()">Share</button>
       </div>
