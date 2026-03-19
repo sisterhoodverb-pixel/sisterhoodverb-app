@@ -8,943 +8,257 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.memberstack.com/scripts/webcomponents/memberstack.js" data-memberstack-app="pk_715b7f282440a2747b11" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
-  const _supabase = window.supabase.createClient(
-    'https://cqiymqekdtewnorojlus.supabase.co',
-    'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
-  );
-
-  let currentUser = null;
-
-  async function initAuth() {
-    const { data: { session } } = await _supabase.auth.getSession();
-    if (session) {
-      currentUser = session.user;
-      updateNavForUser(currentUser);
-      await loadUserInitial();
-      loadFeed();
-      loadJoinedCircles();
-    }
-    _supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session) {
-        currentUser = session.user;
-        updateNavForUser(currentUser);
-        await loadUserInitial();
-        loadFeed();
-        loadJoinedCircles();
-      } else {
-        currentUser = null;
-        updateNavForGuest();
-      }
-    });
-  }
-
-  async function loadJoinedCircles() {
-    if (!currentUser) return;
-    const { data: memberships } = await _supabase
-      .from('circle_members').select('circle_name').eq('user_id', currentUser.id);
-    if (!memberships) return;
-    const joined = memberships.map(m => m.circle_name);
-    document.querySelectorAll('.join-btn[data-circle]').forEach(btn => {
-      const circleName = btn.getAttribute('data-circle');
-      if (joined.includes(circleName)) {
-        btn.classList.add('joined');
-        btn.textContent = 'Joined ✦';
-      } else {
-        btn.classList.remove('joined');
-        btn.textContent = 'Join';
-      }
-    });
-  }
-
-  function updateNavForUser(user) {
-    const joinBtn = document.querySelector('.nav-cta');
-    if (joinBtn) {
-      joinBtn.textContent = 'My Account';
-      joinBtn.onclick = () => showViewWithProfile('profile', joinBtn);
-    }
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) logoutBtn.style.display = 'block';
-    loadUserInitial();
-  }
-
-  async function loadUserInitial() {
-    if (!currentUser) return;
-    const { data: profile } = await _supabase
-      .from('profiles').select('name').eq('id', currentUser.id).single();
-    const name = profile?.name || currentUser.email?.split('@')[0] || 'T';
-    const initial = name.charAt(0).toUpperCase();
-    const composerAvatars = document.querySelectorAll('.post-composer .avatar, #circle-composer-avatar');
-    composerAvatars.forEach(a => a.textContent = initial);
-    window._currentUserName = name;
-  }
-
-  function updateNavForGuest() {
-    const joinBtn = document.querySelector('.nav-cta');
-    if (joinBtn) {
-      joinBtn.textContent = 'Join';
-      joinBtn.onclick = () => openModal();
-    }
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) logoutBtn.style.display = 'none';
-  }
-
-  async function signUp(email, password, name) {
-    const { data, error } = await _supabase.auth.signUp({ email, password });
-    if (error) { showToast('Error: ' + error.message); return; }
-    if (data.user) {
-      await _supabase.from('profiles').insert({
-        id: data.user.id, name: name,
-        handle: '@' + email.split('@')[0], membership_tier: 'free'
-      });
-      showToast('Welcome to the Sisterhood ✦');
-      closeAuthModal();
-    }
-  }
-
-  async function signIn(email, password) {
-    const { data, error } = await _supabase.auth.signInWithPassword({ email, password });
-    if (error) { showToast('Error: ' + error.message); return; }
-    if (data.user) {
-      const { data: existing } = await _supabase
-        .from('profiles').select('id').eq('id', data.user.id).single();
-      if (!existing) {
-        await _supabase.from('profiles').insert({
-          id: data.user.id, name: email.split('@')[0],
-          handle: '@' + email.split('@')[0], membership_tier: 'free'
-        });
-      }
-    }
-    showToast('Welcome back, sis ✦');
-    closeAuthModal();
-  }
-
-  async function signOut() {
-    await _supabase.auth.signOut();
-    showToast('See you soon, sis 🌿');
-    showView('home', document.querySelector('.nav-links a'));
-  }
-
-  // ── FEED ──
-  async function loadFeed() {
-    const { data: posts, error } = await _supabase
-      .from('posts').select('*').order('created_at', { ascending: true }).limit(20);
-    if (error) { console.log('Feed error:', error); return; }
-    if (!posts || posts.length === 0) return;
-
-    const userIds = [...new Set(posts.map(p => p.user_id).filter(Boolean))];
-    let profileMap = {};
-    if (userIds.length > 0) {
-      const { data: profiles } = await _supabase
-        .from('profiles').select('id, name, avatar_url').in('id', userIds);
-      if (profiles) profiles.forEach(p => profileMap[p.id] = p);
-    }
-
-    const feed = document.getElementById('feed-posts');
-    feed.innerHTML = '';
-    posts.forEach((post, i) => {
-      const profile = profileMap[post.user_id];
-      const name = profile?.name || (post.user_id === currentUser?.id ? (window._currentUserName || 'You') : 'Sister');
-      const initial = name.charAt(0).toUpperCase();
-      const time = timeAgo(post.created_at);
-      let textContent = post.content || '';
-      let gifHtml = '';
-      const gifMatch = textContent.match(/\[gif:(.*?)\]/);
-      if (gifMatch) {
-        gifHtml = `<img src="${gifMatch[1]}" style="max-width:100%;border-radius:4px;margin-top:10px;max-height:200px;object-fit:cover;" alt="GIF">`;
-        textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
-      }
-
-      let avatarHtml = '';
-      if (profile?.avatar_url) {
-        avatarHtml = `<div class="avatar member-avatar-btn" onclick="openMemberProfile('${post.user_id}')" style="background-image:url('${profile.avatar_url}');background-size:cover;background-position:center;cursor:pointer;"></div>`;
-      } else {
-        avatarHtml = `<div class="avatar member-avatar-btn" onclick="openMemberProfile('${post.user_id}')" style="background:linear-gradient(135deg,var(--terra),var(--gold));cursor:pointer;">${initial}</div>`;
-      }
-
-      const card = document.createElement('div');
-      card.className = 'feed-card';
-      card.style.animationDelay = (i * 0.1) + 's';
-      card.innerHTML = `
-        <div class="card-header">
-          ${avatarHtml}
-          <div class="card-meta">
-            <div class="card-name member-name-btn" onclick="openMemberProfile('${post.user_id}')" style="cursor:pointer;">${name}</div>
-            <div class="card-time">${time}</div>
-          </div>
-          <span class="card-tag">${post.tag || 'Community'}</span>
-        </div>
-        <div class="card-body">${textContent}${gifHtml}</div>
-        <div class="card-footer">
-          <button class="react-btn" onclick="toggleLike(this, '${post.id}')">🫂 <span>${post.likes || 0}</span></button>
-          <button class="react-btn" onclick="toggleReplies('${post.id}', this)">💬 <span>Reply</span></button>
-          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-        </div>
-        <div id="replies-${post.id}" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(196,98,45,0.08);"></div>\`;
-      const isQuestion = post.tag === 'Question';
-      if (isQuestion) {
-        card.style.borderColor = 'rgba(212,168,83,0.5)';
-        card.style.borderLeftWidth = '3px';
-        card.style.borderLeftColor = 'var(--gold)';
-        const tagEl = card.querySelector('.card-tag');
-        if (tagEl) { tagEl.style.background = 'linear-gradient(135deg,var(--gold),#b8860b)'; tagEl.style.color = 'white'; tagEl.textContent = '❓ Question'; }
-        const bodyEl = card.querySelector('.card-body');
-        if (bodyEl) { bodyEl.style.fontFamily = 'Playfair Display,serif'; bodyEl.style.fontStyle = 'italic'; bodyEl.style.fontSize = '1rem'; }
-      }
-      feed.insertBefore(card, feed.firstChild);
-    });
-  }
-
-  async function savePost(content, tag) {
-    if (!currentUser) { openAuthModal('login'); return; }
-    showToast('Sharing... ✦');
-    const { data, error } = await _supabase.from('posts').insert({
-      user_id: currentUser.id, content: content, tag: tag || 'Community', likes: 0
-    }).select();
-    if (error) { showToast('Could not post: ' + error.message); return; }
-    showToast(tag === 'Question' ? 'Question posted ✦' : 'Shared with your sisters ✦');
-    loadFeed();
-  }
-
-  async function toggleLike(btn, postId) {
-    const span = btn.querySelector('span');
-    const liked = btn.classList.contains('liked');
-    const n = parseInt(span.textContent) || 0;
-    btn.classList.toggle('liked');
-    span.textContent = liked ? n - 1 : n + 1;
-    if (!liked && postId) {
-      await _supabase.from('posts').update({ likes: n + 1 }).eq('id', postId);
-    }
-  }
-
-  // ── MEMBER PROFILE MODAL ──
-  async function openMemberProfile(userId) {
-    if (!userId) return;
-    const modal = document.getElementById('member-profile-modal');
-    modal.classList.add('open');
-    document.getElementById('mp-loading').style.display = 'block';
-    document.getElementById('mp-content').style.display = 'none';
-
-    // Fetch profile
-    const { data: profile } = await _supabase
-      .from('profiles').select('*').eq('id', userId).single();
-
-    // Fetch circles
-    const { data: circles } = await _supabase
-      .from('circle_members').select('circle_name').eq('user_id', userId);
-
-    // Fetch posts
-    const { data: posts } = await _supabase
-      .from('posts').select('*').eq('user_id', userId)
-      .order('created_at', { ascending: false }).limit(5);
-
-    document.getElementById('mp-loading').style.display = 'none';
-    document.getElementById('mp-content').style.display = 'block';
-
-    const name = profile?.name || 'Sister';
-    const handle = profile?.handle || '';
-    const bio = profile?.bio || '';
-    const initial = name.charAt(0).toUpperCase();
-
-    // Banner
-    const bannerEl = document.getElementById('mp-banner');
-    bannerEl.style.background = 'linear-gradient(135deg, #1C1410, #C4622D)';
-    if (profile?.banner_url) {
-      bannerEl.style.backgroundImage = "url('" + profile.banner_url + "')";
-      bannerEl.style.backgroundSize = 'cover';
-      bannerEl.style.backgroundPosition = 'center';
-    }
-
-    // Avatar
-    const avatarEl = document.getElementById('mp-avatar');
-    avatarEl.textContent = initial;
-    avatarEl.style.backgroundImage = '';
-    if (profile?.avatar_url) {
-      avatarEl.style.backgroundImage = "url('" + profile.avatar_url + "')";
-      avatarEl.style.backgroundSize = 'cover';
-      avatarEl.style.backgroundPosition = 'center';
-      avatarEl.textContent = '';
-    }
-
-    document.getElementById('mp-name').textContent = name;
-    document.getElementById('mp-handle').textContent = handle ? (handle.startsWith('@') ? handle : '@' + handle) : '';
-    document.getElementById('mp-bio').textContent = bio || 'No bio yet.';
-
-    // Circles
-    const circlesEl = document.getElementById('mp-circles');
-    if (circles && circles.length > 0) {
-      circlesEl.innerHTML = circles.map(c =>
-        "<span class=\"profile-tag\">" + c.circle_name + "</span>"
-      ).join('');
-    } else {
-      circlesEl.innerHTML = '<span style="font-size:0.82rem;color:rgba(28,20,16,0.4);">No circles joined yet</span>';
-    }
-
-    // Posts
-    const postsEl = document.getElementById('mp-posts');
-    if (posts && posts.length > 0) {
-      postsEl.innerHTML = posts.map(post => {
-        let textContent = post.content || '';
-        const gifMatch = textContent.match(/\[gif:(.*?)\]/);
-        if (gifMatch) textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
-        const txt = textContent || '[GIF]';
-        return '<div class="mp-post-item"><div class="mp-post-text">' + txt + '</div><div class="mp-post-time">' + timeAgo(post.created_at) + '</div></div>';
-      }).join('');
-    } else {
-      postsEl.innerHTML = '<div style="font-size:0.82rem;color:rgba(28,20,16,0.4);padding:12px 0;">No posts yet</div>';
-    }
-  }
-
-  function closeMemberProfile() {
-    document.getElementById('member-profile-modal').classList.remove('open');
-  }
-
-  // ── CIRCLES ──
-  async function joinCircleDB(circleName, btn) {
-    if (!currentUser) { openAuthModal('login'); return; }
-    const joined = btn.classList.contains('joined');
-    if (!joined) {
-      await _supabase.from('circle_members').insert({ user_id: currentUser.id, circle_name: circleName });
-      btn.classList.add('joined'); btn.textContent = 'Joined ✦';
-      showToast('Joined ' + circleName + ' ✦');
-    } else {
-      await _supabase.from('circle_members').delete()
-        .eq('user_id', currentUser.id).eq('circle_name', circleName);
-      btn.classList.remove('joined'); btn.textContent = 'Join';
-      showToast('Left ' + circleName);
-    }
-  }
-
-  async function registerEventDB(eventName, btn) {
-    if (!currentUser) { openAuthModal('login'); return; }
-    await _supabase.from('event_registrations').insert({ user_id: currentUser.id, event_name: eventName });
-    btn.classList.add('registered'); btn.textContent = 'Registered ✦';
-    showToast('Registered for ' + eventName + ' ✦');
-  }
-
-  // ── PROFILE ──
-  async function loadProfile() {
-    if (!currentUser) return;
-    const { data: profile } = await _supabase
-      .from('profiles').select('*').eq('id', currentUser.id).single();
-    if (profile) {
-      document.querySelector('.profile-name').textContent = profile.name || 'Sister';
-      document.querySelector('.profile-handle').textContent = profile.handle || '@sister';
-      document.querySelector('.profile-bio').textContent = profile.bio || 'Tell your sisters a little about yourself...';
-      const profileView = document.getElementById('view-profile');
-      if (profileView) {
-        const inputs = profileView.querySelectorAll('.form-input');
-        if (inputs[0]) inputs[0].value = profile.name || '';
-        if (inputs[1]) inputs[1].value = profile.bio || '';
-        if (inputs[2]) inputs[2].value = profile.location || '';
-        if (inputs[3]) inputs[3].value = currentUser.email || '';
-        if (inputs[4]) inputs[4].value = profile.membership_tier === 'paid' ? 'Full Member ✦' : 'Free Member';
-      }
-    }
-    const { data: circleData } = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
-    const { data: eventData } = await _supabase.from('event_registrations').select('id').eq('user_id', currentUser.id);
-    const { data: postData } = await _supabase.from('posts').select('id').eq('user_id', currentUser.id);
-    const circleEl = document.getElementById('stat-circles');
-    const eventEl = document.getElementById('stat-events');
-    const postEl = document.getElementById('stat-posts');
-    if (circleEl) circleEl.textContent = circleData?.length || 0;
-    if (eventEl) eventEl.textContent = eventData?.length || 0;
-    if (postEl) postEl.textContent = postData?.length || 0;
-  }
-
-  async function saveProfile() {
-    if (!currentUser) return;
-    const profileView = document.getElementById('view-profile');
-    const inputs = profileView.querySelectorAll('.form-input');
-    const name = inputs[0]?.value || '';
-    const bio = inputs[1]?.value || '';
-    const location = inputs[2]?.value || '';
-    await _supabase.from('profiles').update({ name, bio, location }).eq('id', currentUser.id);
-    showToast('Profile saved ✦');
-    loadProfile();
-  }
-
-
-  // ── GIF PICKER ──
-  const GIPHY_KEY = 'AgkjTleIOrzAZS8xROMk5MBOhC87TO4v';
-  let selectedGifUrl = null;
-
-  function toggleGifPicker() {
-    const picker = document.getElementById('gif-picker');
-    const btn = document.getElementById('gif-btn');
-    picker.classList.toggle('open');
-    btn.classList.toggle('active');
-    if (picker.classList.contains('open')) {
-      document.getElementById('gif-search-input').focus();
-      loadTrendingGifs();
-    }
-  }
-
-  async function loadTrendingGifs() {
-    const grid = document.getElementById('gif-grid');
-    grid.innerHTML = '<div class="gif-loading">Loading trending GIFs... ✦</div>';
-    try {
-      const res = await fetch(`https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_KEY}&limit=12&rating=pg`);
-      const data = await res.json();
-      renderGifs(data.data);
-    } catch (e) {
-      grid.innerHTML = '<div class="gif-loading">Search for a GIF above ✦</div>';
-    }
-  }
-
-  async function searchGifs() {
-    const query = document.getElementById('gif-search-input').value.trim();
-    if (!query) return;
-    const grid = document.getElementById('gif-grid');
-    grid.innerHTML = '<div class="gif-loading">Searching... ✦</div>';
-    try {
-      const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(query)}&limit=12&rating=pg`);
-      const data = await res.json();
-      renderGifs(data.data);
-    } catch (e) {
-      grid.innerHTML = '<div class="gif-loading">Could not load GIFs — try again</div>';
-    }
-  }
-
-  function renderGifs(gifs) {
-    const grid = document.getElementById('gif-grid');
-    if (!gifs || gifs.length === 0) {
-      grid.innerHTML = '<div class="gif-loading">No GIFs found — try another search</div>';
-      return;
-    }
-    grid.innerHTML = gifs.map(gif => `
-      <img class="gif-item" src="${gif.images.fixed_height_small.url}"
-        data-full="${gif.images.fixed_height.url}"
-        onclick="selectGif('${gif.images.fixed_height.url}')" alt="${gif.title}">`
-    ).join('');
-  }
-
-  function selectGif(url) {
-    selectedGifUrl = url;
-    const preview = document.getElementById('gif-preview');
-    document.getElementById('gif-preview-img').src = url;
-    preview.style.display = 'block';
-    document.getElementById('gif-picker').classList.remove('open');
-    document.getElementById('gif-btn').classList.remove('active');
-    showToast('GIF selected ✦');
-  }
-
-  function removeGif() {
-    selectedGifUrl = null;
-    document.getElementById('gif-preview').style.display = 'none';
-    document.getElementById('gif-preview-img').src = '';
-  }
-
-  // ── CIRCLE DATA ──
-  const circleData = {
-    'Motherhood Speaks': { icon: '🌺', desc: 'A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.', bg: 'linear-gradient(135deg, #1C1410, #C4622D)' },
-    'Writers Block? I Think Not!': { icon: '✍🏾', desc: 'Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.', bg: 'linear-gradient(135deg, #1C1410, #2d5a3d)' },
-    'Burnout to Bloom': { icon: '🔥', desc: 'For educators, organizers, activists, and artists trying to exist in the world and keep your cup full.', bg: 'linear-gradient(135deg, #1C1410, #8B4513)' },
-    'Speak Poet!': { icon: '🎤', desc: 'For slam poets, performers, and spoken word artists looking for space to share your work and connect with poets who get it.', bg: 'linear-gradient(135deg, #1C1410, #2d1f3d)' },
-    'Healing As We Hustle': { icon: '💼', desc: 'Space for entrepreneurs to connect, network, and get support.', bg: 'linear-gradient(135deg, #1C1410, #3d2b5c)' },
-    'The Travel Girlies': { icon: '✈️', desc: 'Trip tips, resources, warnings, and storytelling.', bg: 'linear-gradient(135deg, #1C1410, #1a3a4a)' }
-  };
-
-  let currentCircle = null;
-  let selectedCircleGifUrl = null;
-  let circleIsJoined = false;
-
-  async function openCircle(name) {
-    currentCircle = name;
-    const data = circleData[name] || { icon: '✦', desc: '', bg: 'var(--deep)' };
-    document.getElementById('circle-detail-icon').textContent = data.icon;
-    document.getElementById('circle-detail-name').textContent = name;
-    document.getElementById('circle-detail-desc').textContent = data.desc;
-    document.getElementById('circle-detail-header').style.background = data.bg;
-    if (currentUser) {
-      const { data: membership } = await _supabase
-        .from('circle_members').select('id')
-        .eq('user_id', currentUser.id).eq('circle_name', name).single();
-      circleIsJoined = !!membership;
-      const joinBtn = document.getElementById('circle-detail-join-btn');
-      joinBtn.textContent = circleIsJoined ? 'Joined ✦' : 'Join Circle';
-      joinBtn.className = circleIsJoined ? 'circle-join-btn joined' : 'circle-join-btn';
-      document.getElementById('circle-composer').style.display = circleIsJoined ? 'block' : 'none';
-    }
-    const { count } = await _supabase.from('circle_members')
-      .select('*', { count: 'exact' }).eq('circle_name', name);
-    document.getElementById('circle-detail-count').textContent = (count || 0) + ' sisters';
-    loadCircleFeed(name);
-    showView('circle-detail', null);
-  }
-
-  async function loadCircleFeed(circleName) {
-    const feed = document.getElementById('circle-feed-posts');
-    feed.innerHTML = '<div class="circle-empty"><span class="circle-empty-icon">✦</span>Loading posts...</div>';
-    const { data: posts, error } = await _supabase
-      .from('posts').select('*').eq('circle', circleName)
-      .order('created_at', { ascending: false }).limit(30);
-    if (error || !posts || posts.length === 0) {
-      feed.innerHTML = `<div class="circle-empty">
-        <span class="circle-empty-icon">${circleData[circleName]?.icon || '✦'}</span>
-        No posts yet — be the first to share in this Circle!</div>`;
-      return;
-    }
-    const userIds = [...new Set(posts.map(p => p.user_id).filter(Boolean))];
-    let profileMap = {};
-    if (userIds.length > 0) {
-      const { data: profiles } = await _supabase
-        .from('profiles').select('id, name, avatar_url').in('id', userIds);
-      if (profiles) profiles.forEach(p => profileMap[p.id] = p);
-    }
-    feed.innerHTML = '';
-    posts.forEach((post, i) => {
-      const profile = profileMap[post.user_id];
-      const name = profile?.name || (post.user_id === currentUser?.id ? (window._currentUserName || 'You') : 'Sister');
-      const initial = name.charAt(0).toUpperCase();
-      const time = timeAgo(post.created_at);
-      let textContent = post.content || '';
-      let gifHtml = '';
-      const gifMatch = textContent.match(/\[gif:(.*?)\]/);
-      if (gifMatch) {
-        gifHtml = `<img src="${gifMatch[1]}" style="max-width:100%;border-radius:4px;margin-top:10px;max-height:200px;object-fit:cover;" alt="GIF">`;
-        textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
-      }
-      let avatarHtml = '';
-      if (profile?.avatar_url) {
-        avatarHtml = `<div class="avatar member-avatar-btn" onclick="openMemberProfile('${post.user_id}')" style="background-image:url('${profile.avatar_url}');background-size:cover;background-position:center;cursor:pointer;"></div>`;
-      } else {
-        avatarHtml = `<div class="avatar member-avatar-btn" onclick="openMemberProfile('${post.user_id}')" style="background:linear-gradient(135deg,var(--terra),var(--gold));cursor:pointer;">${initial}</div>`;
-      }
-      const card = document.createElement('div');
-      card.className = 'feed-card';
-      card.style.animationDelay = (i * 0.1) + 's';
-      card.innerHTML = `
-        <div class="card-header">
-          ${avatarHtml}
-          <div class="card-meta">
-            <div class="card-name member-name-btn" onclick="openMemberProfile('${post.user_id}')" style="cursor:pointer;">${name}</div>
-            <div class="card-time">${time}</div>
-          </div>
-        </div>
-        <div class="card-body">${textContent}${gifHtml}</div>
-        <div class="card-footer">
-          <button class="react-btn" onclick="toggleLike(this, '${post.id}')">🫂 <span>${post.likes || 0}</span></button>
-          <button class="react-btn" onclick="toggleReplies('${post.id}', this)">💬 <span>Reply</span></button>
-          <button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button>
-        </div>
-        <div id="replies-${post.id}" style="display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(196,98,45,0.08);"></div>`;
-      feed.appendChild(card);
-    });
-  }
-
-  async function toggleCircleDetailJoin() {
-    if (!currentUser) { openAuthModal('login'); return; }
-    const btn = document.getElementById('circle-detail-join-btn');
-    if (!circleIsJoined) {
-      await _supabase.from('circle_members').insert({ user_id: currentUser.id, circle_name: currentCircle });
-      circleIsJoined = true; btn.textContent = 'Joined ✦'; btn.className = 'circle-join-btn joined';
-      document.getElementById('circle-composer').style.display = 'block';
-      showToast('Joined ' + currentCircle + ' ✦');
-    } else {
-      await _supabase.from('circle_members').delete().eq('user_id', currentUser.id).eq('circle_name', currentCircle);
-      circleIsJoined = false; btn.textContent = 'Join Circle'; btn.className = 'circle-join-btn';
-      document.getElementById('circle-composer').style.display = 'none';
-      showToast('Left ' + currentCircle);
-    }
-  }
-
-  async function postToCircle() {
-    if (!currentUser) { openAuthModal('login'); return; }
-    const ta = document.getElementById('circle-composer-input');
-    const text = ta.value.trim();
-    if (!text && !selectedCircleGifUrl) { showToast('Write something first ✦'); return; }
-    const content = text + (selectedCircleGifUrl ? `\n[gif:${selectedCircleGifUrl}]` : '');
-    showToast('Sharing... ✦');
-    const { error } = await _supabase.from('posts').insert({
-      user_id: currentUser.id, content: content,
-      circle: currentCircle, tag: currentCircle, likes: 0
-    });
-    if (error) { showToast('Could not post: ' + error.message); return; }
-    ta.value = ''; removeCircleGif();
-    showToast('Shared with the circle ✦');
-    loadCircleFeed(currentCircle);
-  }
-
-  function toggleCircleGifPicker() {
-    const picker = document.getElementById('circle-gif-picker');
-    const btn = document.getElementById('circle-gif-btn');
-    picker.classList.toggle('open'); btn.classList.toggle('active');
-    if (picker.classList.contains('open')) document.getElementById('circle-gif-search').focus();
-  }
-
-  async function searchCircleGifs() {
-    const query = document.getElementById('circle-gif-search').value.trim();
-    if (!query) return;
-    const grid = document.getElementById('circle-gif-grid');
-    grid.innerHTML = '<div class="gif-loading">Searching... ✦</div>';
-    try {
-      const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(query)}&limit=12&rating=pg`);
-      const data = await res.json();
-      grid.innerHTML = '';
-      data.data.forEach(gif => {
-        const img = document.createElement('img');
-        img.className = 'gif-item'; img.src = gif.images.fixed_height_small.url;
-        img.onclick = () => selectCircleGif(gif.images.fixed_height.url);
-        grid.appendChild(img);
-      });
-    } catch (e) { grid.innerHTML = '<div class="gif-loading">Could not load GIFs</div>'; }
-  }
-
-  function selectCircleGif(url) {
-    selectedCircleGifUrl = url;
-    document.getElementById('circle-gif-preview-img').src = url;
-    document.getElementById('circle-gif-preview').style.display = 'block';
-    document.getElementById('circle-gif-picker').classList.remove('open');
-    document.getElementById('circle-gif-btn').classList.remove('active');
-    showToast('GIF selected ✦');
-  }
-
-  function removeCircleGif() {
-    selectedCircleGifUrl = null;
-    document.getElementById('circle-gif-preview').style.display = 'none';
-    document.getElementById('circle-gif-preview-img').src = '';
-  }
-
-  function timeAgo(dateStr) {
-    const now = new Date(); const date = new Date(dateStr);
-    const diff = Math.floor((now - date) / 1000);
-    if (diff < 60) return 'Just now';
-    if (diff < 3600) return Math.floor(diff/60) + ' min ago';
-    if (diff < 86400) return Math.floor(diff/3600) + ' hours ago';
-    return Math.floor(diff/86400) + ' days ago';
-  }
-
-  function openAuthModal(mode = 'signup') {
-    closeModal();
-    document.getElementById('auth-modal').classList.add('open');
-    setAuthMode(mode);
-  }
-
-  function closeAuthModal() { document.getElementById('auth-modal').classList.remove('open'); }
-
-  function setAuthMode(mode) {
-    const title = document.getElementById('auth-title');
-    const submitBtn = document.getElementById('auth-submit');
-    const nameGroup = document.getElementById('auth-name-group');
-    const switchBtn = document.getElementById('auth-switch');
-    if (mode === 'signup') {
-      title.textContent = 'Join the Sisterhood';
-      submitBtn.textContent = 'Create Account';
-      nameGroup.style.display = 'block';
-      switchBtn.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\')">Log in</a>';
-      submitBtn.onclick = () => {
-        const name = document.getElementById('auth-name').value;
-        const email = document.getElementById('auth-email').value;
-        const password = document.getElementById('auth-password').value;
-        signUp(email, password, name);
-      };
-    } else {
-      title.textContent = 'Welcome Back, Sis';
-      submitBtn.textContent = 'Log In';
-      nameGroup.style.display = 'none';
-      switchBtn.innerHTML = 'New here? <a href="#" onclick="setAuthMode(\'signup\')">Join the Sisterhood</a>';
-      submitBtn.onclick = () => {
-        const email = document.getElementById('auth-email').value;
-        const password = document.getElementById('auth-password').value;
-        signIn(email, password);
-      };
-    }
-  }
-
-  window.addEventListener('load', initAuth);
-</script>
 <style>
-  :root {
-    --terra: #C4622D; --deep: #1C1410; --cream: #F5EFE6;
-    --gold: #D4A853; --sage: #7A8C6E; --blush: #E8C4A0; --warm-white: #FBF7F2;
-  }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--warm-white); color: var(--deep); min-height: 100vh; overflow-x: hidden; }
-  body::before {
-    content: ''; position: fixed; inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none; z-index: 1000; opacity: 0.4;
-  }
-  nav {
-    position: fixed; top: 0; left: 0; right: 0;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 40px; background: rgba(251,247,242,0.92);
-    backdrop-filter: blur(12px); border-bottom: 1px solid rgba(196,98,45,0.12); z-index: 100;
-  }
-  .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--terra); letter-spacing: 0.02em; }
-  .nav-logo span { font-style: italic; font-weight: 400; }
-  .nav-links { display: flex; gap: 32px; align-items: center; }
-  .nav-links a { text-decoration: none; color: var(--deep); font-size: 0.85rem; font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; transition: opacity 0.2s; }
-  .nav-links a:hover { opacity: 1; }
-  .nav-links a.active { color: var(--terra); opacity: 1; }
-  .nav-cta { background: var(--terra); color: white !important; padding: 8px 20px; border-radius: 2px; opacity: 1 !important; font-weight: 500 !important; transition: background 0.2s !important; }
-  .nav-cta:hover { background: #a8501f !important; }
-  .hamburger { display: none; cursor: pointer; flex-direction: column; gap: 5px; }
-  .hamburger span { width: 24px; height: 2px; background: var(--deep); display: block; transition: 0.3s; }
-  .view { display: none; padding-top: 72px; min-height: 100vh; }
-  .view.active { display: block; }
-  .home-hero { background: var(--deep); padding: 80px 40px 60px; position: relative; overflow: hidden; }
-  .home-hero::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 40px; background: var(--warm-white); clip-path: ellipse(55% 100% at 50% 100%); }
-  .hero-greeting { font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-bottom: 12px; }
-  .hero-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 5vw, 3.5rem); color: var(--cream); line-height: 1.15; max-width: 600px; margin-bottom: 20px; }
-  .hero-title em { color: var(--gold); font-style: italic; }
-  .hero-sub { color: rgba(245,239,230,0.85); font-size: 0.95rem; max-width: 480px; line-height: 1.7; }
-  .hero-accent { position: absolute; right: 40px; top: 50%; transform: translateY(-50%); width: 180px; height: 180px; border-radius: 50%; background: radial-gradient(circle, rgba(196,98,45,0.3), transparent 70%); border: 1px solid rgba(212,168,83,0.2); }
-  .feed-section { padding: 48px 40px; max-width: 900px; margin: 0 auto; }
-  .section-label { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--terra); margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
-  .section-label::after { content: ''; flex: 1; height: 1px; background: rgba(196,98,45,0.2); }
-  .post-composer { background: white; border: 1px solid rgba(196,98,45,0.15); border-radius: 4px; padding: 20px; margin-bottom: 32px; box-shadow: 0 2px 20px rgba(28,20,16,0.04); }
-  .composer-top { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 14px; }
-  .avatar { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, var(--terra), var(--gold)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; font-family: 'Playfair Display', serif; }
-  .composer-input { flex: 1; border: none; outline: none; font-family: 'DM Sans', sans-serif; font-size: 0.95rem; color: var(--deep); resize: none; background: transparent; line-height: 1.6; }
-  .composer-actions { display: flex; justify-content: space-between; align-items: center; }
-  .composer-tools { display: flex; gap: 8px; }
-  .tool-btn { background: none; border: none; cursor: pointer; padding: 6px 10px; border-radius: 2px; font-size: 0.8rem; color: rgba(28,20,16,0.5); transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
-  .tool-btn:hover, .tool-btn.active { background: var(--cream); color: var(--terra); }
-  .gif-picker { display: none; margin-top: 12px; border: 1px solid rgba(196,98,45,0.2); border-radius: 4px; overflow: hidden; background: var(--cream); }
-  .gif-picker.open { display: block; }
-  .gif-search-bar { display: flex; gap: 8px; padding: 10px; border-bottom: 1px solid rgba(196,98,45,0.1); }
-  .gif-search-input { flex: 1; padding: 8px 12px; border: 1.5px solid rgba(196,98,45,0.2); border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; color: var(--deep); outline: none; background: white; }
-  .gif-search-input:focus { border-color: var(--terra); }
-  .gif-search-btn { background: var(--terra); color: white; border: none; padding: 8px 16px; border-radius: 3px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; transition: background 0.2s; }
-  .gif-search-btn:hover { background: #a8501f; }
-  .gif-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 8px; max-height: 200px; overflow-y: auto; }
-  .gif-item { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 3px; cursor: pointer; transition: opacity 0.2s; }
-  .gif-item:hover { opacity: 0.8; }
-  .gif-loading { text-align: center; padding: 20px; font-size: 0.82rem; color: rgba(28,20,16,0.5); }
-  .gif-preview { margin-top: 10px; position: relative; display: none; }
-  .gif-preview img { max-width: 100%; border-radius: 4px; max-height: 200px; object-fit: cover; }
-  .gif-remove { position: absolute; top: 6px; right: 6px; background: rgba(28,20,16,0.7); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; }
-  .post-btn { background: var(--terra); color: white; border: none; cursor: pointer; padding: 9px 22px; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; letter-spacing: 0.04em; transition: background 0.2s; }
-  .post-btn:hover { background: #a8501f; }
-  .feed-card { background: white; border: 1px solid rgba(196,98,45,0.1); border-radius: 4px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 20px rgba(28,20,16,0.04); animation: fadeUp 0.4s ease both; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-  .card-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
-  .card-meta { flex: 1; }
-  .card-name { font-weight: 600; font-size: 0.9rem; color: var(--deep); font-family: 'Playfair Display', serif; transition: color 0.2s; }
-  .card-name:hover { color: var(--terra); }
-  .card-time { font-size: 0.75rem; color: rgba(28,20,16,0.45); margin-top: 2px; }
-  .card-tag { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; padding: 4px 10px; border-radius: 20px; background: var(--cream); color: var(--terra); font-weight: 500; }
-  .card-body { font-size: 0.93rem; line-height: 1.75; color: rgba(28,20,16,0.8); margin-bottom: 18px; }
-  .card-body strong { color: var(--terra); font-weight: 600; }
-  .card-footer { display: flex; gap: 20px; padding-top: 14px; border-top: 1px solid rgba(196,98,45,0.08); }
-  .react-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; color: rgba(28,20,16,0.5); transition: all 0.2s; padding: 4px 0; }
-  .react-btn:hover, .react-btn.liked { color: var(--terra); }
-
-  /* ── MEMBER PROFILE MODAL ── */
-  .member-profile-modal { max-width: 520px; padding: 0; overflow: hidden; }
-  .mp-banner { height: 120px; background: linear-gradient(135deg, #1C1410, #C4622D); position: relative; }
-  .mp-close-btn { position: absolute; top: 12px; right: 12px; background: rgba(28,20,16,0.6); color: white; border: none; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-  .mp-close-btn:hover { background: rgba(28,20,16,0.9); }
-  .mp-avatar-wrap { margin: -36px 0 0 24px; position: relative; width: fit-content; margin-bottom: 12px; }
-  .mp-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--terra), var(--gold)); display: flex; align-items: center; justify-content: center; color: white; font-size: 1.6rem; font-weight: 700; font-family: 'Playfair Display', serif; border: 3px solid white; box-shadow: 0 4px 16px rgba(28,20,16,0.2); }
-  .mp-body { padding: 0 24px 24px; }
-  .mp-name { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 700; margin-bottom: 2px; }
-  .mp-handle { color: var(--terra); font-size: 0.82rem; margin-bottom: 10px; }
-  .mp-bio { font-size: 0.88rem; color: rgba(28,20,16,0.7); line-height: 1.7; margin-bottom: 20px; }
-  .mp-section-title { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--terra); margin-bottom: 10px; font-weight: 600; padding-bottom: 6px; border-bottom: 1px solid rgba(196,98,45,0.12); }
-  .mp-circles { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
-  .mp-posts { margin-bottom: 8px; }
-  .mp-post-item { padding: 12px 0; border-bottom: 1px solid rgba(196,98,45,0.08); }
-  .mp-post-item:last-child { border-bottom: none; }
-  .mp-post-text { font-size: 0.86rem; color: rgba(28,20,16,0.75); line-height: 1.6; margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .mp-post-time { font-size: 0.72rem; color: rgba(28,20,16,0.4); }
-  .mp-loading { padding: 40px; text-align: center; color: rgba(28,20,16,0.4); font-size: 0.88rem; }
-
-  .circles-hero { padding: 60px 40px 40px; background: linear-gradient(160deg, var(--cream) 0%, var(--warm-white) 100%); border-bottom: 1px solid rgba(196,98,45,0.1); }
-  .page-title { font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); line-height: 1.2; margin-bottom: 10px; }
-  .page-sub { color: rgba(28,20,16,0.6); font-size: 0.95rem; line-height: 1.7; max-width: 500px; }
-  .circles-grid { padding: 40px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; max-width: 1100px; margin: 0 auto; }
-  .circle-card { border-radius: 4px; overflow: hidden; border: 1px solid rgba(196,98,45,0.12); background: white; box-shadow: 0 2px 20px rgba(28,20,16,0.05); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
-  .circle-card:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(28,20,16,0.1); }
-  .circle-banner { height: 90px; position: relative; display: flex; align-items: center; justify-content: center; }
-  .circle-icon { font-size: 2.4rem; }
-  .circle-body { padding: 20px; }
-  .circle-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
-  .circle-desc { font-size: 0.83rem; color: rgba(28,20,16,0.6); line-height: 1.6; margin-bottom: 14px; }
-  .circle-meta { display: flex; justify-content: space-between; align-items: center; }
-  .circle-members { font-size: 0.75rem; color: rgba(28,20,16,0.45); }
-  .join-btn { background: none; border: 1.5px solid var(--terra); color: var(--terra); padding: 6px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: all 0.2s; }
-  .join-btn:hover, .join-btn.joined { background: var(--terra); color: white; }
-  .events-layout { display: grid; grid-template-columns: 1fr 320px; gap: 0; max-width: 1100px; margin: 0 auto; }
-  .events-main { padding: 40px; border-right: 1px solid rgba(196,98,45,0.1); }
-  .events-sidebar { padding: 40px 32px; }
-  .event-card { display: flex; gap: 20px; padding: 22px; background: white; border: 1px solid rgba(196,98,45,0.1); border-radius: 4px; margin-bottom: 14px; transition: box-shadow 0.2s; cursor: pointer; box-shadow: 0 1px 12px rgba(28,20,16,0.04); }
-  .event-card:hover { box-shadow: 0 6px 24px rgba(28,20,16,0.09); }
-  .event-date { min-width: 56px; text-align: center; background: var(--deep); color: var(--cream); padding: 10px 8px; border-radius: 3px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .date-month { font-size: 0.62rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--gold); }
-  .date-day { font-family: 'Playfair Display', serif; font-size: 1.7rem; font-weight: 700; line-height: 1; }
-  .event-info { flex: 1; }
-  .event-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
-  .event-meta { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 8px; }
-  .event-detail { font-size: 0.78rem; color: rgba(28,20,16,0.5); display: flex; align-items: center; gap: 4px; }
-  .event-desc { font-size: 0.85rem; color: rgba(28,20,16,0.65); line-height: 1.6; margin-bottom: 12px; }
-  .event-register { background: var(--terra); color: white; border: none; padding: 8px 20px; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500; border-radius: 2px; transition: background 0.2s; }
-  .event-register:hover { background: #a8501f; }
-  .event-register.registered { background: var(--sage); }
-  .mini-cal { background: white; border: 1px solid rgba(196,98,45,0.1); border-radius: 4px; padding: 20px; margin-bottom: 20px; }
-  .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-  .cal-title { font-family: 'Playfair Display', serif; font-size: 0.95rem; font-weight: 700; }
-  .cal-nav { background: none; border: none; cursor: pointer; color: var(--terra); font-size: 1rem; padding: 4px 8px; }
-  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
-  .cal-day-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(28,20,16,0.4); padding: 4px 0; }
-  .cal-day { padding: 6px 4px; border-radius: 50%; font-size: 0.8rem; cursor: pointer; transition: all 0.15s; }
-  .cal-day:hover { background: var(--cream); }
-  .cal-day.has-event { background: var(--blush); color: var(--terra); font-weight: 600; }
-  .cal-day.today { background: var(--terra); color: white; font-weight: 700; }
-  .resources-layout { padding: 40px; max-width: 1000px; margin: 0 auto; }
-  .resources-filter { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 32px; }
-  .filter-chip { padding: 8px 18px; border-radius: 20px; border: 1.5px solid rgba(196,98,45,0.25); background: transparent; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; font-weight: 500; color: rgba(28,20,16,0.6); transition: all 0.2s; }
-  .filter-chip:hover, .filter-chip.active { background: var(--terra); color: white; border-color: var(--terra); }
-  .resources-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
-  .resource-card { background: white; border: 1px solid rgba(196,98,45,0.1); border-radius: 4px; overflow: hidden; box-shadow: 0 1px 12px rgba(28,20,16,0.04); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
-  .resource-card:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(28,20,16,0.09); }
-  .resource-thumb { height: 100px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; position: relative; }
-  .resource-type { position: absolute; top: 10px; right: 10px; font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.12em; padding: 3px 8px; border-radius: 10px; font-weight: 600; background: rgba(255,255,255,0.9); }
-  .resource-body { padding: 16px; }
-  .resource-title { font-family: 'Playfair Display', serif; font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
-  .resource-desc { font-size: 0.8rem; color: rgba(28,20,16,0.6); line-height: 1.6; margin-bottom: 12px; }
-  .resource-footer { display: flex; justify-content: space-between; align-items: center; }
-  .resource-author { font-size: 0.72rem; color: rgba(28,20,16,0.45); }
-  .resource-access { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--terra); cursor: pointer; }
-  .profile-layout { max-width: 720px; margin: 0 auto; padding: 40px; }
-  .profile-banner { height: 160px; border-radius: 4px; margin-bottom: -50px; background: linear-gradient(135deg, var(--deep) 0%, #3d2b1f 50%, var(--terra) 100%); background-size: cover; background-position: center; background-repeat: no-repeat; position: relative; overflow: hidden; cursor: pointer; }
-  .photo-upload-overlay { position: absolute; inset: 0; background: rgba(28,20,16,0.5); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; font-size: 0.8rem; color: white; letter-spacing: 0.08em; text-transform: uppercase; gap: 8px; }
-  .profile-banner:hover .photo-upload-overlay { opacity: 1; }
-  .avatar-upload-btn { position: absolute; bottom: 0; right: -4px; width: 28px; height: 28px; border-radius: 50%; background: var(--terra); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; border: 2px solid var(--warm-white); cursor: pointer; transition: background 0.2s; }
-  .avatar-upload-btn:hover { background: #a8501f; }
-  input[type="file"] { display: none; }
-  .profile-avatar-wrap { position: relative; margin-left: 32px; margin-bottom: 16px; width: fit-content; }
-  .profile-avatar { width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, var(--terra), var(--gold)); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: 700; font-family: 'Playfair Display', serif; border: 4px solid var(--warm-white); box-shadow: 0 4px 20px rgba(28,20,16,0.2); }
-  .profile-badge { position: absolute; bottom: 4px; right: -4px; width: 26px; height: 26px; border-radius: 50%; background: var(--gold); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; border: 2px solid var(--warm-white); }
-  .profile-info { padding: 0 32px; margin-bottom: 32px; }
-  .profile-name { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 700; margin-bottom: 4px; }
-  .profile-handle { color: var(--terra); font-size: 0.85rem; margin-bottom: 10px; }
-  .profile-bio { color: rgba(28,20,16,0.65); font-size: 0.9rem; line-height: 1.7; max-width: 420px; margin-bottom: 16px; }
-  .profile-stats { display: flex; gap: 28px; margin-bottom: 20px; }
-  .stat { text-align: center; }
-  .stat-num { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--terra); }
-  .stat-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(28,20,16,0.45); }
-  .profile-tags { display: flex; gap: 8px; flex-wrap: wrap; }
-  .profile-tag { padding: 5px 14px; border-radius: 20px; background: var(--cream); color: var(--deep); font-size: 0.78rem; font-weight: 500; }
-  .profile-section-title { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid rgba(196,98,45,0.15); }
-  .settings-form { padding: 0 32px; }
-  .form-group { margin-bottom: 20px; }
-  .form-label { display: block; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(28,20,16,0.5); margin-bottom: 8px; font-weight: 500; }
-  .form-input { width: 100%; padding: 12px 16px; border: 1.5px solid rgba(196,98,45,0.2); border-radius: 3px; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: var(--deep); background: white; outline: none; transition: border-color 0.2s; }
-  .form-input:focus { border-color: var(--terra); }
-  .save-btn { background: var(--terra); color: white; border: none; padding: 12px 32px; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; }
-  .save-btn:hover { background: #a8501f; }
-  .mobile-nav { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: rgba(251,247,242,0.96); backdrop-filter: blur(12px); border-top: 1px solid rgba(196,98,45,0.12); padding: 10px 20px 16px; justify-content: space-around; z-index: 100; }
-  .mobile-nav-btn { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: 'DM Sans', sans-serif; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(28,20,16,0.45); transition: color 0.2s; }
-  .mobile-nav-btn.active { color: var(--terra); }
-  .mobile-nav-btn span:first-child { font-size: 1.2rem; }
-  @media (max-width: 768px) {
-    nav { padding: 14px 20px; } .nav-links { display: none; } .hamburger { display: flex; }
-    .home-hero, .feed-section, .circles-grid, .events-main, .events-sidebar, .resources-layout, .profile-layout { padding: 28px 20px; }
-    .events-layout { grid-template-columns: 1fr; } .events-sidebar { display: none; }
-    .hero-accent { display: none; } .mobile-nav { display: flex; }
-    .view { padding-bottom: 70px; } .profile-info, .settings-form { padding: 0 16px; }
-  }
-  .auth-modal { max-width: 420px; }
-  .auth-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; }
-  .auth-sub { font-size: 0.85rem; color: var(--terra); margin-bottom: 24px; }
-  .auth-switch { text-align: center; font-size: 0.82rem; color: rgba(28,20,16,0.5); margin-top: 16px; }
-  .auth-switch a { color: var(--terra); text-decoration: none; font-weight: 600; }
-  .logout-btn { background: none; border: 1.5px solid rgba(196,98,45,0.3); color: var(--terra); padding: 6px 14px; border-radius: 2px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; font-weight: 500; cursor: pointer; display: none; transition: all 0.2s; }
-  .logout-btn:hover { background: var(--terra); color: white; }
-  .circle-detail-header { background: var(--deep); padding: 60px 40px 40px; position: relative; overflow: hidden; }
-  .circle-detail-back { background: none; border: 1px solid rgba(245,239,230,0.2); color: var(--cream); padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 0.78rem; cursor: pointer; border-radius: 2px; margin-bottom: 24px; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; }
-  .circle-detail-back:hover { border-color: var(--cream); }
-  .circle-detail-icon { font-size: 2.5rem; margin-bottom: 12px; display: block; }
-  .circle-detail-name { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 4vw, 2.4rem); color: var(--cream); margin-bottom: 10px; }
-  .circle-detail-desc { color: rgba(245,239,230,0.65); font-size: 0.95rem; line-height: 1.7; max-width: 560px; margin-bottom: 20px; }
-  .circle-detail-meta { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-  .circle-detail-count { font-size: 0.78rem; color: rgba(245,239,230,0.4); letter-spacing: 0.06em; }
-  .circle-join-btn { background: var(--terra); color: white; border: none; padding: 10px 24px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; }
-  .circle-join-btn:hover { background: #a8501f; }
-  .circle-join-btn.joined { background: var(--sage); }
-  .circle-feed { padding: 40px; max-width: 700px; margin: 0 auto; }
-  .circle-empty { text-align: center; padding: 60px 20px; color: rgba(28,20,16,0.4); font-size: 0.9rem; line-height: 1.8; }
-  .circle-empty-icon { font-size: 2.5rem; display: block; margin-bottom: 12px; }
-  .modal-overlay { position: fixed; inset: 0; background: rgba(28,20,16,0.7); z-index: 500; display: none; align-items: center; justify-content: center; padding: 20px; }
-  .modal-overlay.open { display: flex; }
-  .modal { background: var(--warm-white); border-radius: 6px; max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto; padding: 40px; box-shadow: 0 20px 60px rgba(28,20,16,0.3); }
-  .modal-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; margin-bottom: 6px; color: var(--deep); }
-  .modal-sub { font-size: 0.85rem; color: var(--terra); margin-bottom: 24px; letter-spacing: 0.04em; }
-  .agreement-item { display: flex; gap: 14px; margin-bottom: 18px; padding-bottom: 18px; border-bottom: 1px solid rgba(196,98,45,0.1); }
-  .agreement-item:last-of-type { border-bottom: none; }
-  .agreement-num { width: 28px; height: 28px; border-radius: 50%; background: var(--terra); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
-  .agreement-text strong { display: block; font-size: 0.9rem; margin-bottom: 4px; color: var(--deep); }
-  .agreement-text p { font-size: 0.82rem; color: rgba(28,20,16,0.65); line-height: 1.6; }
-  .modal-check { display: flex; gap: 10px; align-items: flex-start; margin: 24px 0 20px; }
-  .modal-check input { margin-top: 3px; accent-color: var(--terra); width: 16px; height: 16px; }
-  .modal-check label { font-size: 0.85rem; color: var(--deep); line-height: 1.5; cursor: pointer; }
-  .modal-agree-btn { width: 100%; padding: 14px; background: var(--terra); color: white; border: none; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px; transition: background 0.2s; }
-  .modal-agree-btn:hover { background: #a8501f; }
-  .modal-agree-btn:disabled { background: rgba(196,98,45,0.3); cursor: not-allowed; }
-  .modal-cancel { text-align: center; margin-top: 12px; }
-  .modal-cancel button { background: none; border: none; color: rgba(28,20,16,0.45); font-size: 0.82rem; cursor: pointer; font-family: 'DM Sans', sans-serif; }
-  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--deep); color: var(--cream); padding: 12px 24px; border-radius: 3px; font-size: 0.85rem; opacity: 0; transition: all 0.3s; pointer-events: none; z-index: 200; white-space: nowrap; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .membership-banner { background: linear-gradient(135deg, var(--terra), #a8501f); padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-  .membership-text { color: white; }
-  .membership-text strong { font-family: 'Playfair Display', serif; font-size: 1rem; display: block; margin-bottom: 4px; }
-  .membership-text span { font-size: 0.82rem; opacity: 0.85; }
-  .membership-cta { background: white; color: var(--terra); border: none; padding: 10px 24px; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px; white-space: nowrap; transition: opacity 0.2s; flex-shrink: 0; }
-  .membership-cta:hover { opacity: 0.9; }
-  .quote-card { background: var(--deep); color: var(--cream); padding: 32px; border-radius: 4px; margin-bottom: 16px; position: relative; overflow: hidden; }
-  .quote-card::before { content: '"'; font-family: 'Playfair Display', serif; font-size: 8rem; color: rgba(212,168,83,0.15); position: absolute; top: -20px; left: 16px; line-height: 1; }
-  .quote-text { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-style: italic; line-height: 1.7; margin-bottom: 14px; position: relative; z-index: 1; }
-  .quote-author { font-size: 0.78rem; color: var(--gold); letter-spacing: 0.08em; text-transform: uppercase; }
+:root{--terra:#C4622D;--deep:#1C1410;--cream:#F5EFE6;--gold:#D4A853;--sage:#7A8C6E;--blush:#E8C4A0;--warm-white:#FBF7F2}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--warm-white);color:var(--deep);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4}
+nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(251,247,242,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(196,98,45,0.12);z-index:100}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--terra);letter-spacing:0.02em}
+.nav-logo span{font-style:italic;font-weight:400}
+.nav-links{display:flex;gap:32px;align-items:center}
+.nav-links a{text-decoration:none;color:var(--deep);font-size:0.85rem;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;opacity:0.7;transition:opacity 0.2s}
+.nav-links a:hover{opacity:1}
+.nav-links a.active{color:var(--terra);opacity:1}
+.nav-cta{background:var(--terra);color:white!important;padding:8px 20px;border-radius:2px;opacity:1!important;font-weight:500!important;transition:background 0.2s!important}
+.nav-cta:hover{background:#a8501f!important}
+.hamburger{display:none;cursor:pointer;flex-direction:column;gap:5px}
+.hamburger span{width:24px;height:2px;background:var(--deep);display:block}
+.logout-btn{background:none;border:1.5px solid rgba(196,98,45,0.3);color:var(--terra);padding:6px 14px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;display:none;transition:all 0.2s}
+.logout-btn:hover{background:var(--terra);color:white}
+.view{display:none;padding-top:72px;min-height:100vh}
+.view.active{display:block}
+.home-hero{background:var(--deep);padding:80px 40px 60px;position:relative;overflow:hidden}
+.home-hero::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:40px;background:var(--warm-white);clip-path:ellipse(55% 100% at 50% 100%)}
+.hero-greeting{font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.5rem);color:var(--cream);line-height:1.15;max-width:600px;margin-bottom:20px}
+.hero-title em{color:var(--gold);font-style:italic}
+.hero-sub{color:rgba(245,239,230,0.85);font-size:0.95rem;max-width:480px;line-height:1.7}
+.hero-accent{position:absolute;right:40px;top:50%;transform:translateY(-50%);width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(196,98,45,0.3),transparent 70%);border:1px solid rgba(212,168,83,0.2)}
+.feed-section{padding:48px 40px;max-width:900px;margin:0 auto}
+.section-label{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:24px;display:flex;align-items:center;gap:12px}
+.section-label::after{content:'';flex:1;height:1px;background:rgba(196,98,45,0.2)}
+.post-composer{background:white;border:1px solid rgba(196,98,45,0.15);border-radius:4px;padding:20px;margin-bottom:32px;box-shadow:0 2px 20px rgba(28,20,16,0.04)}
+.composer-top{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px}
+.avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.85rem;flex-shrink:0;font-family:'Playfair Display',serif}
+.composer-input{flex:1;border:none;outline:none;font-family:'DM Sans',sans-serif;font-size:0.95rem;color:var(--deep);resize:none;background:transparent;line-height:1.6}
+.composer-actions{display:flex;justify-content:space-between;align-items:center}
+.composer-tools{display:flex;gap:8px;flex-wrap:wrap}
+.tool-btn{background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:2px;font-size:0.8rem;color:rgba(28,20,16,0.5);transition:all 0.2s;font-family:'DM Sans',sans-serif}
+.tool-btn:hover,.tool-btn.active{background:var(--cream);color:var(--terra)}
+.tool-btn.question-active{background:rgba(212,168,83,0.15);color:var(--gold);border:1px solid var(--gold)}
+.gif-picker{display:none;margin-top:12px;border:1px solid rgba(196,98,45,0.2);border-radius:4px;overflow:hidden;background:var(--cream)}
+.gif-picker.open{display:block}
+.gif-search-bar{display:flex;gap:8px;padding:10px;border-bottom:1px solid rgba(196,98,45,0.1)}
+.gif-search-input{flex:1;padding:8px 12px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--deep);outline:none;background:white}
+.gif-search-input:focus{border-color:var(--terra)}
+.gif-search-btn{background:var(--terra);color:white;border:none;padding:8px 16px;border-radius:3px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500}
+.gif-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:8px;max-height:200px;overflow-y:auto}
+.gif-item{width:100%;aspect-ratio:1;object-fit:cover;border-radius:3px;cursor:pointer;transition:opacity 0.2s}
+.gif-item:hover{opacity:0.8}
+.gif-loading{text-align:center;padding:20px;font-size:0.82rem;color:rgba(28,20,16,0.5)}
+.gif-preview{margin-top:10px;position:relative;display:none}
+.gif-preview img{max-width:100%;border-radius:4px;max-height:200px;object-fit:cover}
+.gif-remove{position:absolute;top:6px;right:6px;background:rgba(28,20,16,0.7);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center}
+.post-btn{background:var(--terra);color:white;border:none;cursor:pointer;padding:9px 22px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;letter-spacing:0.04em;transition:background 0.2s}
+.post-btn:hover{background:#a8501f}
+.feed-card{background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:24px;margin-bottom:16px;box-shadow:0 2px 20px rgba(28,20,16,0.04);animation:fadeUp 0.4s ease both}
+.feed-card.question-card{border-left:3px solid var(--gold);border-color:rgba(212,168,83,0.4)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.card-meta{flex:1}
+.card-name{font-weight:600;font-size:0.9rem;color:var(--deep);font-family:'Playfair Display',serif;cursor:pointer;transition:color 0.2s}
+.card-name:hover{color:var(--terra)}
+.card-time{font-size:0.75rem;color:rgba(28,20,16,0.45);margin-top:2px}
+.card-tag{font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;padding:4px 10px;border-radius:20px;background:var(--cream);color:var(--terra);font-weight:500}
+.card-tag.question-tag{background:linear-gradient(135deg,var(--gold),#b8860b);color:white}
+.card-body{font-size:0.93rem;line-height:1.75;color:rgba(28,20,16,0.8);margin-bottom:18px}
+.card-body.question-body{font-family:'Playfair Display',serif;font-style:italic;font-size:1rem}
+.card-footer{display:flex;gap:20px;padding-top:14px;border-top:1px solid rgba(196,98,45,0.08)}
+.react-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:rgba(28,20,16,0.5);transition:all 0.2s;padding:4px 0}
+.react-btn:hover,.react-btn.liked{color:var(--terra)}
+.react-btn.reply-active{color:var(--terra)}
+.replies-section{display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(196,98,45,0.08)}
+.reply-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.reply-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.65rem;flex-shrink:0;font-family:'Playfair Display',serif;background-size:cover;background-position:center}
+.reply-bubble{flex:1;background:var(--cream);border-radius:4px;padding:10px 12px}
+.reply-name{font-size:0.78rem;font-weight:600;font-family:'Playfair Display',serif;margin-bottom:3px}
+.reply-text{font-size:0.84rem;color:rgba(28,20,16,0.8);line-height:1.6}
+.reply-time{font-size:0.7rem;color:rgba(28,20,16,0.4);margin-top:4px}
+.reply-composer{display:flex;gap:10px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(196,98,45,0.1)}
+.reply-input{flex:1;padding:8px 12px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.84rem;outline:none;color:var(--deep);background:white}
+.reply-input:focus{border-color:var(--terra)}
+.reply-submit{background:var(--terra);color:white;border:none;padding:8px 14px;border-radius:2px;cursor:pointer;font-size:0.78rem;font-weight:600;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:background 0.2s}
+.reply-submit:hover{background:#a8501f}
+.membership-banner{background:linear-gradient(135deg,var(--terra),#a8501f);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.membership-text{color:white}
+.membership-text strong{font-family:'Playfair Display',serif;font-size:1rem;display:block;margin-bottom:4px}
+.membership-text span{font-size:0.82rem;opacity:0.85}
+.membership-cta{background:white;color:var(--terra);border:none;padding:10px 24px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;white-space:nowrap;transition:opacity 0.2s;flex-shrink:0}
+.membership-cta:hover{opacity:0.9}
+.quote-card{background:var(--deep);color:var(--cream);padding:32px;border-radius:4px;margin-bottom:16px;position:relative;overflow:hidden}
+.quote-card::before{content:'"';font-family:'Playfair Display',serif;font-size:8rem;color:rgba(212,168,83,0.15);position:absolute;top:-20px;left:16px;line-height:1}
+.quote-text{font-family:'Playfair Display',serif;font-size:1.1rem;font-style:italic;line-height:1.7;margin-bottom:14px;position:relative;z-index:1}
+.quote-author{font-size:0.78rem;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase}
+.circles-hero{padding:60px 40px 40px;background:linear-gradient(160deg,var(--cream) 0%,var(--warm-white) 100%);border-bottom:1px solid rgba(196,98,45,0.1)}
+.page-title{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4vw,2.8rem);line-height:1.2;margin-bottom:10px}
+.page-sub{color:rgba(28,20,16,0.6);font-size:0.95rem;line-height:1.7;max-width:500px}
+.circles-grid{padding:40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;max-width:1100px;margin:0 auto}
+.circle-card{border-radius:4px;overflow:hidden;border:1px solid rgba(196,98,45,0.12);background:white;box-shadow:0 2px 20px rgba(28,20,16,0.05);transition:transform 0.2s,box-shadow 0.2s;cursor:pointer}
+.circle-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(28,20,16,0.1)}
+.circle-banner{height:90px;position:relative;display:flex;align-items:center;justify-content:center}
+.circle-icon{font-size:2.4rem}
+.circle-body{padding:20px}
+.circle-name{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;margin-bottom:6px}
+.circle-desc{font-size:0.83rem;color:rgba(28,20,16,0.6);line-height:1.6;margin-bottom:14px}
+.circle-meta{display:flex;justify-content:space-between;align-items:center}
+.circle-members{font-size:0.75rem;color:rgba(28,20,16,0.45)}
+.join-btn{background:none;border:1.5px solid var(--terra);color:var(--terra);padding:6px 16px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.2s}
+.join-btn:hover,.join-btn.joined{background:var(--terra);color:white}
+.circle-detail-header{background:var(--deep);padding:60px 40px 40px;position:relative;overflow:hidden}
+.circle-detail-back{background:none;border:1px solid rgba(245,239,230,0.2);color:var(--cream);padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:0.78rem;cursor:pointer;border-radius:2px;margin-bottom:24px;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s}
+.circle-detail-back:hover{border-color:var(--cream)}
+.circle-detail-icon{font-size:2.5rem;margin-bottom:12px;display:block}
+.circle-detail-name{font-family:'Playfair Display',serif;font-size:clamp(1.6rem,4vw,2.4rem);color:var(--cream);margin-bottom:10px}
+.circle-detail-desc{color:rgba(245,239,230,0.65);font-size:0.95rem;line-height:1.7;max-width:560px;margin-bottom:20px}
+.circle-detail-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.circle-detail-count{font-size:0.78rem;color:rgba(245,239,230,0.4);letter-spacing:0.06em}
+.circle-join-btn{background:var(--terra);color:white;border:none;padding:10px 24px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
+.circle-join-btn:hover{background:#a8501f}
+.circle-join-btn.joined{background:var(--sage)}
+.circle-feed{padding:40px;max-width:700px;margin:0 auto}
+.circle-empty{text-align:center;padding:60px 20px;color:rgba(28,20,16,0.4);font-size:0.9rem;line-height:1.8}
+.circle-empty-icon{font-size:2.5rem;display:block;margin-bottom:12px}
+.events-layout{display:grid;grid-template-columns:1fr 320px;gap:0;max-width:1100px;margin:0 auto}
+.events-main{padding:40px;border-right:1px solid rgba(196,98,45,0.1)}
+.events-sidebar{padding:40px 32px}
+.event-card{display:flex;gap:20px;padding:22px;background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;margin-bottom:14px;transition:box-shadow 0.2s;box-shadow:0 1px 12px rgba(28,20,16,0.04)}
+.event-card:hover{box-shadow:0 6px 24px rgba(28,20,16,0.09)}
+.event-date{min-width:56px;text-align:center;background:var(--deep);color:var(--cream);padding:10px 8px;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.date-month{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--gold)}
+.date-day{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;line-height:1}
+.event-info{flex:1}
+.event-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:6px}
+.event-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.event-detail{font-size:0.78rem;color:rgba(28,20,16,0.5);display:flex;align-items:center;gap:4px}
+.event-desc{font-size:0.85rem;color:rgba(28,20,16,0.65);line-height:1.6;margin-bottom:12px}
+.event-register{background:var(--terra);color:white;border:none;padding:8px 20px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:500;border-radius:2px;transition:background 0.2s}
+.event-register:hover{background:#a8501f}
+.event-register.registered{background:var(--sage)}
+.mini-cal{background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:20px;margin-bottom:20px}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.cal-title{font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700}
+.cal-nav{background:none;border:none;cursor:pointer;color:var(--terra);font-size:1rem;padding:4px 8px}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-day-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:rgba(28,20,16,0.4);padding:4px 0}
+.cal-day{padding:6px 4px;border-radius:50%;font-size:0.8rem;cursor:pointer;transition:all 0.15s}
+.cal-day:hover{background:var(--cream)}
+.cal-day.has-event{background:var(--blush);color:var(--terra);font-weight:600}
+.cal-day.today{background:var(--terra);color:white;font-weight:700}
+.resources-layout{padding:40px;max-width:1000px;margin:0 auto}
+.resources-filter{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px}
+.filter-chip{padding:8px 18px;border-radius:20px;border:1.5px solid rgba(196,98,45,0.25);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:500;color:rgba(28,20,16,0.6);transition:all 0.2s}
+.filter-chip:hover,.filter-chip.active{background:var(--terra);color:white;border-color:var(--terra)}
+.resources-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.resource-card{background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;overflow:hidden;box-shadow:0 1px 12px rgba(28,20,16,0.04);transition:transform 0.2s,box-shadow 0.2s;cursor:pointer}
+.resource-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(28,20,16,0.09)}
+.resource-thumb{height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;position:relative}
+.resource-type{position:absolute;top:10px;right:10px;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;padding:3px 8px;border-radius:10px;font-weight:600;background:rgba(255,255,255,0.9)}
+.resource-body{padding:16px}
+.resource-title{font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;margin-bottom:6px}
+.resource-desc{font-size:0.8rem;color:rgba(28,20,16,0.6);line-height:1.6;margin-bottom:12px}
+.resource-footer{display:flex;justify-content:space-between;align-items:center}
+.resource-author{font-size:0.72rem;color:rgba(28,20,16,0.45)}
+.resource-access{font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);cursor:pointer}
+.profile-banner{height:160px;border-radius:4px;margin-bottom:-50px;background:linear-gradient(135deg,var(--deep) 0%,#3d2b1f 50%,var(--terra) 100%);background-size:cover;background-position:center;position:relative;overflow:hidden;cursor:pointer}
+.photo-upload-overlay{position:absolute;inset:0;background:rgba(28,20,16,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;font-size:0.8rem;color:white;letter-spacing:0.08em;text-transform:uppercase;gap:8px}
+.profile-banner:hover .photo-upload-overlay{opacity:1}
+.avatar-upload-btn{position:absolute;bottom:0;right:-4px;width:28px;height:28px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;border:2px solid var(--warm-white);cursor:pointer}
+input[type="file"]{display:none}
+.profile-avatar-wrap{position:relative;margin-left:32px;margin-bottom:16px;width:fit-content}
+.profile-avatar{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-size:2rem;font-weight:700;font-family:'Playfair Display',serif;border:4px solid var(--warm-white);box-shadow:0 4px 20px rgba(28,20,16,0.2);background-size:cover;background-position:center}
+.profile-info{padding:0 32px;margin-bottom:32px}
+.profile-name{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;margin-bottom:4px}
+.profile-handle{color:var(--terra);font-size:0.85rem;margin-bottom:10px}
+.profile-bio{color:rgba(28,20,16,0.65);font-size:0.9rem;line-height:1.7;max-width:420px;margin-bottom:16px}
+.profile-stats{display:flex;gap:28px;margin-bottom:20px}
+.stat{text-align:center}
+.stat-num{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--terra)}
+.stat-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.45)}
+.profile-tag{padding:5px 14px;border-radius:20px;background:var(--cream);color:var(--deep);font-size:0.78rem;font-weight:500}
+.profile-section-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(196,98,45,0.15)}
+.form-group{margin-bottom:20px}
+.form-label{display:block;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500}
+.form-input{width:100%;padding:12px 16px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--deep);background:white;outline:none;transition:border-color 0.2s}
+.form-input:focus{border-color:var(--terra)}
+.save-btn{background:var(--terra);color:white;border:none;padding:12px 32px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
+.save-btn:hover{background:#a8501f}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(251,247,242,0.96);backdrop-filter:blur(12px);border-top:1px solid rgba(196,98,45,0.12);padding:10px 20px 16px;justify-content:space-around;z-index:100}
+.mobile-nav-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:'DM Sans',sans-serif;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:rgba(28,20,16,0.45);transition:color 0.2s}
+.mobile-nav-btn.active{color:var(--terra)}
+.mobile-nav-btn span:first-child{font-size:1.2rem}
+.modal-overlay{position:fixed;inset:0;background:rgba(28,20,16,0.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay.open{display:flex}
+.modal{background:var(--warm-white);border-radius:6px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:40px;box-shadow:0 20px 60px rgba(28,20,16,0.3)}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;margin-bottom:6px;color:var(--deep)}
+.modal-sub{font-size:0.85rem;color:var(--terra);margin-bottom:24px;letter-spacing:0.04em}
+.agreement-item{display:flex;gap:14px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid rgba(196,98,45,0.1)}
+.agreement-item:last-of-type{border-bottom:none}
+.agreement-num{width:28px;height:28px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px}
+.agreement-text strong{display:block;font-size:0.9rem;margin-bottom:4px;color:var(--deep)}
+.agreement-text p{font-size:0.82rem;color:rgba(28,20,16,0.65);line-height:1.6}
+.modal-check{display:flex;gap:10px;align-items:flex-start;margin:24px 0 20px}
+.modal-check input{margin-top:3px;accent-color:var(--terra);width:16px;height:16px}
+.modal-check label{font-size:0.85rem;color:var(--deep);line-height:1.5;cursor:pointer}
+.modal-agree-btn{width:100%;padding:14px;background:var(--terra);color:white;border:none;font-family:'DM Sans',sans-serif;font-size:0.9rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
+.modal-agree-btn:hover{background:#a8501f}
+.modal-agree-btn:disabled{background:rgba(196,98,45,0.3);cursor:not-allowed}
+.modal-cancel{text-align:center;margin-top:12px}
+.modal-cancel button{background:none;border:none;color:rgba(28,20,16,0.45);font-size:0.82rem;cursor:pointer;font-family:'DM Sans',sans-serif}
+.auth-modal{max-width:420px}
+.auth-title{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;margin-bottom:6px}
+.auth-sub{font-size:0.85rem;color:var(--terra);margin-bottom:24px}
+.auth-switch{text-align:center;font-size:0.82rem;color:rgba(28,20,16,0.5);margin-top:16px}
+.auth-switch a{color:var(--terra);text-decoration:none;font-weight:600}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--deep);color:var(--cream);padding:12px 24px;border-radius:3px;font-size:0.85rem;opacity:0;transition:all 0.3s;pointer-events:none;z-index:600;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.mp-modal{max-width:520px;padding:0;overflow:hidden}
+.mp-banner{height:120px;background:linear-gradient(135deg,#1C1410,#C4622D);position:relative;background-size:cover;background-position:center}
+.mp-close-btn{position:absolute;top:12px;right:12px;background:rgba(28,20,16,0.6);color:white;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+.mp-avatar-wrap{margin:-36px 0 0 24px;margin-bottom:12px;width:fit-content}
+.mp-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-size:1.6rem;font-weight:700;font-family:'Playfair Display',serif;border:3px solid white;box-shadow:0 4px 16px rgba(28,20,16,0.2);background-size:cover;background-position:center}
+.mp-body{padding:0 24px 24px}
+.mp-name{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;margin-bottom:2px}
+.mp-handle{color:var(--terra);font-size:0.82rem;margin-bottom:10px}
+.mp-bio{font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.7;margin-bottom:20px}
+.mp-section-title{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--terra);margin-bottom:10px;font-weight:600;padding-bottom:6px;border-bottom:1px solid rgba(196,98,45,0.12)}
+.mp-circles{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
+.mp-post-item{padding:12px 0;border-bottom:1px solid rgba(196,98,45,0.08)}
+.mp-post-item:last-child{border-bottom:none}
+.mp-post-text{font-size:0.86rem;color:rgba(28,20,16,0.75);line-height:1.6;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mp-post-time{font-size:0.72rem;color:rgba(28,20,16,0.4)}
+.mp-loading{padding:40px;text-align:center;color:rgba(28,20,16,0.4);font-size:0.88rem}
+@media(max-width:768px){
+  nav{padding:14px 20px}.nav-links{display:none}.hamburger{display:flex}
+  .home-hero,.feed-section,.circles-grid,.events-main,.events-sidebar,.resources-layout,.profile-info,.profile-avatar-wrap{padding-left:20px;padding-right:20px}
+  .events-layout{grid-template-columns:1fr}.events-sidebar{display:none}
+  .hero-accent{display:none}.mobile-nav{display:flex}.view{padding-bottom:70px}
+  .feed-section{padding:28px 20px}
+}
 </style>
 </head>
 <body>
 
-<!-- CIRCLE PROPOSAL MODAL -->
-<div class="modal-overlay" id="proposal-modal" onclick="if(event.target===this)closeProposalModal()">
-  <div class="modal" style="max-width:500px;">
-    <div class="modal-title">Propose a Circle ✦</div>
-    <div class="modal-sub">Share your vision — we'll be in touch to co-facilitate</div>
-    <div class="form-group">
-      <label class="form-label">Circle Name</label>
-      <input class="form-input" id="prop-name" type="text" placeholder="What would you call it?">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Description — What is it about?</label>
-      <textarea class="form-input" id="prop-desc" rows="3" style="resize:vertical" placeholder="Describe the space you want to hold..."></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Why do you want to host this?</label>
-      <textarea class="form-input" id="prop-why" rows="3" style="resize:vertical" placeholder="What draws you to facilitating this circle?"></textarea>
-    </div>
-    <div class="form-group">
-      <label class="form-label">Your Name</label>
-      <input class="form-input" id="prop-contact-name" type="text" placeholder="Your name">
-    </div>
-    <div class="form-group">
-      <label class="form-label">Your Email or Phone</label>
-      <input class="form-input" id="prop-contact" type="text" placeholder="How should we reach you?">
-    </div>
-    <button class="modal-agree-btn" id="prop-submit-btn" onclick="submitProposal()">Submit My Proposal ✦</button>
-    <div class="modal-cancel"><button onclick="closeProposalModal()">Not right now</button></div>
-    <div class="msg" id="prop-msg" style="margin-top:12px;"></div>
-  </div>
-</div>
-
 <!-- MEMBER PROFILE MODAL -->
 <div class="modal-overlay" id="member-profile-modal" onclick="if(event.target===this)closeMemberProfile()">
-  <div class="modal member-profile-modal" style="padding:0;">
+  <div class="modal mp-modal">
     <div class="mp-banner" id="mp-banner">
       <button class="mp-close-btn" onclick="closeMemberProfile()">✕</button>
     </div>
     <div id="mp-loading" class="mp-loading">Loading profile... ✦</div>
-    <div id="mp-content" style="display:none;">
-      <div style="padding:0 24px;">
-        <div class="mp-avatar-wrap">
-          <div class="mp-avatar" id="mp-avatar">S</div>
-        </div>
+    <div id="mp-content" style="display:none">
+      <div style="padding:0 24px">
+        <div class="mp-avatar-wrap"><div class="mp-avatar" id="mp-avatar">S</div></div>
       </div>
       <div class="mp-body">
         <div class="mp-name" id="mp-name">Sister</div>
@@ -953,7 +267,7 @@
         <div class="mp-section-title">Circles</div>
         <div class="mp-circles" id="mp-circles"></div>
         <div class="mp-section-title">Recent Posts</div>
-        <div class="mp-posts" id="mp-posts"></div>
+        <div id="mp-posts"></div>
       </div>
     </div>
   </div>
@@ -982,7 +296,7 @@
   </div>
 </div>
 
-<!-- COMMUNITY AGREEMENTS MODAL -->
+<!-- AGREEMENTS MODAL -->
 <div class="modal-overlay" id="agreements-modal">
   <div class="modal">
     <div class="modal-title">Community Agreements</div>
@@ -1002,17 +316,16 @@
 <nav>
   <div class="nav-logo">Sisterhood<span>(verb)</span></div>
   <div class="nav-links">
-    <a href="#" class="active" onclick="showView('home', this)">Home</a>
-    <a href="#" onclick="showViewWithProfile('circles', this)">Circles</a>
-    <a href="#" onclick="showView('events', this)">Events</a>
-    <a href="#" onclick="showView('resources', this)">Resources</a>
-    <a href="#" onclick="showViewWithProfile('profile', this)">Profile</a>
-    <a href="#" class="nav-cta" onclick="openModal(); return false;">Join</a>
+    <a href="#" class="active" onclick="showView('home',this)">Home</a>
+    <a href="#" onclick="showViewWithProfile('circles',this)">Circles</a>
+    <a href="#" onclick="showView('events',this)">Events</a>
+    <a href="#" onclick="showView('resources',this)">Resources</a>
+    <a href="#" onclick="showViewWithProfile('profile',this)">Profile</a>
+    <a href="#" class="nav-cta" onclick="openModal();return false;">Join</a>
     <button class="logout-btn" id="logout-btn" onclick="signOut()">Log Out</button>
   </div>
-  <div class="hamburger" onclick="toggleMobile()"><span></span><span></span><span></span></div>
+  <div class="hamburger" onclick="showToast('Use bottom nav on mobile')"><span></span><span></span><span></span></div>
 </nav>
-
 <div class="toast" id="toast"></div>
 
 <!-- HOME -->
@@ -1029,14 +342,14 @@
   </div>
   <div class="feed-section">
     <div class="section-label">Community Feed</div>
-    <div class="post-composer">
+    <div class="post-composer" id="home-composer">
       <div class="composer-top">
-        <div class="avatar">T</div>
-        <textarea class="composer-input" rows="2" placeholder="What's on your heart today, sister?"></textarea>
+        <div class="avatar" id="home-composer-avatar">T</div>
+        <textarea class="composer-input" id="home-composer-input" rows="2" placeholder="What's on your heart today, sister?"></textarea>
       </div>
-      <div class="gif-preview" id="gif-preview"><img id="gif-preview-img" src="" alt="Selected GIF"><button class="gif-remove" onclick="removeGif()">✕</button></div>
+      <div class="gif-preview" id="gif-preview"><img id="gif-preview-img" src="" alt="GIF"><button class="gif-remove" onclick="removeGif()">✕</button></div>
       <div class="gif-picker" id="gif-picker">
-        <div class="gif-search-bar"><input class="gif-search-input" id="gif-search-input" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter') searchGifs()"><button class="gif-search-btn" onclick="searchGifs()">Search</button></div>
+        <div class="gif-search-bar"><input class="gif-search-input" id="gif-search-input" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter')searchGifs()"><button class="gif-search-btn" onclick="searchGifs()">Search</button></div>
         <div class="gif-grid" id="gif-grid"><div class="gif-loading">Search for a GIF above ✦</div></div>
       </div>
       <div class="composer-actions">
@@ -1045,43 +358,30 @@
           <button class="tool-btn" onclick="showToast('Voice notes coming soon')">🎙 Voice</button>
           <button class="tool-btn" onclick="showToast('Prompts loaded')">✨ Prompt</button>
           <button class="tool-btn" id="gif-btn" onclick="toggleGifPicker()">GIF 🎬</button>
-          <button class="tool-btn" id="question-btn" onclick="toggleQuestionMode()" style="border:1.5px solid transparent;">❓ Question</button>
+          <button class="tool-btn" id="question-btn" onclick="toggleQuestionMode()">❓ Question</button>
         </div>
-        <button class="post-btn" onclick="postToFeed()">Share</button>
+        <button class="post-btn" id="home-post-btn" onclick="postToFeed()">Share</button>
       </div>
     </div>
     <div class="quote-card">
       <p class="quote-text">Sisterhood(verb): loving yourself and your kin with ancestral abundance.</p>
       <div class="quote-author">— Tayllor Oyewole-Davis, Founder</div>
     </div>
-    <div style="background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:32px;margin-bottom:24px;box-shadow:0 2px 20px rgba(28,20,16,0.04);">
-      <div class="section-label" style="margin-bottom:16px;">Our Why</div>
-      <p style="font-family:'Playfair Display',serif;font-size:1.15rem;font-style:italic;color:var(--deep);margin-bottom:14px;line-height:1.6;">Sisterhood is a practice.</p>
-      <p style="font-size:0.92rem;color:rgba(28,20,16,0.7);line-height:1.8;margin-bottom:20px;">We help women and communities return to themselves through creativity, care, and collective action. Sisterhood(verb) is a community-rooted creative practice offering workshops, programs, and partnerships that use storytelling, arts integration, and facilitated dialogue to support wellness, belonging, and cultural connection.</p>
-      <p style="font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:14px;font-weight:600;">We Create Spaces Where...</p>
-      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;">
-        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.6;"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0;">✦</span>Creativity is a tool for healing and truth-telling</li>
-        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.6;"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0;">✦</span>Community care replaces burnout and isolation</li>
-        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.6;"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0;">✦</span>Culture, identity, and lived experience are honored</li>
-        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.6;"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0;">✦</span>People feel resourced — not extracted from</li>
+    <div style="background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:32px;margin-bottom:24px;box-shadow:0 2px 20px rgba(28,20,16,0.04)">
+      <div class="section-label" style="margin-bottom:16px">Our Why</div>
+      <p style="font-family:'Playfair Display',serif;font-size:1.15rem;font-style:italic;color:var(--deep);margin-bottom:14px;line-height:1.6">Sisterhood is a practice.</p>
+      <p style="font-size:0.92rem;color:rgba(28,20,16,0.7);line-height:1.8;margin-bottom:20px">We help women and communities return to themselves through creativity, care, and collective action. Sisterhood(verb) is a community-rooted creative practice offering workshops, programs, and partnerships that use storytelling, arts integration, and facilitated dialogue to support wellness, belonging, and cultural connection.</p>
+      <p style="font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:14px;font-weight:600">We Create Spaces Where...</p>
+      <ul style="list-style:none;display:flex;flex-direction:column;gap:10px">
+        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.6"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>Creativity is a tool for healing and truth-telling</li>
+        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.6"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>Community care replaces burnout and isolation</li>
+        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.6"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>Culture, identity, and lived experience are honored</li>
+        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.6"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>People feel resourced — not extracted from</li>
       </ul>
     </div>
     <div id="feed-posts">
-      <div class="feed-card">
-        <div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#7A8C6E,#C4622D);">A</div><div class="card-meta"><div class="card-name">Amara W.</div><div class="card-time">2 hours ago</div></div><span class="card-tag">Motherhood</span></div>
-        <div class="card-body">Just finished the <strong>Motherhood Speaks</strong> workshop and I am undone in the best way. I didn't realize how much I'd been carrying silently until I finally had a room — even a virtual one — where I was allowed to put it down.</div>
-        <div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>14</span></button><button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>3 replies</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div>
-      </div>
-      <div class="feed-card" style="animation-delay:0.1s">
-        <div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#D4A853,#C4622D);">N</div><div class="card-meta"><div class="card-name">Nia R.</div><div class="card-time">Yesterday</div></div><span class="card-tag">Creative</span></div>
-        <div class="card-body">Sharing my writing prompt response from Circle this week — "Write the letter your 13-year-old self needed to receive." I've never cried so hard or felt so free at the same time. Thank you for this space. 🌺</div>
-        <div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>27</span></button><button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>8 replies</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div>
-      </div>
-      <div class="feed-card" style="animation-delay:0.2s">
-        <div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#C4622D,#1C1410);">S</div><div class="card-meta"><div class="card-name">Simone T.</div><div class="card-time">2 days ago</div></div><span class="card-tag">Wellness</span></div>
-        <div class="card-body">Reminder to us all: rest is <strong>resistance</strong>. You don't have to earn your stillness. You are allowed to pause without producing.</div>
-        <div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>42</span></button><button class="react-btn" onclick="showToast('Reply coming in full version')">💬 <span>12 replies</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div>
-      </div>
+      <div class="feed-card"><div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#7A8C6E,#C4622D)">A</div><div class="card-meta"><div class="card-name">Amara W.</div><div class="card-time">2 hours ago</div></div><span class="card-tag">Motherhood</span></div><div class="card-body">Just finished the <strong>Motherhood Speaks</strong> workshop and I am undone in the best way. I didn't realize how much I'd been carrying silently until I finally had a room where I was allowed to put it down.</div><div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>14</span></button><button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div></div>
+      <div class="feed-card" style="animation-delay:0.1s"><div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#D4A853,#C4622D)">N</div><div class="card-meta"><div class="card-name">Nia R.</div><div class="card-time">Yesterday</div></div><span class="card-tag">Creative</span></div><div class="card-body">Sharing my writing prompt response from Circle this week. I've never cried so hard or felt so free at the same time. Thank you for this space. 🌺</div><div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>27</span></button><button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div></div>
     </div>
   </div>
 </div>
@@ -1090,13 +390,13 @@
 <div class="view" id="view-circles">
   <div class="circles-hero"><div class="section-label" style="margin-bottom:12px">Your Spaces</div><h1 class="page-title">Find Your Circle</h1><p class="page-sub">Intimate groups where the real conversations happen. Each Circle is a practice space — not a performance.</p></div>
   <div class="circles-grid">
-    <div class="circle-card" onclick="openCircle('Motherhood Speaks')"><div class="circle-banner" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);"><span class="circle-icon">🌺</span></div><div class="circle-body"><div class="circle-name">Motherhood Speaks</div><div class="circle-desc">A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.</div><div class="circle-meta"><span class="circle-members">48 sisters</span><button class="join-btn joined" data-circle="Motherhood Speaks" onclick="event.stopPropagation();toggleJoin(this,'Motherhood Speaks')">Joined ✦</button></div></div></div>
-    <div class="circle-card" onclick="openCircle('Writers Block? I Think Not!')"><div class="circle-banner" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be);"><span class="circle-icon">✍🏾</span></div><div class="circle-body"><div class="circle-name">Writers Block? I Think Not!</div><div class="circle-desc">Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div><div class="circle-meta"><button class="join-btn" data-circle="Writers Block? I Think Not!" onclick="event.stopPropagation();toggleJoin(this,'Writers Block? I Think Not!')">Join</button></div></div></div>
-    <div class="circle-card" onclick="openCircle('Burnout to Bloom')"><div class="circle-banner" style="background:linear-gradient(135deg,#F5EFE6,#ddc9b0);"><span class="circle-icon">🔥</span></div><div class="circle-body"><div class="circle-name">Burnout to Bloom</div><div class="circle-desc">For educators, organizers, activists, and artists trying to exist in the world and keep your cup full.</div><div class="circle-meta"><button class="join-btn" data-circle="Burnout to Bloom" onclick="event.stopPropagation();toggleJoin(this,'Burnout to Bloom')">Join</button></div></div></div>
-    <div class="circle-card" onclick="openCircle('Speak Poet!')"><div class="circle-banner" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);"><span class="circle-icon">🎤</span></div><div class="circle-body"><div class="circle-name">Speak Poet!</div><div class="circle-desc">For slam poets, performers, and spoken word artists looking for space to share your work and connect.</div><div class="circle-meta"><button class="join-btn" data-circle="Speak Poet!" onclick="event.stopPropagation();toggleJoin(this,'Speak Poet!')">Join</button></div></div></div>
-    <div class="circle-card" onclick="openCircle('Healing As We Hustle')"><div class="circle-banner" style="background:linear-gradient(135deg,#2d1f3d,#5c3d7a);"><span class="circle-icon">💼</span></div><div class="circle-body"><div class="circle-name">Healing As We Hustle</div><div class="circle-desc">Space for entrepreneurs to connect, network, and get support as we go big or go home.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="Healing As We Hustle" onclick="event.stopPropagation();toggleJoin(this,'Healing As We Hustle')">Join</button></div></div></div>
-    <div class="circle-card" onclick="openCircle('The Travel Girlies')"><div class="circle-banner" style="background:linear-gradient(135deg,#1a3a4a,#2d6a8a);"><span class="circle-icon">✈️</span></div><div class="circle-body"><div class="circle-name">The Travel Girlies</div><div class="circle-desc">Trip tips, resources, warnings, and storytelling. Booked and busy or still in the group chat — you're welcome here.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="The Travel Girlies" onclick="event.stopPropagation();toggleJoin(this,'The Travel Girlies')">Join</button></div></div></div>
-    <div class="circle-card" style="border:1.5px dashed rgba(196,98,45,0.3);background:var(--cream);"><div class="circle-banner" style="background:transparent;height:70px;"><span class="circle-icon">✦</span></div><div class="circle-body"><div class="circle-name" style="color:var(--terra)">Start a Circle</div><div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the Sisterhood(verb) team.</div><div class="circle-meta"><span class="circle-members">Members only</span><button class="join-btn" onclick="openProposalModal()">Propose</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('Motherhood Speaks')"><div class="circle-banner" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0)"><span class="circle-icon">🌺</span></div><div class="circle-body"><div class="circle-name">Motherhood Speaks</div><div class="circle-desc">A space to share your wins, losses, resources, hopes, fears, and faith with other moms who get it.</div><div class="circle-meta"><span class="circle-members">48 sisters</span><button class="join-btn" data-circle="Motherhood Speaks" onclick="event.stopPropagation();toggleJoin(this,'Motherhood Speaks')">Join</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('Writers Block? I Think Not!')"><div class="circle-banner" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be)"><span class="circle-icon">✍🏾</span></div><div class="circle-body"><div class="circle-name">Writers Block? I Think Not!</div><div class="circle-desc">Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div><div class="circle-meta"><button class="join-btn" data-circle="Writers Block? I Think Not!" onclick="event.stopPropagation();toggleJoin(this,'Writers Block? I Think Not!')">Join</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('Burnout to Bloom')"><div class="circle-banner" style="background:linear-gradient(135deg,#F5EFE6,#ddc9b0)"><span class="circle-icon">🔥</span></div><div class="circle-body"><div class="circle-name">Burnout to Bloom</div><div class="circle-desc">For educators, organizers, activists, and artists trying to keep your cup full. We get it. We got you.</div><div class="circle-meta"><button class="join-btn" data-circle="Burnout to Bloom" onclick="event.stopPropagation();toggleJoin(this,'Burnout to Bloom')">Join</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('Speak Poet!')"><div class="circle-banner" style="background:linear-gradient(135deg,#1C1410,#3d2b1f)"><span class="circle-icon">🎤</span></div><div class="circle-body"><div class="circle-name">Speak Poet!</div><div class="circle-desc">For slam poets, performers, and spoken word artists looking for space to share and connect.</div><div class="circle-meta"><button class="join-btn" data-circle="Speak Poet!" onclick="event.stopPropagation();toggleJoin(this,'Speak Poet!')">Join</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('Healing As We Hustle')"><div class="circle-banner" style="background:linear-gradient(135deg,#2d1f3d,#5c3d7a)"><span class="circle-icon">💼</span></div><div class="circle-body"><div class="circle-name">Healing As We Hustle</div><div class="circle-desc">Space for entrepreneurs to connect, network, and get support as we go big or go home.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="Healing As We Hustle" onclick="event.stopPropagation();toggleJoin(this,'Healing As We Hustle')">Join</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('The Travel Girlies')"><div class="circle-banner" style="background:linear-gradient(135deg,#1a3a4a,#2d6a8a)"><span class="circle-icon">✈️</span></div><div class="circle-body"><div class="circle-name">The Travel Girlies</div><div class="circle-desc">Trip tips, resources, warnings, and storytelling. Booked and busy or still in the group chat — you're welcome.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="The Travel Girlies" onclick="event.stopPropagation();toggleJoin(this,'The Travel Girlies')">Join</button></div></div></div>
+    <div class="circle-card" style="border:1.5px dashed rgba(196,98,45,0.3);background:var(--cream)"><div class="circle-banner" style="background:transparent;height:70px"><span class="circle-icon">✦</span></div><div class="circle-body"><div class="circle-name" style="color:var(--terra)">Start a Circle</div><div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the team.</div><div class="circle-meta"><span class="circle-members">Members only</span><button class="join-btn" onclick="showToast('Proposal form opening...')">Propose</button></div></div></div>
   </div>
 </div>
 
@@ -1110,17 +410,20 @@
     <div class="circle-detail-meta"><span class="circle-detail-count" id="circle-detail-count">0 sisters</span><button class="circle-join-btn" id="circle-detail-join-btn" onclick="toggleCircleDetailJoin()">Join Circle</button></div>
   </div>
   <div class="circle-feed">
-    <div class="post-composer" id="circle-composer" style="display:none;">
+    <div class="post-composer" id="circle-composer" style="display:none">
       <div class="composer-top"><div class="avatar" id="circle-composer-avatar">T</div><textarea class="composer-input" id="circle-composer-input" rows="2" placeholder="Share with your sisters..."></textarea></div>
-      <div class="composer-actions">
-        <div class="composer-tools"><button class="tool-btn" id="circle-gif-btn" onclick="toggleCircleGifPicker()">GIF 🎬</button></div>
-        <button class="post-btn" onclick="postToCircle()">Share</button>
-      </div>
+      <div class="gif-preview" id="circle-gif-preview"><img id="circle-gif-preview-img" src="" alt="GIF"><button class="gif-remove" onclick="removeCircleGif()">✕</button></div>
       <div class="gif-picker" id="circle-gif-picker">
-        <div class="gif-search-bar"><input class="gif-search-input" id="circle-gif-search" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter') searchCircleGifs()"><button class="gif-search-btn" onclick="searchCircleGifs()">Search</button></div>
+        <div class="gif-search-bar"><input class="gif-search-input" id="circle-gif-search" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter')searchCircleGifs()"><button class="gif-search-btn" onclick="searchCircleGifs()">Search</button></div>
         <div class="gif-grid" id="circle-gif-grid"><div class="gif-loading">Search for a GIF above ✦</div></div>
       </div>
-      <div class="gif-preview" id="circle-gif-preview"><img id="circle-gif-preview-img" src="" alt="Selected GIF"><button class="gif-remove" onclick="removeCircleGif()">✕</button></div>
+      <div class="composer-actions">
+        <div class="composer-tools">
+          <button class="tool-btn" id="circle-gif-btn" onclick="toggleCircleGifPicker()">GIF 🎬</button>
+          <button class="tool-btn" id="circle-question-btn" onclick="toggleCircleQuestionMode()">❓ Question</button>
+        </div>
+        <button class="post-btn" id="circle-post-btn" onclick="postToCircle()">Share</button>
+      </div>
     </div>
     <div id="circle-feed-posts"></div>
   </div>
@@ -1132,15 +435,12 @@
   <div class="events-layout">
     <div class="events-main">
       <div class="section-label">Upcoming</div>
-      <div class="event-card"><div class="event-date"><span class="date-month">Mar</span><span class="date-day">18</span></div><div class="event-info"><div class="event-title">Motherhood Speaks — Session 2</div><div class="event-meta"><span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span><span class="event-detail">📍 Virtual (Zoom)</span><span class="event-detail">💰 Members only</span></div><div class="event-desc">Week 2 of our Motherhood Speaks series. A space to share your wins, losses, resources, hopes, and fears with moms who get it.</div><button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button></div></div>
-      <div class="event-card"><div class="event-date"><span class="date-month">Mar</span><span class="date-day">25</span></div><div class="event-info"><div class="event-title">Motherhood Speaks — Session 3</div><div class="event-meta"><span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span><span class="event-detail">📍 Virtual (Zoom)</span><span class="event-detail">💰 Members only</span></div><div class="event-desc">Week 3 of our Wednesday series. Come as you are, bring what you carry.</div><button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button></div></div>
-      <div class="event-card"><div class="event-date"><span class="date-month">Apr</span><span class="date-day">1</span></div><div class="event-info"><div class="event-title">Motherhood Speaks — Session 4</div><div class="event-meta"><span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span><span class="event-detail">📍 Virtual (Zoom)</span><span class="event-detail">💰 Members only</span></div><div class="event-desc">Week 4 of our Wednesday series. We're going deeper — bring your whole self.</div><button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button></div></div>
-      <div class="event-card"><div class="event-date"><span class="date-month">Apr</span><span class="date-day">8</span></div><div class="event-info"><div class="event-title">Motherhood Speaks — Session 5 (Finale)</div><div class="event-meta"><span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span><span class="event-detail">📍 Virtual (Zoom)</span><span class="event-detail">💰 Members only</span></div><div class="event-desc">The final Wednesday gathering of this series. We celebrate, reflect, and send each other off rooted and full.</div><button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button></div></div>
-      <div class="event-card"><div class="event-date"><span class="date-month">Sum</span><span class="date-day" style="font-size:1.1rem;">2026</span></div><div class="event-info"><div class="event-title">Sisterhood Speaks — Launching Summer 2026 🌸</div><div class="event-meta"><span class="event-detail">📍 TBD</span><span class="event-detail">💰 Stay tuned</span></div><div class="event-desc">Something big is coming. Join the community now to be the first to know.</div><button class="event-register" onclick="showToast('Stay tuned — announcements coming soon ✦')">Notify Me</button></div></div>
+      <div class="event-card"><div class="event-date"><span class="date-month">Apr</span><span class="date-day">25</span></div><div class="event-info"><div class="event-title">3rd Annual Black Women's Health Equity Day</div><div class="event-meta"><span class="event-detail">📍 Palm Park Beach House, Santa Barbara</span><span class="event-detail">🌺 Community Event</span></div><div class="event-desc">A day of wellness, community, and celebration of Black women's health. Join us for workshops, vendors, and sisterhood.</div><button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button></div></div>
+      <div class="event-card"><div class="event-date"><span class="date-month">Sum</span><span class="date-day" style="font-size:1.1rem">2026</span></div><div class="event-info"><div class="event-title">Sisterhood Speaks — Launching Summer 2026 🌸</div><div class="event-meta"><span class="event-detail">📍 TBD</span><span class="event-detail">💰 Stay tuned</span></div><div class="event-desc">Something big is coming. Join the community now to be the first to know.</div><button class="event-register" onclick="showToast('Stay tuned — announcements coming soon ✦')">Notify Me</button></div></div>
     </div>
     <div class="events-sidebar">
       <div class="mini-cal"><div class="cal-header"><div class="cal-title">March 2026</div><button class="cal-nav">‹</button><button class="cal-nav">›</button></div><div class="cal-grid"><div class="cal-day-label">S</div><div class="cal-day-label">M</div><div class="cal-day-label">T</div><div class="cal-day-label">W</div><div class="cal-day-label">T</div><div class="cal-day-label">F</div><div class="cal-day-label">S</div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day">1</div><div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day today">17</div><div class="cal-day has-event">18</div><div class="cal-day">19</div><div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day has-event">25</div><div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div><div class="cal-day">31</div></div></div>
-      <div style="background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:20px;"><div class="profile-section-title">Host a Workshop</div><p style="font-size:0.83rem;color:rgba(28,20,16,0.6);line-height:1.6;margin-bottom:14px;">Are you an educator, healer, or artist? Propose a workshop to our community.</p><button class="save-btn" style="width:100%;padding:10px;" onclick="showToast('Proposal form coming soon ✦')">Propose Event</button></div>
+      <div style="background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:20px"><div class="profile-section-title">Host a Workshop</div><p style="font-size:0.83rem;color:rgba(28,20,16,0.6);line-height:1.6;margin-bottom:14px">Are you an educator, healer, or artist? Propose a workshop to our community.</p><button class="save-btn" style="width:100%;padding:10px" onclick="showToast('Proposal form coming soon ✦')">Propose Event</button></div>
     </div>
   </div>
 </div>
@@ -1151,26 +451,25 @@
   <div class="resources-layout">
     <div class="resources-filter"><button class="filter-chip active" onclick="filterRes(this)">All</button><button class="filter-chip" onclick="filterRes(this)">Workshops</button><button class="filter-chip" onclick="filterRes(this)">Writing Prompts</button><button class="filter-chip" onclick="filterRes(this)">Guides</button><button class="filter-chip" onclick="filterRes(this)">Audio</button><button class="filter-chip" onclick="filterRes(this)">Reading</button></div>
     <div class="resources-grid">
-      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">📋<span class="resource-type" style="color:var(--terra);">Recap</span></div><div class="resource-body"><div class="resource-title">Motherhood Speaks — Session Recap</div><div class="resource-desc">A written recap of key themes, reflections, and takeaways from each Motherhood Speaks session.</div><div class="resource-footer"><span class="resource-author">by Tayllor Oyewole-Davis</span><span class="resource-access" style="color:var(--sage);">Coming Soon</span></div></div></div>
-      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be);">📓<span class="resource-type" style="color:var(--sage);">Journal</span></div><div class="resource-body"><div class="resource-title">52 Weeks of Healing — The Journal</div><div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and creative healing.</div><div class="resource-footer"><span class="resource-author">Sisterhood(verb)</span><span class="resource-access" style="color:var(--terra);font-weight:600;">Members Free · Buy →</span></div></div></div>
-      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);">🎙<span class="resource-type" style="color:var(--gold);">Audio</span></div><div class="resource-body"><div class="resource-title">River Meditation (Guided Meditation)</div><div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div><div class="resource-footer"><span class="resource-author">by Tayllor Oyewole-Davis</span><span class="resource-access" style="color:var(--sage);">Coming Soon</span></div></div></div>
-      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#f0e0ca);">📖<span class="resource-type" style="color:#8B6914;">Reading</span></div><div class="resource-body"><div class="resource-title">Community Care Reading List</div><div class="resource-desc">Curated books on collective healing, Black feminist thought, creative practice, and care work.</div><div class="resource-footer"><span class="resource-author">Sisterhood(verb)</span><span class="resource-access" style="color:var(--sage);">Coming Soon</span></div></div></div>
+      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be)">📓<span class="resource-type" style="color:var(--sage)">Journal</span></div><div class="resource-body"><div class="resource-title">52 Weeks of Healing — The Journal</div><div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and creative healing.</div><div class="resource-footer"><span class="resource-author">Sisterhood(verb)</span><span class="resource-access" style="color:var(--terra);font-weight:600">Members Free · Buy →</span></div></div></div>
+      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#3d2b1f)">🎙<span class="resource-type" style="color:var(--gold)">Audio</span></div><div class="resource-body"><div class="resource-title">River Meditation (Guided Meditation)</div><div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div><div class="resource-footer"><span class="resource-author">by Tayllor Oyewole-Davis</span><span class="resource-access" style="color:var(--sage)">Coming Soon</span></div></div></div>
+      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#f0e0ca)">📖<span class="resource-type" style="color:#8B6914">Reading</span></div><div class="resource-body"><div class="resource-title">Community Care Reading List</div><div class="resource-desc">Curated books on collective healing, Black feminist thought, creative practice, and care work.</div><div class="resource-footer"><span class="resource-author">Sisterhood(verb)</span><span class="resource-access" style="color:var(--sage)">Coming Soon</span></div></div></div>
     </div>
   </div>
 </div>
 
 <!-- PROFILE -->
 <div class="view" id="view-profile">
-  <div style="max-width:720px;margin:0 auto;padding:32px 40px 0;">
+  <div style="max-width:720px;margin:0 auto;padding:32px 40px 0">
     <div class="profile-banner" id="profile-banner" onclick="document.getElementById('banner-upload').click()">
-      <img id="profile-banner-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">
+      <img id="profile-banner-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0">
       <div class="photo-upload-overlay">📷 Change Banner</div>
     </div>
     <input type="file" id="banner-upload" accept="image/*" onchange="uploadBanner(this)">
     <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(this)">
     <div class="profile-avatar-wrap">
       <div class="profile-avatar" id="profile-avatar-display">T</div>
-      <div class="avatar-upload-btn" onclick="document.getElementById('avatar-upload').click()" title="Change photo">📷</div>
+      <div class="avatar-upload-btn" onclick="document.getElementById('avatar-upload').click()">📷</div>
     </div>
   </div>
   <div class="profile-info">
@@ -1183,16 +482,14 @@
       <div class="stat"><div class="stat-num" id="stat-posts">0</div><div class="stat-label">Posts</div></div>
     </div>
   </div>
-  <div style="max-width:720px;margin:0 auto;padding:0 32px 40px;">
+  <div style="max-width:720px;margin:0 auto;padding:0 32px 40px">
     <div class="profile-section-title" style="margin-bottom:20px">Edit Profile</div>
-    <div class="settings-form" style="padding:0;">
-      <div class="form-group"><label class="form-label">Display Name</label><input class="form-input" type="text" placeholder="Your name" value=""></div>
-      <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" rows="3" style="resize:vertical" placeholder="Tell your sisters about yourself..."></textarea></div>
-      <div class="form-group"><label class="form-label">Location</label><input class="form-input" type="text" placeholder="Where are you based?" value=""></div>
-      <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="your@email.com" value=""></div>
-      <div class="form-group"><label class="form-label">Membership Plan</label><input class="form-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--terra);font-weight:600;"></div>
-      <button class="save-btn" onclick="saveProfile()">Save Changes</button>
-    </div>
+    <div class="form-group"><label class="form-label">Display Name</label><input class="form-input" type="text" placeholder="Your name"></div>
+    <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" rows="3" style="resize:vertical" placeholder="Tell your sisters about yourself..."></textarea></div>
+    <div class="form-group"><label class="form-label">Location</label><input class="form-input" type="text" placeholder="Where are you based?"></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="your@email.com"></div>
+    <div class="form-group"><label class="form-label">Membership Plan</label><input class="form-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--terra);font-weight:600"></div>
+    <button class="save-btn" onclick="saveProfile()">Save Changes</button>
   </div>
 </div>
 
@@ -1206,277 +503,689 @@
 </div>
 
 <script>
-  function openModal() { document.getElementById('agreements-modal').classList.add('open'); }
-  function closeModal() { document.getElementById('agreements-modal').classList.remove('open'); }
-  function handleAgree() { document.getElementById('agreements-modal').classList.remove('open'); setTimeout(() => openAuthModal('signup'), 200); }
-  function toggleAgreeBtn() { document.getElementById('agree-btn').disabled = !document.getElementById('agree-check').checked; }
+const _supabase = window.supabase.createClient(
+  'https://cqiymqekdtewnorojlus.supabase.co',
+  'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
+);
+const GIPHY_KEY = 'AgkjTleIOrzAZS8xROMk5MBOhC87TO4v';
+let currentUser = null;
+let selectedGifUrl = null;
+let selectedCircleGifUrl = null;
+let isQuestionMode = false;
+let isCircleQuestionMode = false;
+let currentCircle = null;
+let circleIsJoined = false;
 
-  const views = ['home','circles','events','resources','profile','circle-detail'];
+const circleInfo = {
+  'Motherhood Speaks':{icon:'🌺',desc:'A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.',bg:'linear-gradient(135deg,#1C1410,#C4622D)'},
+  'Writers Block? I Think Not!':{icon:'✍🏾',desc:'Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.',bg:'linear-gradient(135deg,#1C1410,#2d5a3d)'},
+  'Burnout to Bloom':{icon:'🔥',desc:'For educators, organizers, activists, and artists trying to exist in the world and keep your cup full.',bg:'linear-gradient(135deg,#1C1410,#8B4513)'},
+  'Speak Poet!':{icon:'🎤',desc:'For slam poets, performers, and spoken word artists looking for space to share your work and connect.',bg:'linear-gradient(135deg,#1C1410,#2d1f3d)'},
+  'Healing As We Hustle':{icon:'💼',desc:'Space for entrepreneurs to connect, network, and get support.',bg:'linear-gradient(135deg,#1C1410,#3d2b5c)'},
+  'The Travel Girlies':{icon:'✈️',desc:'Trip tips, resources, warnings, and storytelling.',bg:'linear-gradient(135deg,#1C1410,#1a3a4a)'}
+};
 
-  function showView(name, el) {
-    views.forEach(v => document.getElementById('view-'+v).classList.remove('active'));
-    document.getElementById('view-'+name).classList.add('active');
-    document.querySelectorAll('.nav-links a:not(.nav-cta)').forEach(a => a.classList.remove('active'));
-    document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById('mob-'+name)?.classList.add('active');
-    if (el && !el.classList.contains('mobile-nav-btn') && !el.classList.contains('nav-cta')) el.classList.add('active');
-    window.scrollTo(0,0);
-    return false;
+// ── AUTH ──
+async function initAuth() {
+  const {data:{session}} = await _supabase.auth.getSession();
+  if (session) { currentUser = session.user; await onLogin(); }
+  _supabase.auth.onAuthStateChange(async (event, session) => {
+    if (session) { currentUser = session.user; await onLogin(); }
+    else { currentUser = null; onLogout(); }
+  });
+}
+
+async function onLogin() {
+  document.getElementById('logout-btn').style.display = 'block';
+  const joinBtn = document.querySelector('.nav-cta');
+  if (joinBtn) { joinBtn.textContent = 'My Account'; joinBtn.onclick = () => showViewWithProfile('profile', joinBtn); }
+  const {data:profile} = await _supabase.from('profiles').select('name,avatar_url').eq('id', currentUser.id).single();
+  const name = profile?.name || currentUser.email?.split('@')[0] || 'S';
+  window._currentUserName = name;
+  const initial = name.charAt(0).toUpperCase();
+  document.querySelectorAll('#home-composer-avatar, #circle-composer-avatar').forEach(el => el.textContent = initial);
+  loadFeed();
+  loadJoinedCircles();
+}
+
+function onLogout() {
+  document.getElementById('logout-btn').style.display = 'none';
+  const joinBtn = document.querySelector('.nav-cta');
+  if (joinBtn) { joinBtn.textContent = 'Join'; joinBtn.onclick = () => openModal(); }
+}
+
+async function signUp(email, password, name) {
+  const {data, error} = await _supabase.auth.signUp({email, password});
+  if (error) { showToast('Error: ' + error.message); return; }
+  if (data.user) {
+    await _supabase.from('profiles').insert({id:data.user.id, name, handle:'@'+email.split('@')[0], membership_tier:'free'});
+    showToast('Welcome to the Sisterhood ✦');
+    closeAuthModal();
+  }
+}
+
+async function signIn(email, password) {
+  const {data, error} = await _supabase.auth.signInWithPassword({email, password});
+  if (error) { showToast('Error: ' + error.message); return; }
+  showToast('Welcome back, sis ✦');
+  closeAuthModal();
+}
+
+async function signOut() {
+  await _supabase.auth.signOut();
+  showToast('See you soon, sis 🌿');
+  showView('home', document.querySelector('.nav-links a'));
+}
+
+// ── FEED ──
+function buildPostCard(post, profileMap, isCircle) {
+  const profile = profileMap[post.user_id];
+  const name = profile ? profile.name : (post.user_id === currentUser?.id ? (window._currentUserName || 'You') : 'Sister');
+  const initial = name.charAt(0).toUpperCase();
+  const time = timeAgo(post.created_at);
+  const isQuestion = post.tag === 'Question';
+
+  let textContent = post.content || '';
+  let gifHtml = '';
+  const gifMatch = textContent.match(/\[gif:(.*?)\]/);
+  if (gifMatch) {
+    gifHtml = '<img src="' + gifMatch[1] + '" style="max-width:100%;border-radius:4px;margin-top:10px;max-height:200px;object-fit:cover" alt="GIF">';
+    textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
   }
 
-  let toastTimer;
-  function showToast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg; t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+  let avatarStyle = profile && profile.avatar_url
+    ? 'background-image:url(' + profile.avatar_url + ');background-size:cover;background-position:center'
+    : 'background:linear-gradient(135deg,var(--terra),var(--gold))';
+
+  const card = document.createElement('div');
+  card.className = 'feed-card' + (isQuestion ? ' question-card' : '');
+
+  const tagHtml = '<span class="card-tag' + (isQuestion ? ' question-tag' : '') + '">' + (isQuestion ? '❓ Question' : (post.tag || 'Community')) + '</span>';
+  const bodyClass = 'card-body' + (isQuestion ? ' question-body' : '');
+
+  card.innerHTML =
+    '<div class="card-header">' +
+      '<div class="avatar" style="' + avatarStyle + ';cursor:pointer" onclick="openMemberProfile(\'' + post.user_id + '\')">' + (profile && profile.avatar_url ? '' : initial) + '</div>' +
+      '<div class="card-meta">' +
+        '<div class="card-name" onclick="openMemberProfile(\'' + post.user_id + '\')">' + name + '</div>' +
+        '<div class="card-time">' + time + '</div>' +
+      '</div>' +
+      (isCircle ? '' : tagHtml) +
+    '</div>' +
+    '<div class="' + bodyClass + '">' + textContent + gifHtml + '</div>' +
+    '<div class="card-footer">' +
+      '<button class="react-btn" onclick="toggleLike(this,\'' + post.id + '\')">🫂 <span>' + (post.likes || 0) + '</span></button>' +
+      '<button class="react-btn" onclick="toggleReplies(\'' + post.id + '\',this)">💬 <span>Reply</span></button>' +
+      '<button class="react-btn" onclick="showToast(\'Saved ✦\')">🔖 Save</button>' +
+    '</div>' +
+    '<div class="replies-section" id="replies-' + post.id + '"></div>';
+
+  return card;
+}
+
+async function loadFeed() {
+  const {data:posts, error} = await _supabase.from('posts').select('*').order('created_at',{ascending:true}).limit(30);
+  if (error || !posts || posts.length === 0) return;
+  const userIds = [...new Set(posts.map(p => p.user_id).filter(Boolean))];
+  let profileMap = {};
+  if (userIds.length > 0) {
+    const {data:profiles} = await _supabase.from('profiles').select('id,name,avatar_url').in('id', userIds);
+    if (profiles) profiles.forEach(p => profileMap[p.id] = p);
+  }
+  const feed = document.getElementById('feed-posts');
+  feed.innerHTML = '';
+  posts.forEach((post, i) => {
+    const card = buildPostCard(post, profileMap, false);
+    card.style.animationDelay = (i * 0.05) + 's';
+    feed.insertBefore(card, feed.firstChild);
+  });
+}
+
+async function savePost(content, tag) {
+  if (!currentUser) { openAuthModal('login'); return; }
+  showToast('Sharing... ✦');
+  const {error} = await _supabase.from('posts').insert({
+    user_id: currentUser.id, content, tag: tag || 'Community', likes: 0
+  });
+  if (error) { showToast('Could not post: ' + error.message); return; }
+  showToast(tag === 'Question' ? 'Question posted ✦' : 'Shared with your sisters ✦');
+  loadFeed();
+}
+
+// ── QUESTION MODE ──
+function toggleQuestionMode() {
+  isQuestionMode = !isQuestionMode;
+  const btn = document.getElementById('question-btn');
+  const ta = document.getElementById('home-composer-input');
+  const postBtn = document.getElementById('home-post-btn');
+  if (isQuestionMode) {
+    btn.classList.add('question-active');
+    ta.placeholder = 'Ask your sisters a question...';
+    postBtn.textContent = 'Ask ✦';
+  } else {
+    btn.classList.remove('question-active');
+    ta.placeholder = "What's on your heart today, sister?";
+    postBtn.textContent = 'Share';
+  }
+}
+
+function toggleCircleQuestionMode() {
+  isCircleQuestionMode = !isCircleQuestionMode;
+  const btn = document.getElementById('circle-question-btn');
+  const ta = document.getElementById('circle-composer-input');
+  const postBtn = document.getElementById('circle-post-btn');
+  if (isCircleQuestionMode) {
+    btn.classList.add('question-active');
+    ta.placeholder = 'Ask your circle a question...';
+    postBtn.textContent = 'Ask ✦';
+  } else {
+    btn.classList.remove('question-active');
+    ta.placeholder = 'Share with your sisters...';
+    postBtn.textContent = 'Share';
+  }
+}
+
+function postToFeed() {
+  const ta = document.getElementById('home-composer-input');
+  const text = ta.value.trim();
+  if (!text && !selectedGifUrl) { showToast('Write something first ✦'); return; }
+  if (!currentUser) { openAuthModal('login'); return; }
+  const content = text + (selectedGifUrl ? '\n[gif:' + selectedGifUrl + ']' : '');
+  const tag = isQuestionMode ? 'Question' : 'Community';
+  savePost(content, tag);
+  ta.value = ''; removeGif();
+  if (isQuestionMode) toggleQuestionMode();
+}
+
+// ── REPLIES ──
+async function toggleReplies(postId, btn) {
+  const section = document.getElementById('replies-' + postId);
+  if (!section) return;
+  const isOpen = section.style.display === 'block';
+  if (isOpen) {
+    section.style.display = 'none';
+    btn.querySelector('span').textContent = 'Reply';
+    btn.classList.remove('reply-active');
+  } else {
+    section.style.display = 'block';
+    btn.querySelector('span').textContent = 'Hide';
+    btn.classList.add('reply-active');
+    await loadReplies(postId, section);
+  }
+}
+
+async function loadReplies(postId, container) {
+  container.innerHTML = '<div style="font-size:0.8rem;color:rgba(28,20,16,0.4);padding:8px 0">Loading replies...</div>';
+  const {data:replies} = await _supabase.from('post_replies').select('*').eq('post_id', postId).order('created_at',{ascending:true});
+  const userIds = replies ? [...new Set(replies.map(r => r.user_id).filter(Boolean))] : [];
+  let profileMap = {};
+  if (userIds.length > 0) {
+    const {data:profiles} = await _supabase.from('profiles').select('id,name,avatar_url').in('id', userIds);
+    if (profiles) profiles.forEach(p => profileMap[p.id] = p);
+  }
+  container.innerHTML = '';
+  if (replies && replies.length > 0) {
+    replies.forEach(reply => {
+      const profile = profileMap[reply.user_id];
+      const name = profile ? profile.name : 'Sister';
+      const initial = name.charAt(0).toUpperCase();
+      const avatarStyle = profile && profile.avatar_url
+        ? 'background-image:url(' + profile.avatar_url + ');background-size:cover;background-position:center'
+        : 'background:linear-gradient(135deg,var(--terra),var(--gold))';
+      const div = document.createElement('div');
+      div.className = 'reply-item';
+      div.innerHTML =
+        '<div class="reply-avatar" style="' + avatarStyle + '">' + (profile && profile.avatar_url ? '' : initial) + '</div>' +
+        '<div class="reply-bubble">' +
+          '<div class="reply-name">' + name + '</div>' +
+          '<div class="reply-text">' + reply.content + '</div>' +
+          '<div class="reply-time">' + timeAgo(reply.created_at) + '</div>' +
+        '</div>';
+      container.appendChild(div);
+    });
+  } else {
+    const empty = document.createElement('div');
+    empty.style.cssText = 'font-size:0.82rem;color:rgba(28,20,16,0.4);padding:8px 0';
+    empty.textContent = 'No replies yet — be the first to respond ✦';
+    container.appendChild(empty);
   }
 
-  function toggleLike(btn, postId) {
-    btn.classList.toggle('liked');
-    const span = btn.querySelector('span');
-    const n = parseInt(span.textContent) || 0;
-    span.textContent = btn.classList.contains('liked') ? n+1 : n-1;
-    showToast(btn.classList.contains('liked') ? 'Loved ✦' : 'Removed');
-    if (postId) {
-      const newCount = btn.classList.contains('liked') ? n+1 : n-1;
-      _supabase.from('posts').update({ likes: newCount }).eq('id', postId);
-    }
+  // Reply composer
+  const myInitial = window._currentUserName ? window._currentUserName.charAt(0).toUpperCase() : 'S';
+  const composer = document.createElement('div');
+  composer.className = 'reply-composer';
+  composer.innerHTML =
+    '<div class="reply-avatar" style="background:linear-gradient(135deg,var(--terra),var(--gold))">' + myInitial + '</div>' +
+    '<input class="reply-input" type="text" placeholder="Write a reply..." id="ri-' + postId + '" onkeydown="if(event.key===\'Enter\')submitReply(\'' + postId + '\')">' +
+    '<button class="reply-submit" onclick="submitReply(\'' + postId + '\')">Reply ✦</button>';
+  container.appendChild(composer);
+}
+
+async function submitReply(postId) {
+  if (!currentUser) { openAuthModal('login'); return; }
+  const input = document.getElementById('ri-' + postId);
+  if (!input) return;
+  const content = input.value.trim();
+  if (!content) return;
+  input.value = '';
+  const {error} = await _supabase.from('post_replies').insert({post_id: postId, user_id: currentUser.id, content});
+  if (error) { showToast('Could not reply: ' + error.message); return; }
+  const section = document.getElementById('replies-' + postId);
+  if (section) await loadReplies(postId, section);
+}
+
+// ── LIKES ──
+function toggleLike(btn, postId) {
+  btn.classList.toggle('liked');
+  const span = btn.querySelector('span');
+  const n = parseInt(span.textContent) || 0;
+  span.textContent = btn.classList.contains('liked') ? n + 1 : n - 1;
+  showToast(btn.classList.contains('liked') ? 'Loved ✦' : 'Removed');
+  if (postId) {
+    const newCount = btn.classList.contains('liked') ? n + 1 : n - 1;
+    _supabase.from('posts').update({likes: newCount}).eq('id', postId);
+  }
+}
+
+// ── CIRCLES ──
+async function loadJoinedCircles() {
+  if (!currentUser) return;
+  const {data:memberships} = await _supabase.from('circle_members').select('circle_name').eq('user_id', currentUser.id);
+  if (!memberships) return;
+  const joined = memberships.map(m => m.circle_name);
+  document.querySelectorAll('.join-btn[data-circle]').forEach(btn => {
+    const c = btn.getAttribute('data-circle');
+    if (joined.includes(c)) { btn.classList.add('joined'); btn.textContent = 'Joined ✦'; }
+    else { btn.classList.remove('joined'); btn.textContent = 'Join'; }
+  });
+}
+
+async function joinCircleDB(circleName, btn) {
+  if (!currentUser) { openAuthModal('login'); return; }
+  const joined = btn.classList.contains('joined');
+  if (!joined) {
+    await _supabase.from('circle_members').insert({user_id: currentUser.id, circle_name: circleName});
+    btn.classList.add('joined'); btn.textContent = 'Joined ✦';
+    showToast('Joined ' + circleName + ' ✦');
+  } else {
+    await _supabase.from('circle_members').delete().eq('user_id', currentUser.id).eq('circle_name', circleName);
+    btn.classList.remove('joined'); btn.textContent = 'Join';
+    showToast('Left ' + circleName);
+  }
+}
+
+async function openCircle(name) {
+  currentCircle = name;
+  const info = circleInfo[name] || {icon:'✦', desc:'', bg:'var(--deep)'};
+  document.getElementById('circle-detail-icon').textContent = info.icon;
+  document.getElementById('circle-detail-name').textContent = name;
+  document.getElementById('circle-detail-desc').textContent = info.desc;
+  document.getElementById('circle-detail-header').style.background = info.bg;
+  if (currentUser) {
+    const {data:m} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id).eq('circle_name', name).single();
+    circleIsJoined = !!m;
+    const joinBtn = document.getElementById('circle-detail-join-btn');
+    joinBtn.textContent = circleIsJoined ? 'Joined ✦' : 'Join Circle';
+    joinBtn.className = circleIsJoined ? 'circle-join-btn joined' : 'circle-join-btn';
+    document.getElementById('circle-composer').style.display = circleIsJoined ? 'block' : 'none';
+  }
+  const {count} = await _supabase.from('circle_members').select('*',{count:'exact'}).eq('circle_name', name);
+  document.getElementById('circle-detail-count').textContent = (count || 0) + ' sisters';
+  loadCircleFeed(name);
+  showView('circle-detail', null);
+}
+
+async function loadCircleFeed(circleName) {
+  const feed = document.getElementById('circle-feed-posts');
+  feed.innerHTML = '<div class="circle-empty"><span class="circle-empty-icon">✦</span>Loading posts...</div>';
+  const {data:posts, error} = await _supabase.from('posts').select('*').eq('circle', circleName).order('created_at',{ascending:false}).limit(30);
+  if (error || !posts || posts.length === 0) {
+    feed.innerHTML = '<div class="circle-empty"><span class="circle-empty-icon">' + (circleInfo[circleName]?.icon || '✦') + '</span>No posts yet — be the first to share in this Circle!</div>';
+    return;
+  }
+  const userIds = [...new Set(posts.map(p => p.user_id).filter(Boolean))];
+  let profileMap = {};
+  if (userIds.length > 0) {
+    const {data:profiles} = await _supabase.from('profiles').select('id,name,avatar_url').in('id', userIds);
+    if (profiles) profiles.forEach(p => profileMap[p.id] = p);
+  }
+  feed.innerHTML = '';
+  posts.forEach((post, i) => {
+    const card = buildPostCard(post, profileMap, true);
+    card.style.animationDelay = (i * 0.05) + 's';
+    feed.appendChild(card);
+  });
+}
+
+async function toggleCircleDetailJoin() {
+  if (!currentUser) { openAuthModal('login'); return; }
+  const btn = document.getElementById('circle-detail-join-btn');
+  if (!circleIsJoined) {
+    await _supabase.from('circle_members').insert({user_id: currentUser.id, circle_name: currentCircle});
+    circleIsJoined = true; btn.textContent = 'Joined ✦'; btn.className = 'circle-join-btn joined';
+    document.getElementById('circle-composer').style.display = 'block';
+    showToast('Joined ' + currentCircle + ' ✦');
+  } else {
+    await _supabase.from('circle_members').delete().eq('user_id', currentUser.id).eq('circle_name', currentCircle);
+    circleIsJoined = false; btn.textContent = 'Join Circle'; btn.className = 'circle-join-btn';
+    document.getElementById('circle-composer').style.display = 'none';
+    showToast('Left ' + currentCircle);
+  }
+}
+
+async function postToCircle() {
+  if (!currentUser) { openAuthModal('login'); return; }
+  const ta = document.getElementById('circle-composer-input');
+  const text = ta.value.trim();
+  if (!text && !selectedCircleGifUrl) { showToast('Write something first ✦'); return; }
+  const content = text + (selectedCircleGifUrl ? '\n[gif:' + selectedCircleGifUrl + ']' : '');
+  const tag = isCircleQuestionMode ? 'Question' : currentCircle;
+  showToast('Sharing... ✦');
+  const {error} = await _supabase.from('posts').insert({user_id: currentUser.id, content, circle: currentCircle, tag, likes: 0});
+  if (error) { showToast('Could not post: ' + error.message); return; }
+  ta.value = ''; removeCircleGif();
+  if (isCircleQuestionMode) toggleCircleQuestionMode();
+  showToast('Shared with the circle ✦');
+  loadCircleFeed(currentCircle);
+}
+
+// ── GIF PICKER ──
+function toggleGifPicker() {
+  const picker = document.getElementById('gif-picker');
+  const btn = document.getElementById('gif-btn');
+  picker.classList.toggle('open'); btn.classList.toggle('active');
+  if (picker.classList.contains('open')) { document.getElementById('gif-search-input').focus(); loadTrendingGifs(); }
+}
+
+async function loadTrendingGifs() {
+  const grid = document.getElementById('gif-grid');
+  grid.innerHTML = '<div class="gif-loading">Loading trending GIFs... ✦</div>';
+  try {
+    const res = await fetch('https://api.giphy.com/v1/gifs/trending?api_key=' + GIPHY_KEY + '&limit=12&rating=pg');
+    const data = await res.json();
+    renderGifs(data.data, 'gif-grid', 'selectGif');
+  } catch(e) { grid.innerHTML = '<div class="gif-loading">Search for a GIF above ✦</div>'; }
+}
+
+async function searchGifs() {
+  const query = document.getElementById('gif-search-input').value.trim();
+  if (!query) return;
+  const grid = document.getElementById('gif-grid');
+  grid.innerHTML = '<div class="gif-loading">Searching... ✦</div>';
+  try {
+    const res = await fetch('https://api.giphy.com/v1/gifs/search?api_key=' + GIPHY_KEY + '&q=' + encodeURIComponent(query) + '&limit=12&rating=pg');
+    const data = await res.json();
+    renderGifs(data.data, 'gif-grid', 'selectGif');
+  } catch(e) { grid.innerHTML = '<div class="gif-loading">Could not load GIFs</div>'; }
+}
+
+function renderGifs(gifs, gridId, selectFn) {
+  const grid = document.getElementById(gridId);
+  if (!gifs || gifs.length === 0) { grid.innerHTML = '<div class="gif-loading">No GIFs found</div>'; return; }
+  grid.innerHTML = '';
+  gifs.forEach(gif => {
+    const img = document.createElement('img');
+    img.className = 'gif-item';
+    img.src = gif.images.fixed_height_small.url;
+    img.onclick = () => window[selectFn](gif.images.fixed_height.url);
+    grid.appendChild(img);
+  });
+}
+
+function selectGif(url) {
+  selectedGifUrl = url;
+  document.getElementById('gif-preview-img').src = url;
+  document.getElementById('gif-preview').style.display = 'block';
+  document.getElementById('gif-picker').classList.remove('open');
+  document.getElementById('gif-btn').classList.remove('active');
+  showToast('GIF selected ✦');
+}
+
+function removeGif() {
+  selectedGifUrl = null;
+  document.getElementById('gif-preview').style.display = 'none';
+  document.getElementById('gif-preview-img').src = '';
+}
+
+function toggleCircleGifPicker() {
+  const picker = document.getElementById('circle-gif-picker');
+  const btn = document.getElementById('circle-gif-btn');
+  picker.classList.toggle('open'); btn.classList.toggle('active');
+  if (picker.classList.contains('open')) document.getElementById('circle-gif-search').focus();
+}
+
+async function searchCircleGifs() {
+  const query = document.getElementById('circle-gif-search').value.trim();
+  if (!query) return;
+  const grid = document.getElementById('circle-gif-grid');
+  grid.innerHTML = '<div class="gif-loading">Searching... ✦</div>';
+  try {
+    const res = await fetch('https://api.giphy.com/v1/gifs/search?api_key=' + GIPHY_KEY + '&q=' + encodeURIComponent(query) + '&limit=12&rating=pg');
+    const data = await res.json();
+    renderGifs(data.data, 'circle-gif-grid', 'selectCircleGif');
+  } catch(e) { grid.innerHTML = '<div class="gif-loading">Could not load GIFs</div>'; }
+}
+
+function selectCircleGif(url) {
+  selectedCircleGifUrl = url;
+  document.getElementById('circle-gif-preview-img').src = url;
+  document.getElementById('circle-gif-preview').style.display = 'block';
+  document.getElementById('circle-gif-picker').classList.remove('open');
+  document.getElementById('circle-gif-btn').classList.remove('active');
+  showToast('GIF selected ✦');
+}
+
+function removeCircleGif() {
+  selectedCircleGifUrl = null;
+  document.getElementById('circle-gif-preview').style.display = 'none';
+  document.getElementById('circle-gif-preview-img').src = '';
+}
+
+// ── MEMBER PROFILE MODAL ──
+async function openMemberProfile(userId) {
+  if (!userId) return;
+  const modal = document.getElementById('member-profile-modal');
+  modal.classList.add('open');
+  document.getElementById('mp-loading').style.display = 'block';
+  document.getElementById('mp-content').style.display = 'none';
+
+  const {data:profile} = await _supabase.from('profiles').select('*').eq('id', userId).single();
+  const {data:circles} = await _supabase.from('circle_members').select('circle_name').eq('user_id', userId);
+  const {data:posts} = await _supabase.from('posts').select('*').eq('user_id', userId).order('created_at',{ascending:false}).limit(5);
+
+  document.getElementById('mp-loading').style.display = 'none';
+  document.getElementById('mp-content').style.display = 'block';
+
+  const name = profile?.name || 'Sister';
+  const initial = name.charAt(0).toUpperCase();
+
+  const bannerEl = document.getElementById('mp-banner');
+  bannerEl.style.background = 'linear-gradient(135deg,#1C1410,#C4622D)';
+  if (profile?.banner_url) {
+    bannerEl.style.backgroundImage = 'url(' + profile.banner_url + ')';
+    bannerEl.style.backgroundSize = 'cover';
+    bannerEl.style.backgroundPosition = 'center';
   }
 
-  function toggleJoin(btn, circleName) {
-    if (circleName) joinCircleDB(circleName, btn);
-    else {
-      const joined = btn.classList.contains('joined');
-      btn.classList.toggle('joined');
-      btn.textContent = joined ? 'Join' : 'Joined ✦';
-      showToast(joined ? 'Left circle' : 'Joined circle ✦');
-    }
+  const avatarEl = document.getElementById('mp-avatar');
+  avatarEl.textContent = initial;
+  avatarEl.style.backgroundImage = '';
+  if (profile?.avatar_url) {
+    avatarEl.style.backgroundImage = 'url(' + profile.avatar_url + ')';
+    avatarEl.style.backgroundSize = 'cover';
+    avatarEl.style.backgroundPosition = 'center';
+    avatarEl.textContent = '';
   }
 
-  function registerEvent(btn, eventName) {
-    if (eventName) registerEventDB(eventName, btn);
-    else { btn.classList.add('registered'); btn.textContent = 'Registered ✦'; showToast('You\'re registered! Check your email ✦'); }
+  document.getElementById('mp-name').textContent = name;
+  document.getElementById('mp-handle').textContent = profile?.handle ? (profile.handle.startsWith('@') ? profile.handle : '@' + profile.handle) : '';
+  document.getElementById('mp-bio').textContent = profile?.bio || 'No bio yet.';
+
+  const circlesEl = document.getElementById('mp-circles');
+  if (circles && circles.length > 0) {
+    circlesEl.innerHTML = circles.map(c => '<span class="profile-tag">' + c.circle_name + '</span>').join('');
+  } else {
+    circlesEl.innerHTML = '<span style="font-size:0.82rem;color:rgba(28,20,16,0.4)">No circles joined yet</span>';
   }
 
-  function filterRes(btn) {
-    document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    showToast('Filtering by: ' + btn.textContent);
+  const postsEl = document.getElementById('mp-posts');
+  if (posts && posts.length > 0) {
+    postsEl.innerHTML = posts.map(post => {
+      let text = (post.content || '').replace(/\[gif:(.*?)\]/, '').trim();
+      return '<div class="mp-post-item"><div class="mp-post-text">' + (text || '[GIF]') + '</div><div class="mp-post-time">' + timeAgo(post.created_at) + '</div></div>';
+    }).join('');
+  } else {
+    postsEl.innerHTML = '<div style="font-size:0.82rem;color:rgba(28,20,16,0.4);padding:12px 0">No posts yet</div>';
   }
+}
 
-  function postToFeed() {
-    const ta = document.querySelector('.composer-input');
-    const text = ta.value.trim();
-    if (!text && !selectedGifUrl) { showToast('Write something first ✦'); return; }
-    if (!currentUser) { openAuthModal('login'); return; }
-    const content = text + (selectedGifUrl ? `\n[gif:${selectedGifUrl}]` : '');
-    const tag = isQuestionMode ? 'Question' : 'Community';
-    savePost(content, tag); ta.value = ''; removeGif();
-    if (isQuestionMode) toggleQuestionMode();
+function closeMemberProfile() { document.getElementById('member-profile-modal').classList.remove('open'); }
+
+// ── PROFILE ──
+async function loadProfile() {
+  if (!currentUser) return;
+  const {data:profile} = await _supabase.from('profiles').select('*').eq('id', currentUser.id).single();
+  if (profile) {
+    document.querySelector('.profile-name').textContent = profile.name || 'Sister';
+    document.querySelector('.profile-handle').textContent = profile.handle || '@member';
+    document.querySelector('.profile-bio').textContent = profile.bio || 'Tell your sisters a little about yourself...';
+    const inputs = document.querySelectorAll('#view-profile .form-input');
+    if (inputs[0]) inputs[0].value = profile.name || '';
+    if (inputs[1]) inputs[1].value = profile.bio || '';
+    if (inputs[2]) inputs[2].value = profile.location || '';
+    if (inputs[3]) inputs[3].value = currentUser.email || '';
+    if (inputs[4]) inputs[4].value = profile.membership_tier === 'paid' ? 'Full Member ✦' : 'Free Member';
   }
+  const {data:cd} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
+  const {data:ed} = await _supabase.from('event_registrations').select('id').eq('user_id', currentUser.id);
+  const {data:pd} = await _supabase.from('posts').select('id').eq('user_id', currentUser.id);
+  document.getElementById('stat-circles').textContent = cd?.length || 0;
+  document.getElementById('stat-events').textContent = ed?.length || 0;
+  document.getElementById('stat-posts').textContent = pd?.length || 0;
+}
 
-  function toggleMobile() { showToast('Mobile menu — use bottom nav'); }
+async function saveProfile() {
+  if (!currentUser) return;
+  const inputs = document.querySelectorAll('#view-profile .form-input');
+  const name = inputs[0]?.value || '';
+  const bio = inputs[1]?.value || '';
+  const location = inputs[2]?.value || '';
+  await _supabase.from('profiles').update({name, bio, location}).eq('id', currentUser.id);
+  showToast('Profile saved ✦');
+  loadProfile();
+}
 
-  async function uploadAvatar(input) {
-    if (!currentUser || !input.files[0]) return;
-    const file = input.files[0];
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${currentUser.id}-avatar.${fileExt}`;
-    showToast('Uploading photo...');
-    const { error: uploadError } = await _supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
-    if (uploadError) { showToast('Upload failed: ' + uploadError.message); return; }
-    const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
-    const avatarUrl = data.publicUrl;
-    await _supabase.from('profiles').update({ avatar_url: avatarUrl }).eq('id', currentUser.id);
-    const avatarEl = document.getElementById('profile-avatar-display');
-    if (avatarEl) { avatarEl.style.backgroundImage = `url(${avatarUrl}?t=${Date.now()})`; avatarEl.style.backgroundSize = 'cover'; avatarEl.style.backgroundPosition = 'center'; avatarEl.style.overflow = 'hidden'; avatarEl.textContent = ''; }
-    showToast('Profile photo updated ✦');
+async function loadProfilePhotos() {
+  if (!currentUser) return;
+  const {data:profile} = await _supabase.from('profiles').select('avatar_url,banner_url').eq('id', currentUser.id).single();
+  if (profile?.avatar_url) {
+    const el = document.getElementById('profile-avatar-display');
+    if (el) { el.style.backgroundImage = 'url(' + profile.avatar_url + ')'; el.style.backgroundSize = 'cover'; el.style.backgroundPosition = 'center'; el.textContent = ''; }
   }
-
-  async function uploadBanner(input) {
-    if (!currentUser || !input.files[0]) return;
-    const file = input.files[0];
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${currentUser.id}-banner.${fileExt}`;
-    showToast('Uploading banner...');
-    const { error: uploadError } = await _supabase.storage.from('avatars').upload(filePath, file, { upsert: true });
-    if (uploadError) { showToast('Upload failed: ' + uploadError.message); return; }
-    const { data } = _supabase.storage.from('avatars').getPublicUrl(filePath);
-    const bannerUrl = data.publicUrl;
-    await _supabase.from('profiles').update({ banner_url: bannerUrl }).eq('id', currentUser.id);
-    const bannerImg = document.getElementById('profile-banner-img');
-    if (bannerImg) { bannerImg.src = bannerUrl + '?t=' + Date.now(); bannerImg.style.display = 'block'; }
-    showToast('Banner photo updated ✦');
+  if (profile?.banner_url) {
+    const img = document.getElementById('profile-banner-img');
+    if (img) { img.src = profile.banner_url; img.style.display = 'block'; }
   }
+}
 
-  async function loadProfilePhotos() {
-    if (!currentUser) return;
-    const { data: profile } = await _supabase.from('profiles').select('avatar_url, banner_url').eq('id', currentUser.id).single();
-    if (profile?.avatar_url) {
-      const avatarEl = document.getElementById('profile-avatar-display');
-      if (avatarEl) { avatarEl.style.backgroundImage = `url(${profile.avatar_url})`; avatarEl.style.backgroundSize = 'cover'; avatarEl.style.backgroundPosition = 'center'; avatarEl.style.overflow = 'hidden'; avatarEl.textContent = ''; }
-    }
-    if (profile?.banner_url) {
-      const bannerImg = document.getElementById('profile-banner-img');
-      if (bannerImg) { bannerImg.src = profile.banner_url; bannerImg.style.display = 'block'; }
-    }
+async function uploadAvatar(input) {
+  if (!currentUser || !input.files[0]) return;
+  const file = input.files[0];
+  const filePath = currentUser.id + '-avatar.' + file.name.split('.').pop();
+  showToast('Uploading photo...');
+  const {error:uploadError} = await _supabase.storage.from('avatars').upload(filePath, file, {upsert:true});
+  if (uploadError) { showToast('Upload failed: ' + uploadError.message); return; }
+  const {data} = _supabase.storage.from('avatars').getPublicUrl(filePath);
+  await _supabase.from('profiles').update({avatar_url: data.publicUrl}).eq('id', currentUser.id);
+  const el = document.getElementById('profile-avatar-display');
+  if (el) { el.style.backgroundImage = 'url(' + data.publicUrl + '?t=' + Date.now() + ')'; el.style.backgroundSize = 'cover'; el.style.backgroundPosition = 'center'; el.textContent = ''; }
+  showToast('Profile photo updated ✦');
+}
+
+async function uploadBanner(input) {
+  if (!currentUser || !input.files[0]) return;
+  const file = input.files[0];
+  const filePath = currentUser.id + '-banner.' + file.name.split('.').pop();
+  showToast('Uploading banner...');
+  const {error:uploadError} = await _supabase.storage.from('avatars').upload(filePath, file, {upsert:true});
+  if (uploadError) { showToast('Upload failed: ' + uploadError.message); return; }
+  const {data} = _supabase.storage.from('avatars').getPublicUrl(filePath);
+  await _supabase.from('profiles').update({banner_url: data.publicUrl}).eq('id', currentUser.id);
+  const img = document.getElementById('profile-banner-img');
+  if (img) { img.src = data.publicUrl + '?t=' + Date.now(); img.style.display = 'block'; }
+  showToast('Banner photo updated ✦');
+}
+
+// ── EVENTS ──
+async function registerEventDB(eventName, btn) {
+  if (!currentUser) { openAuthModal('login'); return; }
+  await _supabase.from('event_registrations').insert({user_id: currentUser.id, event_name: eventName});
+  btn.classList.add('registered'); btn.textContent = 'Registered ✦';
+  showToast('Registered for ' + eventName + ' ✦');
+}
+
+// ── HELPERS ──
+function timeAgo(dateStr) {
+  const diff = Math.floor((new Date() - new Date(dateStr)) / 1000);
+  if (diff < 60) return 'Just now';
+  if (diff < 3600) return Math.floor(diff/60) + ' min ago';
+  if (diff < 86400) return Math.floor(diff/3600) + ' hours ago';
+  return Math.floor(diff/86400) + ' days ago';
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+const views = ['home','circles','events','resources','profile','circle-detail'];
+function showView(name, el) {
+  views.forEach(v => document.getElementById('view-' + v).classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  document.querySelectorAll('.nav-links a:not(.nav-cta)').forEach(a => a.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('mob-' + name)?.classList.add('active');
+  if (el && !el.classList.contains('mobile-nav-btn') && !el.classList.contains('nav-cta')) el.classList.add('active');
+  window.scrollTo(0,0);
+  return false;
+}
+
+function showViewWithProfile(name, el) {
+  showView(name, el);
+  if (name === 'profile') { loadProfile(); loadProfilePhotos(); }
+  if (name === 'circles') loadJoinedCircles();
+}
+
+function openModal() { document.getElementById('agreements-modal').classList.add('open'); }
+function closeModal() { document.getElementById('agreements-modal').classList.remove('open'); }
+function handleAgree() { closeModal(); setTimeout(() => openAuthModal('signup'), 200); }
+function toggleAgreeBtn() { document.getElementById('agree-btn').disabled = !document.getElementById('agree-check').checked; }
+function openAuthModal(mode) { closeModal(); document.getElementById('auth-modal').classList.add('open'); setAuthMode(mode || 'signup'); }
+function closeAuthModal() { document.getElementById('auth-modal').classList.remove('open'); }
+function setAuthMode(mode) {
+  const title = document.getElementById('auth-title');
+  const submitBtn = document.getElementById('auth-submit');
+  const nameGroup = document.getElementById('auth-name-group');
+  const switchBtn = document.getElementById('auth-switch');
+  if (mode === 'signup') {
+    title.textContent = 'Join the Sisterhood'; submitBtn.textContent = 'Create Account'; nameGroup.style.display = 'block';
+    switchBtn.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\')">Log in</a>';
+    submitBtn.onclick = () => { signUp(document.getElementById('auth-email').value, document.getElementById('auth-password').value, document.getElementById('auth-name').value); };
+  } else {
+    title.textContent = 'Welcome Back, Sis'; submitBtn.textContent = 'Log In'; nameGroup.style.display = 'none';
+    switchBtn.innerHTML = 'New here? <a href="#" onclick="setAuthMode(\'signup\')">Join the Sisterhood</a>';
+    submitBtn.onclick = () => { signIn(document.getElementById('auth-email').value, document.getElementById('auth-password').value); };
   }
+}
 
-  function showViewWithProfile(name, el) {
-    showView(name, el);
-    if (name === 'profile') { loadProfile(); loadProfilePhotos(); }
-    if (name === 'circles') loadJoinedCircles();
-  }
+function toggleJoin(btn, circleName) { joinCircleDB(circleName, btn); }
+function registerEvent(btn, eventName) { registerEventDB(eventName, btn); }
+function filterRes(btn) { document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); btn.classList.add('active'); showToast('Filtering by: ' + btn.textContent); }
 
-  function openProposalModal() {
-    if (!currentUser) { openAuthModal("login"); return; }
-    document.getElementById("proposal-modal").classList.add("open");
-    // Pre-fill name if we have it
-    if (window._currentUserName) {
-      document.getElementById("prop-contact-name").value = window._currentUserName;
-    }
-    if (currentUser?.email) {
-      document.getElementById("prop-contact").value = currentUser.email;
-    }
-  }
-
-  function closeProposalModal() {
-    document.getElementById("proposal-modal").classList.remove("open");
-    document.getElementById("prop-msg").className = "msg";
-  }
-
-  async function submitProposal() {
-    const circleName = document.getElementById("prop-name").value.trim();
-    const desc = document.getElementById("prop-desc").value.trim();
-    const why = document.getElementById("prop-why").value.trim();
-    const contactName = document.getElementById("prop-contact-name").value.trim();
-    const contact = document.getElementById("prop-contact").value.trim();
-
-    if (!circleName || !desc || !why || !contactName || !contact) {
-      const msg = document.getElementById("prop-msg");
-      msg.className = "msg err";
-      msg.style.display = "block";
-      msg.textContent = "Please fill in all fields before submitting.";
-      return;
-    }
-
-    const btn = document.getElementById("prop-submit-btn");
-    btn.disabled = true;
-    btn.textContent = "Submitting...";
-
-    const subject = "New Circle Proposal: " + circleName;
-    const message = "A member has proposed a new Circle!\n\nCircle Name: " + circleName + "\n\nDescription: " + desc + "\n\nWhy they want to host it: " + why + "\n\nSubmitted by: " + contactName + "\nContact: " + contact;
-
-    try {
-      const res = await fetch("https://cqiymqekdtewnorojlus.supabase.co/functions/v1/send-daily-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subject, message, proposalOnly: true })
-      });
-      const data = await res.json();
-      const msg = document.getElementById("prop-msg");
-      msg.style.display = "block";
-      msg.className = "msg ok";
-      msg.textContent = "Your proposal has been sent! We’ll be in touch soon ✨";
-      btn.textContent = "Submitted ✔";
-      // Clear form after 3 seconds and close
-      setTimeout(() => {
-        document.getElementById("prop-name").value = "";
-        document.getElementById("prop-desc").value = "";
-        document.getElementById("prop-why").value = "";
-        closeProposalModal();
-        btn.disabled = false;
-        btn.textContent = "Submit My Proposal ✦";
-      }, 3000);
-    } catch (e) {
-      const msg = document.getElementById("prop-msg");
-      msg.style.display = "block";
-      msg.className = "msg err";
-      msg.textContent = "Could not send — please try again.";
-      btn.disabled = false;
-      btn.textContent = "Submit My Proposal ✦";
-    }
-  }
-
-  // ── QUESTION MODE ──
-  let isQuestionMode = false;
-
-  function toggleQuestionMode() {
-    isQuestionMode = !isQuestionMode;
-    const btn = document.getElementById('question-btn');
-    const ta = document.querySelector('#view-home .composer-input');
-    const postBtn = document.querySelector('#view-home .post-btn');
-    if (isQuestionMode) {
-      btn.classList.add('active');
-      btn.style.color = 'var(--gold)';
-      ta.placeholder = 'Ask your sisters a question...';
-      postBtn.textContent = 'Ask ♦';
-    } else {
-      btn.classList.remove('active');
-      btn.style.color = '';
-      ta.placeholder = "What\'s on your heart today, sister?";
-      postBtn.textContent = 'Share';
-    }
-  }
-
-  // ── REPLIES ──
-  async function loadReplies(postId, container) {
-    container.innerHTML = '<div style="font-size:0.8rem;color:rgba(28,20,16,0.4);padding:8px 0;">Loading replies...</div>';
-    const { data: replies } = await _supabase
-      .from('post_replies').select('*').eq('post_id', postId).order('created_at', { ascending: true });
-    const userIds = replies ? [...new Set(replies.map(r => r.user_id).filter(Boolean))] : [];
-    let profileMap = {};
-    if (userIds.length > 0) {
-      const { data: profiles } = await _supabase.from('profiles').select('id, name, avatar_url').in('id', userIds);
-      if (profiles) profiles.forEach(p => profileMap[p.id] = p);
-    }
-    container.innerHTML = '';
-    if (replies && replies.length > 0) {
-      replies.forEach(reply => {
-        const profile = profileMap[reply.user_id];
-        const name = profile?.name || 'Sister';
-        const initial = name.charAt(0).toUpperCase();
-        const avatarHtml = profile?.avatar_url
-          ? "<div class=\"avatar\" style=\"width:28px;height:28px;font-size:0.65rem;background-image:url('" + profile.avatar_url + "');background-size:cover;background-position:center;flex-shrink:0;\"></div>"
-          : "<div class=\"avatar\" style=\"width:28px;height:28px;font-size:0.65rem;background:linear-gradient(135deg,var(--terra),var(--gold));flex-shrink:0;\">" + initial + "</div>";
-        const div = document.createElement('div');
-        div.style.cssText = 'display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;';
-        div.innerHTML = avatarHtml + '<div style="flex:1;background:var(--cream);border-radius:4px;padding:10px 12px;"><div style="font-size:0.78rem;font-weight:600;font-family:Playfair Display,serif;margin-bottom:3px;">' + name + '</div><div style="font-size:0.84rem;color:rgba(28,20,16,0.8);line-height:1.6;">' + reply.content + '</div><div style="font-size:0.7rem;color:rgba(28,20,16,0.4);margin-top:4px;">' + timeAgo(reply.created_at) + '</div></div>';
-        container.appendChild(div);
-      });
-    } else {
-      container.innerHTML = '<div style="font-size:0.82rem;color:rgba(28,20,16,0.4);padding:8px 0;">No replies yet — be the first to respond ♦</div>';
-    }
-    const initial = window._currentUserName ? window._currentUserName.charAt(0).toUpperCase() : 'S';
-    const replyComposer = document.createElement('div');
-    replyComposer.style.cssText = 'display:flex;gap:10px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(196,98,45,0.1);';
-    replyComposer.innerHTML = '<div class="avatar" style="width:28px;height:28px;font-size:0.65rem;background:linear-gradient(135deg,var(--terra),var(--gold));flex-shrink:0;">' + initial + '</div><div style="flex:1;display:flex;gap:8px;"><input type="text" placeholder="Write a reply..." id="reply-input-' + postId + '" style="flex:1;padding:8px 12px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:DM Sans,sans-serif;font-size:0.84rem;outline:none;" onkeydown="if(event.key==='Enter')submitReply('' + postId + '',this,document.getElementById('replies-' + postId + ''))"><button onclick="submitReply('' + postId + '',document.getElementById('reply-input-' + postId + ''),document.getElementById('replies-' + postId + ''))" style="background:var(--terra);color:white;border:none;padding:8px 14px;border-radius:2px;cursor:pointer;font-size:0.78rem;font-weight:600;font-family:DM Sans,sans-serif;white-space:nowrap;">Reply ♦</button></div>';
-    container.appendChild(replyComposer);
-  }
-
-  async function submitReply(postId, input, container) {
-    if (!currentUser) { openAuthModal('login'); return; }
-    const content = input.value.trim();
-    if (!content) return;
-    input.value = '';
-    const { error } = await _supabase.from('post_replies').insert({ post_id: postId, user_id: currentUser.id, content: content });
-    if (error) { showToast('Could not post reply: ' + error.message); return; }
-    loadReplies(postId, container);
-  }
-
-  function toggleReplies(postId, btn) {
-    const container = document.getElementById('replies-' + postId);
-    if (!container) return;
-    const isOpen = container.style.display !== 'none';
-    if (isOpen) {
-      container.style.display = 'none';
-      btn.querySelector('span').textContent = 'Reply';
-    } else {
-      container.style.display = 'block';
-      btn.querySelector('span').textContent = 'Hide';
-      loadReplies(postId, container);
-    }
-  }
-
+window.addEventListener('load', initAuth);
 </script>
+</body>
+</html>
