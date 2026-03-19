@@ -1352,23 +1352,7 @@
     btn.textContent = "Submitting...";
 
     const subject = "New Circle Proposal: " + circleName;
-    const message = "A member has proposed a new Circle!
-
-" +
-      "Circle Name: " + circleName + "
-
-" +
-      "Description:
-" + desc + "
-
-" +
-      "Why they want to host it:
-" + why + "
-
-" +
-      "Submitted by: " + contactName + "
-" +
-      "Contact: " + contact;
+    const message = "A member has proposed a new Circle!\n\nCircle Name: " + circleName + "\n\nDescription: " + desc + "\n\nWhy they want to host it: " + why + "\n\nSubmitted by: " + contactName + "\nContact: " + contact;
 
     try {
       const res = await fetch("https://cqiymqekdtewnorojlus.supabase.co/functions/v1/send-daily-email", {
