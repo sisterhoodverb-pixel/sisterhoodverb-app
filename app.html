@@ -195,14 +195,14 @@
     });
   }
 
-  async function savePost(content) {
+  async function savePost(content, tag) {
     if (!currentUser) { openAuthModal('login'); return; }
     showToast('Sharing... ✦');
     const { data, error } = await _supabase.from('posts').insert({
-      user_id: currentUser.id, content: content, tag: 'Community', likes: 0
+      user_id: currentUser.id, content: content, tag: tag || 'Community', likes: 0
     }).select();
     if (error) { showToast('Could not post: ' + error.message); return; }
-    showToast('Shared with your sisters ✦');
+    showToast(tag === 'Question' ? 'Question posted ✦' : 'Shared with your sisters ✦');
     loadFeed();
   }
 
@@ -250,7 +250,7 @@
     const bannerEl = document.getElementById('mp-banner');
     bannerEl.style.background = 'linear-gradient(135deg, #1C1410, #C4622D)';
     if (profile?.banner_url) {
-      bannerEl.style.backgroundImage = `url('${profile.banner_url}')`;
+      bannerEl.style.backgroundImage = "url('" + profile.banner_url + "')";
       bannerEl.style.backgroundSize = 'cover';
       bannerEl.style.backgroundPosition = 'center';
     }
@@ -260,7 +260,7 @@
     avatarEl.textContent = initial;
     avatarEl.style.backgroundImage = '';
     if (profile?.avatar_url) {
-      avatarEl.style.backgroundImage = `url('${profile.avatar_url}')`;
+      avatarEl.style.backgroundImage = "url('" + profile.avatar_url + "')";
       avatarEl.style.backgroundSize = 'cover';
       avatarEl.style.backgroundPosition = 'center';
       avatarEl.textContent = '';
@@ -274,7 +274,7 @@
     const circlesEl = document.getElementById('mp-circles');
     if (circles && circles.length > 0) {
       circlesEl.innerHTML = circles.map(c =>
-        `<span class="profile-tag">${c.circle_name}</span>`
+        "<span class=\"profile-tag\">" + c.circle_name + "</span>"
       ).join('');
     } else {
       circlesEl.innerHTML = '<span style="font-size:0.82rem;color:rgba(28,20,16,0.4);">No circles joined yet</span>';
@@ -287,10 +287,8 @@
         let textContent = post.content || '';
         const gifMatch = textContent.match(/\[gif:(.*?)\]/);
         if (gifMatch) textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
-        return `<div class="mp-post-item">
-          <div class="mp-post-text">${textContent || '[GIF]'}</div>
-          <div class="mp-post-time">${timeAgo(post.created_at)}</div>
-        </div>`;
+        const txt = textContent || '[GIF]';
+        return '<div class="mp-post-item"><div class="mp-post-text">' + txt + '</div><div class="mp-post-time">' + timeAgo(post.created_at) + '</div></div>';
       }).join('');
     } else {
       postsEl.innerHTML = '<div style="font-size:0.82rem;color:rgba(28,20,16,0.4);padding:12px 0;">No posts yet</div>';
@@ -366,85 +364,6 @@
     loadProfile();
   }
 
-  // ── QUESTION MODE ──
-  let isQuestionMode = false;
-
-  function toggleQuestionMode() {
-    isQuestionMode = !isQuestionMode;
-    const btn = document.getElementById('question-btn');
-    const ta = document.querySelector('#view-home .composer-input');
-    const postBtn = document.querySelector('#view-home .post-btn');
-    if (isQuestionMode) {
-      btn.classList.add('active');
-      btn.style.color = 'var(--gold)';
-      ta.placeholder = 'Ask your sisters a question...';
-      postBtn.textContent = 'Ask ♦';
-    } else {
-      btn.classList.remove('active');
-      btn.style.color = '';
-      ta.placeholder = "What\'s on your heart today, sister?";
-      postBtn.textContent = 'Share';
-    }
-  }
-
-  // ── REPLIES ──
-  async function loadReplies(postId, container) {
-    container.innerHTML = '<div style="font-size:0.8rem;color:rgba(28,20,16,0.4);padding:8px 0;">Loading replies...</div>';
-    const { data: replies } = await _supabase
-      .from('post_replies').select('*').eq('post_id', postId).order('created_at', { ascending: true });
-    const userIds = replies ? [...new Set(replies.map(r => r.user_id).filter(Boolean))] : [];
-    let profileMap = {};
-    if (userIds.length > 0) {
-      const { data: profiles } = await _supabase.from('profiles').select('id, name, avatar_url').in('id', userIds);
-      if (profiles) profiles.forEach(p => profileMap[p.id] = p);
-    }
-    container.innerHTML = '';
-    if (replies && replies.length > 0) {
-      replies.forEach(reply => {
-        const profile = profileMap[reply.user_id];
-        const name = profile?.name || 'Sister';
-        const initial = name.charAt(0).toUpperCase();
-        const avatarHtml = profile?.avatar_url
-          ? `<div class="avatar" style="width:28px;height:28px;font-size:0.65rem;background-image:url('${profile.avatar_url}');background-size:cover;background-position:center;flex-shrink:0;"></div>`
-          : `<div class="avatar" style="width:28px;height:28px;font-size:0.65rem;background:linear-gradient(135deg,var(--terra),var(--gold));flex-shrink:0;">${initial}</div>`;
-        const div = document.createElement('div');
-        div.style.cssText = 'display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;';
-        div.innerHTML = avatarHtml + '<div style="flex:1;background:var(--cream);border-radius:4px;padding:10px 12px;"><div style="font-size:0.78rem;font-weight:600;font-family:Playfair Display,serif;margin-bottom:3px;">' + name + '</div><div style="font-size:0.84rem;color:rgba(28,20,16,0.8);line-height:1.6;">' + reply.content + '</div><div style="font-size:0.7rem;color:rgba(28,20,16,0.4);margin-top:4px;">' + timeAgo(reply.created_at) + '</div></div>';
-        container.appendChild(div);
-      });
-    } else {
-      container.innerHTML = '<div style="font-size:0.82rem;color:rgba(28,20,16,0.4);padding:8px 0;">No replies yet — be the first to respond ♦</div>';
-    }
-    const initial = window._currentUserName ? window._currentUserName.charAt(0).toUpperCase() : 'S';
-    const replyComposer = document.createElement('div');
-    replyComposer.style.cssText = 'display:flex;gap:10px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(196,98,45,0.1);';
-    replyComposer.innerHTML = '<div class="avatar" style="width:28px;height:28px;font-size:0.65rem;background:linear-gradient(135deg,var(--terra),var(--gold));flex-shrink:0;">' + initial + '</div><div style="flex:1;display:flex;gap:8px;"><input type="text" placeholder="Write a reply..." id="reply-input-' + postId + '" style="flex:1;padding:8px 12px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:DM Sans,sans-serif;font-size:0.84rem;outline:none;" onkeydown="if(event.key==='Enter')submitReply('' + postId + '',this,document.getElementById('replies-' + postId + ''))"><button onclick="submitReply('' + postId + '',document.getElementById('reply-input-' + postId + ''),document.getElementById('replies-' + postId + ''))" style="background:var(--terra);color:white;border:none;padding:8px 14px;border-radius:2px;cursor:pointer;font-size:0.78rem;font-weight:600;font-family:DM Sans,sans-serif;white-space:nowrap;">Reply ♦</button></div>';
-    container.appendChild(replyComposer);
-  }
-
-  async function submitReply(postId, input, container) {
-    if (!currentUser) { openAuthModal('login'); return; }
-    const content = input.value.trim();
-    if (!content) return;
-    input.value = '';
-    const { error } = await _supabase.from('post_replies').insert({ post_id: postId, user_id: currentUser.id, content: content });
-    if (error) { showToast('Could not post reply: ' + error.message); return; }
-    loadReplies(postId, container);
-  }
-
-  function toggleReplies(postId, btn) {
-    const container = document.getElementById('replies-' + postId);
-    if (!container) return;
-    const isOpen = container.style.display !== 'none';
-    if (isOpen) {
-      container.style.display = 'none';
-      btn.querySelector('span').textContent = 'Reply';
-    } else {
-      container.style.display = 'block';
-      btn.querySelector('span').textContent = 'Hide';
-      loadReplies(postId, container);
-    }
-  }
 
   // ── GIF PICKER ──
   const GIPHY_KEY = 'AgkjTleIOrzAZS8xROMk5MBOhC87TO4v';
@@ -1352,7 +1271,9 @@
     if (!text && !selectedGifUrl) { showToast('Write something first ✦'); return; }
     if (!currentUser) { openAuthModal('login'); return; }
     const content = text + (selectedGifUrl ? `\n[gif:${selectedGifUrl}]` : '');
-    savePost(content); ta.value = ''; removeGif();
+    const tag = isQuestionMode ? 'Question' : 'Community';
+    savePost(content, tag); ta.value = ''; removeGif();
+    if (isQuestionMode) toggleQuestionMode();
   }
 
   function toggleMobile() { showToast('Mobile menu — use bottom nav'); }
@@ -1477,6 +1398,85 @@
       btn.textContent = "Submit My Proposal ✦";
     }
   }
+
+  // ── QUESTION MODE ──
+  let isQuestionMode = false;
+
+  function toggleQuestionMode() {
+    isQuestionMode = !isQuestionMode;
+    const btn = document.getElementById('question-btn');
+    const ta = document.querySelector('#view-home .composer-input');
+    const postBtn = document.querySelector('#view-home .post-btn');
+    if (isQuestionMode) {
+      btn.classList.add('active');
+      btn.style.color = 'var(--gold)';
+      ta.placeholder = 'Ask your sisters a question...';
+      postBtn.textContent = 'Ask ♦';
+    } else {
+      btn.classList.remove('active');
+      btn.style.color = '';
+      ta.placeholder = "What\'s on your heart today, sister?";
+      postBtn.textContent = 'Share';
+    }
+  }
+
+  // ── REPLIES ──
+  async function loadReplies(postId, container) {
+    container.innerHTML = '<div style="font-size:0.8rem;color:rgba(28,20,16,0.4);padding:8px 0;">Loading replies...</div>';
+    const { data: replies } = await _supabase
+      .from('post_replies').select('*').eq('post_id', postId).order('created_at', { ascending: true });
+    const userIds = replies ? [...new Set(replies.map(r => r.user_id).filter(Boolean))] : [];
+    let profileMap = {};
+    if (userIds.length > 0) {
+      const { data: profiles } = await _supabase.from('profiles').select('id, name, avatar_url').in('id', userIds);
+      if (profiles) profiles.forEach(p => profileMap[p.id] = p);
+    }
+    container.innerHTML = '';
+    if (replies && replies.length > 0) {
+      replies.forEach(reply => {
+        const profile = profileMap[reply.user_id];
+        const name = profile?.name || 'Sister';
+        const initial = name.charAt(0).toUpperCase();
+        const avatarHtml = profile?.avatar_url
+          ? "<div class=\"avatar\" style=\"width:28px;height:28px;font-size:0.65rem;background-image:url('" + profile.avatar_url + "');background-size:cover;background-position:center;flex-shrink:0;\"></div>"
+          : "<div class=\"avatar\" style=\"width:28px;height:28px;font-size:0.65rem;background:linear-gradient(135deg,var(--terra),var(--gold));flex-shrink:0;\">" + initial + "</div>";
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;gap:10px;align-items:flex-start;margin-bottom:10px;';
+        div.innerHTML = avatarHtml + '<div style="flex:1;background:var(--cream);border-radius:4px;padding:10px 12px;"><div style="font-size:0.78rem;font-weight:600;font-family:Playfair Display,serif;margin-bottom:3px;">' + name + '</div><div style="font-size:0.84rem;color:rgba(28,20,16,0.8);line-height:1.6;">' + reply.content + '</div><div style="font-size:0.7rem;color:rgba(28,20,16,0.4);margin-top:4px;">' + timeAgo(reply.created_at) + '</div></div>';
+        container.appendChild(div);
+      });
+    } else {
+      container.innerHTML = '<div style="font-size:0.82rem;color:rgba(28,20,16,0.4);padding:8px 0;">No replies yet — be the first to respond ♦</div>';
+    }
+    const initial = window._currentUserName ? window._currentUserName.charAt(0).toUpperCase() : 'S';
+    const replyComposer = document.createElement('div');
+    replyComposer.style.cssText = 'display:flex;gap:10px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(196,98,45,0.1);';
+    replyComposer.innerHTML = '<div class="avatar" style="width:28px;height:28px;font-size:0.65rem;background:linear-gradient(135deg,var(--terra),var(--gold));flex-shrink:0;">' + initial + '</div><div style="flex:1;display:flex;gap:8px;"><input type="text" placeholder="Write a reply..." id="reply-input-' + postId + '" style="flex:1;padding:8px 12px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:DM Sans,sans-serif;font-size:0.84rem;outline:none;" onkeydown="if(event.key==='Enter')submitReply('' + postId + '',this,document.getElementById('replies-' + postId + ''))"><button onclick="submitReply('' + postId + '',document.getElementById('reply-input-' + postId + ''),document.getElementById('replies-' + postId + ''))" style="background:var(--terra);color:white;border:none;padding:8px 14px;border-radius:2px;cursor:pointer;font-size:0.78rem;font-weight:600;font-family:DM Sans,sans-serif;white-space:nowrap;">Reply ♦</button></div>';
+    container.appendChild(replyComposer);
+  }
+
+  async function submitReply(postId, input, container) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const content = input.value.trim();
+    if (!content) return;
+    input.value = '';
+    const { error } = await _supabase.from('post_replies').insert({ post_id: postId, user_id: currentUser.id, content: content });
+    if (error) { showToast('Could not post reply: ' + error.message); return; }
+    loadReplies(postId, container);
+  }
+
+  function toggleReplies(postId, btn) {
+    const container = document.getElementById('replies-' + postId);
+    if (!container) return;
+    const isOpen = container.style.display !== 'none';
+    if (isOpen) {
+      container.style.display = 'none';
+      btn.querySelector('span').textContent = 'Reply';
+    } else {
+      container.style.display = 'block';
+      btn.querySelector('span').textContent = 'Hide';
+      loadReplies(postId, container);
+    }
+  }
+
 </script>
-</body>
-</html>
