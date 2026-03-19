@@ -128,7 +128,7 @@
   // ── FEED ──
   async function loadFeed() {
     const { data: posts, error } = await _supabase
-      .from('posts').select('*').order('created_at', { ascending: false }).limit(20);
+      .from('posts').select('*').order('created_at', { ascending: true }).limit(20);
     if (error) { console.log('Feed error:', error); return; }
     if (!posts || posts.length === 0) return;
 
