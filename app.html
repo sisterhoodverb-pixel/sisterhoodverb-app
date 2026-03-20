@@ -1230,18 +1230,80 @@ async function loadProfilePhotos() {
   }
 }
 
-async function uploadAvatar(input) {
+// ── AVATAR CROP ──
+let cropX = 0, cropY = 0, cropZoom = 1, cropDragging = false, cropStartX = 0, cropStartY = 0;
+let cropFile = null;
+
+function uploadAvatar(input) {
   if (!currentUser || !input.files[0]) return;
-  const file = input.files[0];
-  const filePath = currentUser.id + '-avatar.' + file.name.split('.').pop();
-  showToast('Uploading photo...');
-  const {error:uploadError} = await _supabase.storage.from('avatars').upload(filePath, file, {upsert:true});
-  if (uploadError) { showToast('Upload failed: ' + uploadError.message); return; }
-  const {data} = _supabase.storage.from('avatars').getPublicUrl(filePath);
-  await _supabase.from('profiles').update({avatar_url: data.publicUrl}).eq('id', currentUser.id);
-  const el = document.getElementById('profile-avatar-display');
-  if (el) { el.style.backgroundImage = 'url(' + data.publicUrl + '?t=' + Date.now() + ')'; el.style.backgroundSize = 'cover'; el.style.backgroundPosition = 'center'; el.textContent = ''; }
-  showToast('Profile photo updated ✦');
+  cropFile = input.files[0];
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = document.getElementById('crop-img');
+    img.onload = function() {
+      cropX = 0; cropY = 0; cropZoom = 1;
+      document.getElementById('crop-zoom').value = 100;
+      const size = 280;
+      const scale = Math.max(size / img.naturalWidth, size / img.naturalHeight);
+      img.style.width = (img.naturalWidth * scale) + 'px';
+      img.style.height = (img.naturalHeight * scale) + 'px';
+      img.style.left = ((size - img.naturalWidth * scale) / 2) + 'px';
+      img.style.top = ((size - img.naturalHeight * scale) / 2) + 'px';
+      img.style.marginLeft = '0px'; img.style.marginTop = '0px';
+      img.style.transform = 'scale(1)';
+      document.getElementById('crop-modal').classList.add('open');
+      setupCropEvents();
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(cropFile);
+  input.value = '';
+}
+
+function setupCropEvents() {
+  const zoomSlider = document.getElementById('crop-zoom');
+  const ci = document.getElementById('crop-img');
+  const cc = document.getElementById('crop-container');
+  zoomSlider.oninput = function() { cropZoom = this.value / 100; ci.style.transform = 'scale(' + cropZoom + ')'; };
+  cc.onmousedown = function(e) { cropDragging=true; cropStartX=e.clientX-cropX; cropStartY=e.clientY-cropY; cc.style.cursor='grabbing'; e.preventDefault(); };
+  document.onmousemove = function(e) { if (!cropDragging) return; cropX=e.clientX-cropStartX; cropY=e.clientY-cropStartY; ci.style.marginLeft=cropX+'px'; ci.style.marginTop=cropY+'px'; };
+  document.onmouseup = function() { cropDragging=false; if(cc) cc.style.cursor='grab'; };
+  cc.ontouchstart = function(e) { if(e.touches.length===1){cropDragging=true;cropStartX=e.touches[0].clientX-cropX;cropStartY=e.touches[0].clientY-cropY;} e.preventDefault(); };
+  cc.ontouchmove = function(e) { if(!cropDragging||e.touches.length!==1)return; cropX=e.touches[0].clientX-cropStartX; cropY=e.touches[0].clientY-cropStartY; ci.style.marginLeft=cropX+'px'; ci.style.marginTop=cropY+'px'; e.preventDefault(); };
+  cc.ontouchend = function() { cropDragging=false; };
+}
+
+function closeCropModal() {
+  document.getElementById('crop-modal').classList.remove('open');
+  cropFile=null; cropX=0; cropY=0; cropZoom=1;
+}
+
+async function saveCroppedAvatar() {
+  if (!currentUser) return;
+  const img = document.getElementById('crop-img');
+  const size = 280;
+  const canvas = document.createElement('canvas');
+  canvas.width=400; canvas.height=400;
+  const ctx = canvas.getContext('2d');
+  ctx.beginPath(); ctx.arc(200,200,200,0,Math.PI*2); ctx.clip();
+  const imgW = parseFloat(img.style.width)*cropZoom;
+  const imgH = parseFloat(img.style.height)*cropZoom;
+  const offsetX = parseFloat(img.style.left||0)+cropX+(parseFloat(img.style.width)-imgW)/2;
+  const offsetY = parseFloat(img.style.top||0)+cropY+(parseFloat(img.style.height)-imgH)/2;
+  const s = 400/size;
+  ctx.drawImage(img, offsetX*s, offsetY*s, imgW*s, imgH*s);
+  showToast('Saving photo...');
+  closeCropModal();
+  canvas.toBlob(async function(blob) {
+    const filePath = currentUser.id+'-avatar.jpg';
+    const {error} = await _supabase.storage.from('avatars').upload(filePath, blob, {upsert:true, contentType:'image/jpeg'});
+    if (error) { showToast('Upload failed: '+error.message); return; }
+    const {data} = _supabase.storage.from('avatars').getPublicUrl(filePath);
+    await _supabase.from('profiles').update({avatar_url:data.publicUrl}).eq('id',currentUser.id);
+    const el = document.getElementById('profile-avatar-display');
+    if (el) { el.style.backgroundImage='url('+data.publicUrl+'?t='+Date.now()+')'; el.style.backgroundSize='cover'; el.style.backgroundPosition='center'; el.textContent=''; }
+    showToast('Profile photo updated ♦');
+  }, 'image/jpeg', 0.9);
 }
 
 async function uploadBanner(input) {
