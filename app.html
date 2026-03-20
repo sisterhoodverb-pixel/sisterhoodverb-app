@@ -336,7 +336,14 @@ input[type="file"]{display:none}
     <p class="hero-sub">A space to be seen, speak freely, and practice sisterhood — not just talk about it.</p>
     <div class="hero-accent"></div>
   </div>
-  <div class="membership-banner">
+  <div class="membership-banner" id="founding-banner" style="display:none;background:linear-gradient(135deg,#b8860b,var(--gold));">
+    <div class="membership-text">
+      <strong>✦ You're invited to be a Founding Sister</strong>
+      <span>Join free for life — only 50 spots available. No credit card needed.</span>
+    </div>
+    <button class="membership-cta" onclick="openModal()">Claim Your Spot ✦</button>
+  </div>
+  <div class="membership-banner" id="regular-banner">
     <div class="membership-text"><strong>Upgrade to Full Member</strong><span>Unlock all Circles, workshop recordings, and 1:1 mentorship access</span></div>
     <button class="membership-cta" onclick="openModal()">Explore Plans</button>
   </div>
@@ -470,6 +477,7 @@ input[type="file"]{display:none}
     <div class="profile-avatar-wrap">
       <div class="profile-avatar" id="profile-avatar-display">T</div>
       <div class="avatar-upload-btn" onclick="document.getElementById('avatar-upload').click()">📷</div>
+      <div id="founding-badge" style="display:none;position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--gold),#b8860b);color:white;font-size:0.62rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px;white-space:nowrap;border:2px solid white;">✦ Founding Sister</div>
     </div>
   </div>
   <div class="profile-info">
@@ -558,8 +566,22 @@ async function signUp(email, password, name) {
   const {data, error} = await _supabase.auth.signUp({email, password});
   if (error) { showToast('Error: ' + error.message); return; }
   if (data.user) {
-    await _supabase.from('profiles').insert({id:data.user.id, name, handle:'@'+email.split('@')[0], membership_tier:'free'});
-    showToast('Welcome to the Sisterhood ✦');
+    // Check if founding member link was used
+    const isFoundingLink = window._foundingMode === true;
+    let tier = 'free';
+    if (isFoundingLink) {
+      // Check count hasn't exceeded 50
+      const {data: countData} = await _supabase.rpc('founding_member_count');
+      if ((countData || 0) < 50) {
+        tier = 'founding';
+      }
+    }
+    await _supabase.from('profiles').insert({id:data.user.id, name, handle:'@'+email.split('@')[0], membership_tier: tier});
+    if (tier === 'founding') {
+      showToast('Welcome, Founding Sister! ✦');
+    } else {
+      showToast('Welcome to the Sisterhood ✦');
+    }
     closeAuthModal();
   }
 }
@@ -1054,7 +1076,13 @@ async function loadProfile() {
     if (inputs[1]) inputs[1].value = profile.bio || '';
     if (inputs[2]) inputs[2].value = profile.location || '';
     if (inputs[3]) inputs[3].value = currentUser.email || '';
-    if (inputs[4]) inputs[4].value = profile.membership_tier === 'paid' ? 'Full Member ✦' : 'Free Member';
+    const tierLabel = profile.membership_tier === 'founding' ? '✦ Founding Sister' : profile.membership_tier === 'paid' ? 'Full Member ✦' : 'Free Member';
+    if (inputs[4]) inputs[4].value = tierLabel;
+    // Show founding badge
+    const badge = document.getElementById('founding-badge');
+    if (badge) badge.style.display = (profile.membership_tier === 'founding' || profile.membership_tier === 'paid') ? 'flex' : 'none';
+    // Store tier globally for feature gating
+    window._currentUserTier = profile.membership_tier;
   }
   const {data:cd} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
   const {data:ed} = await _supabase.from('event_registrations').select('id').eq('user_id', currentUser.id);
@@ -1171,7 +1199,9 @@ function setAuthMode(mode) {
   const nameGroup = document.getElementById('auth-name-group');
   const switchBtn = document.getElementById('auth-switch');
   if (mode === 'signup') {
-    title.textContent = 'Join the Sisterhood'; submitBtn.textContent = 'Create Account'; nameGroup.style.display = 'block';
+    title.textContent = window._foundingMode ? 'Claim Your Founding Sister Spot ✦' : 'Join the Sisterhood';
+    submitBtn.textContent = window._foundingMode ? 'Join Free for Life ✦' : 'Create Account';
+    nameGroup.style.display = 'block';
     switchBtn.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\')">Log in</a>';
     submitBtn.onclick = () => { signUp(document.getElementById('auth-email').value, document.getElementById('auth-password').value, document.getElementById('auth-name').value); };
   } else {
@@ -1185,7 +1215,19 @@ function toggleJoin(btn, circleName) { joinCircleDB(circleName, btn); }
 function registerEvent(btn, eventName) { registerEventDB(eventName, btn); }
 function filterRes(btn) { document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); btn.classList.add('active'); showToast('Filtering by: ' + btn.textContent); }
 
-window.addEventListener('load', initAuth);
+window.addEventListener('load', function() {
+  // Check for founding member link
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('founding') === 'yes') {
+    window._foundingMode = true;
+    // Show founding banner, hide regular
+    const foundingBanner = document.getElementById('founding-banner');
+    const regularBanner = document.getElementById('regular-banner');
+    if (foundingBanner) foundingBanner.style.display = 'flex';
+    if (regularBanner) regularBanner.style.display = 'none';
+  }
+  initAuth();
+});
 </script>
 </body>
 </html>
