@@ -673,6 +673,7 @@ async function savePost(content, tag) {
   if (error) { showToast('Could not post: ' + error.message); return; }
   showToast(tag === 'Question' ? 'Question posted ✦' : 'Shared with your sisters ✦');
   loadFeed();
+  refreshProfileStats();
 }
 
 // ── QUESTION MODE ──
@@ -827,7 +828,8 @@ async function joinCircleDB(circleName, btn) {
   if (!currentUser) { openAuthModal('login'); return; }
   const joined = btn.classList.contains('joined');
   if (!joined) {
-    await _supabase.from('circle_members').insert({user_id: currentUser.id, circle_name: circleName});
+    const {error} = await _supabase.from('circle_members').insert({user_id: currentUser.id, circle_name: circleName});
+    if (error && error.code !== '23505') { showToast('Could not join: ' + error.message); return; }
     btn.classList.add('joined'); btn.textContent = 'Joined ✦';
     showToast('Joined ' + circleName + ' ✦');
   } else {
@@ -835,6 +837,22 @@ async function joinCircleDB(circleName, btn) {
     btn.classList.remove('joined'); btn.textContent = 'Join';
     showToast('Left ' + circleName);
   }
+  // Refresh all joined states and profile stats
+  await loadJoinedCircles();
+  refreshProfileStats();
+}
+
+async function refreshProfileStats() {
+  if (!currentUser) return;
+  const {data:cd} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
+  const {data:ed} = await _supabase.from('event_registrations').select('id').eq('user_id', currentUser.id);
+  const {data:pd} = await _supabase.from('posts').select('id').eq('user_id', currentUser.id);
+  const circleEl = document.getElementById('stat-circles');
+  const eventEl = document.getElementById('stat-events');
+  const postEl = document.getElementById('stat-posts');
+  if (circleEl) circleEl.textContent = cd?.length || 0;
+  if (eventEl) eventEl.textContent = ed?.length || 0;
+  if (postEl) postEl.textContent = pd?.length || 0;
 }
 
 async function openCircle(name) {
@@ -1109,12 +1127,7 @@ async function loadProfile() {
     // Store tier globally for feature gating
     window._currentUserTier = profile.membership_tier;
   }
-  const {data:cd} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
-  const {data:ed} = await _supabase.from('event_registrations').select('id').eq('user_id', currentUser.id);
-  const {data:pd} = await _supabase.from('posts').select('id').eq('user_id', currentUser.id);
-  document.getElementById('stat-circles').textContent = cd?.length || 0;
-  document.getElementById('stat-events').textContent = ed?.length || 0;
-  document.getElementById('stat-posts').textContent = pd?.length || 0;
+  await refreshProfileStats();
 }
 
 async function saveProfile() {
@@ -1176,6 +1189,7 @@ async function registerEventDB(eventName, btn) {
   await _supabase.from('event_registrations').insert({user_id: currentUser.id, event_name: eventName});
   btn.classList.add('registered'); btn.textContent = 'Registered ✦';
   showToast('Registered for ' + eventName + ' ✦');
+  refreshProfileStats();
 }
 
 // ── HELPERS ──
