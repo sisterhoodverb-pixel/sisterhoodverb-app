@@ -26,6 +26,20 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .hamburger span{width:24px;height:2px;background:var(--deep);display:block}
 .logout-btn{background:none;border:1.5px solid rgba(196,98,45,0.3);color:var(--terra);padding:6px 14px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;display:none;transition:all 0.2s}
 .logout-btn:hover{background:var(--terra);color:white}
+  .notif-bell{background:none;border:none;cursor:pointer;font-size:1.1rem;padding:6px;border-radius:50%;position:relative;transition:background 0.2s}
+  .notif-bell:hover{background:var(--cream)}
+  .notif-badge{position:absolute;top:-2px;right:-2px;background:#e74c3c;color:white;border-radius:50%;width:18px;height:18px;font-size:0.6rem;font-weight:700;display:flex!important;align-items:center;justify-content:center;border:2px solid white}
+  .notif-dropdown{position:absolute;right:0;top:calc(100% + 10px);width:320px;background:white;border-radius:6px;box-shadow:0 8px 30px rgba(28,20,16,0.15);border:1px solid rgba(196,98,45,0.12);z-index:200;overflow:hidden}
+  .notif-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(196,98,45,0.1);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--deep)}
+  .notif-header button{background:none;border:none;cursor:pointer;font-size:0.72rem;color:var(--terra);font-family:'DM Sans',sans-serif;font-weight:500}
+  .notif-list{max-height:360px;overflow-y:auto}
+  .notif-item{padding:14px 16px;border-bottom:1px solid rgba(196,98,45,0.06);cursor:pointer;transition:background 0.15s;display:flex;gap:10px;align-items:flex-start}
+  .notif-item:hover{background:var(--cream)}
+  .notif-item.unread{background:rgba(212,168,83,0.06)}
+  .notif-item.unread::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--terra);flex-shrink:0;margin-top:5px}
+  .notif-item-text{flex:1;font-size:0.83rem;color:var(--deep);line-height:1.5}
+  .notif-item-time{font-size:0.72rem;color:rgba(28,20,16,0.4);margin-top:3px}
+  .notif-empty{padding:24px;text-align:center;font-size:0.83rem;color:rgba(28,20,16,0.4)}
 .view{display:none;padding-top:72px;min-height:100vh}
 .view.active{display:block}
 .home-hero{background:var(--deep);padding:80px 40px 60px;position:relative;overflow:hidden}
@@ -325,6 +339,19 @@ input[type="file"]{display:none}
     <a href="#" onclick="showView('resources',this)">Resources</a>
     <a href="#" onclick="showViewWithProfile('profile',this)">Profile</a>
     <a href="#" class="nav-cta" onclick="openModal();return false;">Join</a>
+    <div class="notif-wrap" id="notif-wrap" style="display:none;position:relative;">
+      <button class="notif-bell" id="notif-bell" onclick="toggleNotifDropdown()">
+        🔔
+        <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
+      </button>
+      <div class="notif-dropdown" id="notif-dropdown" style="display:none;">
+        <div class="notif-header">
+          <span>Notifications</span>
+          <button onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div id="notif-list"><div class="notif-empty">No notifications yet ✦</div></div>
+      </div>
+    </div>
     <button class="logout-btn" id="logout-btn" onclick="signOut()">Log Out</button>
   </div>
   <div class="hamburger" onclick="showToast('Use bottom nav on mobile')"><span></span><span></span><span></span></div>
@@ -571,6 +598,9 @@ async function onLogin() {
   document.querySelectorAll('#home-composer-avatar, #circle-composer-avatar').forEach(el => el.textContent = initial);
   loadFeed();
   loadJoinedCircles();
+  loadNotifications();
+  if (notifInterval) clearInterval(notifInterval);
+  notifInterval = setInterval(loadNotifications, 60000);
 }
 
 function onLogout() {
@@ -1386,6 +1416,85 @@ async function changePassword() {
   document.getElementById('confirm-password-input').value = '';
   showToast('Password updated successfully ♦');
 }
+
+
+  // ── NOTIFICATIONS ──
+  let notifInterval = null;
+
+  async function loadNotifications() {
+    if (!currentUser) return;
+    const {data: notifs} = await _supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', currentUser.id)
+      .order('created_at', {ascending: false})
+      .limit(20);
+
+    if (!notifs) return;
+
+    const unread = notifs.filter(n => !n.read).length;
+    const badge = document.getElementById('notif-badge');
+    const wrap = document.getElementById('notif-wrap');
+
+    if (wrap) wrap.style.display = 'block';
+    if (badge) {
+      if (unread > 0) {
+        badge.style.display = 'flex';
+        badge.textContent = unread > 9 ? '9+' : unread;
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+
+    if (notifs.length === 0) {
+      list.innerHTML = '<div class="notif-empty">No notifications yet ♦</div>';
+      return;
+    }
+
+    list.innerHTML = notifs.map(n => {
+      return '<div class="notif-item ' + (n.read ? '' : 'unread') + '" onclick="handleNotifClick('' + n.id + '','' + (n.post_id || '') + '')">' +
+        (n.read ? '<div style="width:6px;flex-shrink:0;"></div>' : '') +
+        '<div><div class="notif-item-text">' + n.message + '</div>' +
+        '<div class="notif-item-time">' + timeAgo(n.created_at) + '</div></div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function toggleNotifDropdown() {
+    const dropdown = document.getElementById('notif-dropdown');
+    if (!dropdown) return;
+    const isOpen = dropdown.style.display !== 'none';
+    dropdown.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) loadNotifications();
+  }
+
+  async function handleNotifClick(notifId, postId) {
+    // Mark as read
+    await _supabase.from('notifications').update({read: true}).eq('id', notifId);
+    document.getElementById('notif-dropdown').style.display = 'none';
+    loadNotifications();
+    // Scroll to home feed
+    showView('home', document.querySelector('.nav-links a'));
+  }
+
+  async function markAllRead() {
+    if (!currentUser) return;
+    await _supabase.from('notifications').update({read: true}).eq('user_id', currentUser.id).eq('read', false);
+    loadNotifications();
+    showToast('All notifications marked as read ♦');
+  }
+
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('notif-wrap');
+    const dropdown = document.getElementById('notif-dropdown');
+    if (wrap && dropdown && !wrap.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
 
 
 </script>
