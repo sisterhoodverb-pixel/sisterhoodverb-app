@@ -502,6 +502,19 @@ input[type="file"]{display:none}
     <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="profile-email-input" type="email" placeholder="your@email.com"></div>
     <div class="form-group"><label class="form-label">Membership Plan</label><input class="form-input" id="profile-tier-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--terra);font-weight:600"></div>
     <button class="save-btn" onclick="saveProfile()">Save Changes</button>
+
+    <div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(196,98,45,0.15);">
+      <div class="profile-section-title" style="margin-bottom:20px;">Change Password</div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input class="form-input" type="password" id="new-password-input" placeholder="Enter new password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <input class="form-input" type="password" id="confirm-password-input" placeholder="Confirm new password">
+      </div>
+      <button class="save-btn" onclick="changePassword()">Update Password</button>
+    </div>
   </div>
 </div>
 
@@ -664,7 +677,7 @@ async function loadFeed() {
   posts.forEach((post, i) => {
     const card = buildPostCard(post, profileMap, false);
     card.style.animationDelay = (i * 0.05) + 's';
-    feed.insertBefore(card, feed.firstChild);
+    feed.appendChild(card);
   });
 }
 
@@ -1321,6 +1334,20 @@ window.addEventListener('load', function() {
     if (error) { showToast('Error: ' + error.message); return; }
     showToast('Password reset email sent — check your inbox ✦');
     closeAuthModal();
+  }
+
+
+  async function changePassword() {
+    const newPass = document.getElementById('new-password-input')?.value;
+    const confirmPass = document.getElementById('confirm-password-input')?.value;
+    if (!newPass || !confirmPass) { showToast('Please fill in both fields'); return; }
+    if (newPass !== confirmPass) { showToast('Passwords do not match'); return; }
+    if (newPass.length < 6) { showToast('Password must be at least 6 characters'); return; }
+    const {error} = await _supabase.auth.updateUser({ password: newPass });
+    if (error) { showToast('Error: ' + error.message); return; }
+    document.getElementById('new-password-input').value = '';
+    document.getElementById('confirm-password-input').value = '';
+    showToast('Password updated successfully ✦');
   }
 
 
