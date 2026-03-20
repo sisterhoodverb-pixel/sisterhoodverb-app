@@ -1517,7 +1517,7 @@ async function changePassword() {
     }
 
     list.innerHTML = notifs.map(n => {
-      return '<div class="notif-item ' + (n.read ? '' : 'unread') + '" onclick="handleNotifClick('' + n.id + '','' + (n.post_id || '') + '')">' +
+      return '<div class="notif-item ' + (n.read ? '' : 'unread') + '" onclick="handleNotifClick(\'' + n.id + '\',\'' + (n.post_id || '') + '\')">' +
         (n.read ? '<div style="width:6px;flex-shrink:0;"></div>' : '') +
         '<div><div class="notif-item-text">' + n.message + '</div>' +
         '<div class="notif-item-time">' + timeAgo(n.created_at) + '</div></div>' +
