@@ -492,11 +492,11 @@ input[type="file"]{display:none}
   </div>
   <div style="max-width:720px;margin:0 auto;padding:0 32px 40px">
     <div class="profile-section-title" style="margin-bottom:20px">Edit Profile</div>
-    <div class="form-group"><label class="form-label">Display Name</label><input class="form-input" type="text" placeholder="Your name"></div>
-    <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" rows="3" style="resize:vertical" placeholder="Tell your sisters about yourself..."></textarea></div>
-    <div class="form-group"><label class="form-label">Location</label><input class="form-input" type="text" placeholder="Where are you based?"></div>
-    <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" placeholder="your@email.com"></div>
-    <div class="form-group"><label class="form-label">Membership Plan</label><input class="form-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--terra);font-weight:600"></div>
+    <div class="form-group"><label class="form-label">Display Name</label><input class="form-input" id="profile-name-input" type="text" placeholder="Your name"></div>
+    <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" id="profile-bio-input" rows="3" style="resize:vertical" placeholder="Tell your sisters about yourself..."></textarea></div>
+    <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="profile-location-input" type="text" placeholder="Where are you based?"></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="profile-email-input" type="email" placeholder="your@email.com"></div>
+    <div class="form-group"><label class="form-label">Membership Plan</label><input class="form-input" id="profile-tier-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--terra);font-weight:600"></div>
     <button class="save-btn" onclick="saveProfile()">Save Changes</button>
   </div>
 </div>
@@ -1071,13 +1071,17 @@ async function loadProfile() {
     document.querySelector('.profile-name').textContent = profile.name || 'Sister';
     document.querySelector('.profile-handle').textContent = profile.handle || '@member';
     document.querySelector('.profile-bio').textContent = profile.bio || 'Tell your sisters a little about yourself...';
-    const inputs = document.querySelectorAll('#view-profile .form-input');
-    if (inputs[0]) inputs[0].value = profile.name || '';
-    if (inputs[1]) inputs[1].value = profile.bio || '';
-    if (inputs[2]) inputs[2].value = profile.location || '';
-    if (inputs[3]) inputs[3].value = currentUser.email || '';
+    const nameIn = document.getElementById('profile-name-input');
+    const bioIn = document.getElementById('profile-bio-input');
+    const locIn = document.getElementById('profile-location-input');
+    const emailIn = document.getElementById('profile-email-input');
+    if (nameIn) nameIn.value = profile.name || '';
+    if (bioIn) bioIn.value = profile.bio || '';
+    if (locIn) locIn.value = profile.location || '';
+    if (emailIn) emailIn.value = currentUser.email || '';
     const tierLabel = profile.membership_tier === 'founding' ? '✦ Founding Sister' : profile.membership_tier === 'paid' ? 'Full Member ✦' : 'Free Member';
-    if (inputs[4]) inputs[4].value = tierLabel;
+    const tierIn = document.getElementById('profile-tier-input');
+    if (tierIn) tierIn.value = tierLabel;
     // Show founding badge
     const badge = document.getElementById('founding-badge');
     if (badge) badge.style.display = (profile.membership_tier === 'founding' || profile.membership_tier === 'paid') ? 'flex' : 'none';
@@ -1094,11 +1098,12 @@ async function loadProfile() {
 
 async function saveProfile() {
   if (!currentUser) return;
-  const inputs = document.querySelectorAll('#view-profile .form-input');
-  const name = inputs[0]?.value || '';
-  const bio = inputs[1]?.value || '';
-  const location = inputs[2]?.value || '';
-  await _supabase.from('profiles').update({name, bio, location}).eq('id', currentUser.id);
+  const name = document.getElementById('profile-name-input')?.value || '';
+  const bio = document.getElementById('profile-bio-input')?.value || '';
+  const location = document.getElementById('profile-location-input')?.value || '';
+  if (!name) { showToast('Please enter your name ✦'); return; }
+  const {error} = await _supabase.from('profiles').update({name, bio, location}).eq('id', currentUser.id);
+  if (error) { showToast('Could not save: ' + error.message); return; }
   showToast('Profile saved ✦');
   loadProfile();
 }
