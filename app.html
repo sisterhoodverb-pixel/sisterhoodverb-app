@@ -665,7 +665,7 @@ async function loadFeed() {
 }
 
 async function savePost(content, tag) {
-  if (!currentUser) { openAuthModal('login'); return; }
+  if (!currentUser) { showToast('Please log in to post ♦'); openAuthModal('login'); return; }
   showToast('Sharing... ✦');
   const {error} = await _supabase.from('posts').insert({
     user_id: currentUser.id, content, tag: tag || 'Community', likes: 0
@@ -711,9 +711,10 @@ function toggleCircleQuestionMode() {
 
 function postToFeed() {
   const ta = document.getElementById('home-composer-input');
+  if (!ta) { showToast('Could not find composer — try refreshing'); return; }
   const text = ta.value.trim();
   if (!text && !selectedGifUrl) { showToast('Write something first ✦'); return; }
-  if (!currentUser) { openAuthModal('login'); return; }
+  if (!currentUser) { showToast('Please log in to post ✦'); openAuthModal('login'); return; }
   const content = text + (selectedGifUrl ? '\n[gif:' + selectedGifUrl + ']' : '');
   const tag = isQuestionMode ? 'Question' : 'Community';
   savePost(content, tag);
