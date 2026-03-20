@@ -1337,18 +1337,28 @@ window.addEventListener('load', function() {
   }
 
 
-  async function changePassword() {
-    const newPass = document.getElementById('new-password-input')?.value;
-    const confirmPass = document.getElementById('confirm-password-input')?.value;
-    if (!newPass || !confirmPass) { showToast('Please fill in both fields'); return; }
-    if (newPass !== confirmPass) { showToast('Passwords do not match'); return; }
-    if (newPass.length < 6) { showToast('Password must be at least 6 characters'); return; }
-    const {error} = await _supabase.auth.updateUser({ password: newPass });
-    if (error) { showToast('Error: ' + error.message); return; }
-    document.getElementById('new-password-input').value = '';
-    document.getElementById('confirm-password-input').value = '';
-    showToast('Password updated successfully ✦');
+async function changePassword() {
+  const newPass = document.getElementById('new-password-input')?.value;
+  const confirmPass = document.getElementById('confirm-password-input')?.value;
+  if (!newPass || !confirmPass) { showToast('Please fill in both fields'); return; }
+  if (newPass !== confirmPass) { showToast('Passwords do not match — try again'); return; }
+  if (newPass.length < 6) { showToast('Password must be at least 6 characters'); return; }
+  const btn = document.querySelector('[onclick="changePassword()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Updating...'; }
+  const {error} = await _supabase.auth.updateUser({ password: newPass });
+  if (btn) { btn.disabled = false; btn.textContent = 'Update Password'; }
+  if (error) {
+    if (error.message.includes('same')) {
+      showToast('That\'s your current password — please choose a new one');
+    } else {
+      showToast('Error: ' + error.message);
+    }
+    return;
   }
+  document.getElementById('new-password-input').value = '';
+  document.getElementById('confirm-password-input').value = '';
+  showToast('Password updated successfully ♦');
+}
 
 
 </script>
