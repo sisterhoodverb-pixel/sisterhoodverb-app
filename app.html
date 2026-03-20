@@ -77,6 +77,8 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .card-footer{display:flex;gap:20px;padding-top:14px;border-top:1px solid rgba(196,98,45,0.08)}
 .react-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:rgba(28,20,16,0.5);transition:all 0.2s;padding:4px 0}
 .react-btn:hover,.react-btn.liked{color:var(--terra)}
+  .delete-btn{color:rgba(196,98,45,0.5)!important}.delete-btn:hover{color:#c0392b!important}
+  .report-btn{color:rgba(28,20,16,0.3)!important}.report-btn:hover{color:var(--terra)!important}
 .react-btn.reply-active{color:var(--terra)}
 .replies-section{display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(196,98,45,0.08)}
 .reply-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
@@ -388,8 +390,9 @@ input[type="file"]{display:none}
       </ul>
     </div>
     <div id="feed-posts">
-      <div class="feed-card"><div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#7A8C6E,#C4622D)">A</div><div class="card-meta"><div class="card-name">Amara W.</div><div class="card-time">2 hours ago</div></div><span class="card-tag">Motherhood</span></div><div class="card-body">Just finished the <strong>Motherhood Speaks</strong> workshop and I am undone in the best way. I didn't realize how much I'd been carrying silently until I finally had a room where I was allowed to put it down.</div><div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>14</span></button><button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div></div>
-      <div class="feed-card" style="animation-delay:0.1s"><div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#D4A853,#C4622D)">N</div><div class="card-meta"><div class="card-name">Nia R.</div><div class="card-time">Yesterday</div></div><span class="card-tag">Creative</span></div><div class="card-body">Sharing my writing prompt response from Circle this week. I've never cried so hard or felt so free at the same time. Thank you for this space. 🌺</div><div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>27</span></button><button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div></div>
+      <!-- Static placeholder cards removed - real posts load here -->
+      <div class="feed-card" style="display:none;" style="display:none;"><div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#7A8C6E,#C4622D)">A</div><div class="card-meta"><div class="card-name">Amara W.</div><div class="card-time">2 hours ago</div></div><span class="card-tag">Motherhood</span></div><div class="card-body">Just finished the <strong>Motherhood Speaks</strong> workshop and I am undone in the best way. I didn't realize how much I'd been carrying silently until I finally had a room where I was allowed to put it down.</div><div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>14</span></button><button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div></div>
+      <div class="feed-card" style="display:none;" style="animation-delay:0.1s"><div class="card-header"><div class="avatar" style="background:linear-gradient(135deg,#D4A853,#C4622D)">N</div><div class="card-meta"><div class="card-name">Nia R.</div><div class="card-time">Yesterday</div></div><span class="card-tag">Creative</span></div><div class="card-body">Sharing my writing prompt response from Circle this week. I've never cried so hard or felt so free at the same time. Thank you for this space. 🌺</div><div class="card-footer"><button class="react-btn" onclick="toggleLike(this)">🫂 <span>27</span></button><button class="react-btn" onclick="showToast('Replies coming soon')">💬 <span>Reply</span></button><button class="react-btn" onclick="showToast('Saved ✦')">🔖 Save</button></div></div>
     </div>
   </div>
 </div>
@@ -640,6 +643,7 @@ function buildPostCard(post, profileMap, isCircle) {
       '<button class="react-btn" onclick="toggleLike(this,\'' + post.id + '\')">🫂 <span>' + (post.likes || 0) + '</span></button>' +
       '<button class="react-btn" onclick="toggleReplies(\'' + post.id + '\',this)">💬 <span>Reply</span></button>' +
       '<button class="react-btn" onclick="showToast(\'Saved ✦\')">🔖 Save</button>' +
+      (currentUser && post.user_id === currentUser.id ? '<button class="react-btn delete-btn" onclick="deletePost(\'' + post.id + '\',this)">🗑 Delete</button>' : '<button class="react-btn report-btn" onclick="reportPost(\'' + post.id + '\',this)">🚩 Report</button>') +
     '</div>' +
     '<div class="replies-section" id="replies-' + post.id + '"></div>';
 
@@ -647,7 +651,7 @@ function buildPostCard(post, profileMap, isCircle) {
 }
 
 async function loadFeed() {
-  const {data:posts, error} = await _supabase.from('posts').select('*').order('created_at',{ascending:true}).limit(30);
+  const {data:posts, error} = await _supabase.from('posts').select('*').order('created_at',{ascending:false}).limit(30);
   if (error || !posts || posts.length === 0) return;
   const userIds = [...new Set(posts.map(p => p.user_id).filter(Boolean))];
   let profileMap = {};
@@ -1269,6 +1273,67 @@ window.addEventListener('load', function() {
   }
   initAuth();
 });
+  // ── DELETE POST ──
+  async function deletePost(postId, btn) {
+    if (!currentUser) return;
+    if (!confirm('Delete this post? This cannot be undone.')) return;
+    const card = btn.closest('.feed-card');
+    const {error} = await _supabase.from('posts').delete().eq('id', postId).eq('user_id', currentUser.id);
+    if (error) { showToast('Could not delete: ' + error.message); return; }
+    if (card) {
+      card.style.opacity = '0';
+      card.style.transform = 'scale(0.95)';
+      card.style.transition = 'all 0.3s ease';
+      setTimeout(() => card.remove(), 300);
+    }
+    showToast('Post deleted ✦');
+    refreshProfileStats();
+  }
+
+  // ── REPORT POST ──
+  function reportPost(postId, btn) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    const modal = document.getElementById('report-modal');
+    document.getElementById('report-post-id').value = postId;
+    modal.classList.add('open');
+  }
+
+  async function submitReport() {
+    const postId = document.getElementById('report-post-id').value;
+    const reason = document.getElementById('report-reason').value;
+    if (!reason) { showToast('Please select a reason'); return; }
+    const {error} = await _supabase.from('post_reports').insert({
+      post_id: postId, reported_by: currentUser.id, reason: reason
+    });
+    if (error) { showToast('Could not submit report: ' + error.message); return; }
+    document.getElementById('report-modal').classList.remove('open');
+    document.getElementById('report-reason').value = '';
+    showToast('Report submitted — thank you ✦');
+  }
+
+
 </script>
+
+<!-- REPORT MODAL -->
+<div class="modal-overlay" id="report-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-title">Report Post</div>
+    <div class="modal-sub">Help us keep Sisterhood(verb) a safe space ✦</div>
+    <input type="hidden" id="report-post-id">
+    <div class="form-group">
+      <label class="form-label">Reason for reporting</label>
+      <select id="report-reason" class="form-input" style="cursor:pointer;">
+        <option value="">Select a reason...</option>
+        <option value="harmful">Harmful or abusive content</option>
+        <option value="spam">Spam or self-promotion</option>
+        <option value="misinformation">Misinformation</option>
+        <option value="harassment">Harassment or bullying</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <button class="modal-agree-btn" onclick="submitReport()">Submit Report</button>
+    <div class="modal-cancel"><button onclick="document.getElementById('report-modal').classList.remove('open')">Cancel</button></div>
+  </div>
+</div>
 </body>
 </html>
