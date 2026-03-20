@@ -653,7 +653,7 @@ function buildPostCard(post, profileMap, isCircle) {
     '</div>' +
     '<div class="' + bodyClass + '">' + textContent + gifHtml + '</div>' +
     '<div class="card-footer">' +
-      '<button class="react-btn" onclick="toggleLike(this,\'' + post.id + '\')">🫂 <span>' + (post.likes || 0) + '</span></button>' +
+      '<button class="react-btn like-btn" id="like-btn-' + post.id + '" onclick="toggleLike(this,\'' + post.id + '\')">🫂 <span>' + (post.likes || 0) + '</span></button>' +
       '<button class="react-btn" onclick="toggleReplies(\'' + post.id + '\',this)">💬 <span>Reply</span></button>' +
       '<button class="react-btn" onclick="showToast(\'Saved ✦\')">🔖 Save</button>' +
       (currentUser && post.user_id === currentUser.id ? '<button class="react-btn delete-btn" onclick="deletePost(\'' + post.id + '\',this)">🗑 Delete</button>' : '<button class="react-btn report-btn" onclick="reportPost(\'' + post.id + '\',this)">🚩 Report</button>') +
@@ -672,11 +672,23 @@ async function loadFeed() {
     const {data:profiles} = await _supabase.from('profiles').select('id,name,avatar_url').in('id', userIds);
     if (profiles) profiles.forEach(p => profileMap[p.id] = p);
   }
+  // Fetch current user's likes
+  let likedPostIds = new Set();
+  if (currentUser) {
+    const postIds = posts.map(p => p.id);
+    const {data:likes} = await _supabase.from('post_likes').select('post_id').eq('user_id', currentUser.id).in('post_id', postIds);
+    if (likes) likes.forEach(l => likedPostIds.add(l.post_id));
+  }
   const feed = document.getElementById('feed-posts');
   feed.innerHTML = '';
   posts.forEach((post, i) => {
     const card = buildPostCard(post, profileMap, false);
     card.style.animationDelay = (i * 0.05) + 's';
+    // Mark liked posts
+    if (likedPostIds.has(post.id)) {
+      const likeBtn = card.querySelector('.like-btn');
+      if (likeBtn) likeBtn.classList.add('liked');
+    }
     feed.appendChild(card);
   });
 }
@@ -817,15 +829,30 @@ async function submitReply(postId) {
 }
 
 // ── LIKES ──
-function toggleLike(btn, postId) {
-  btn.classList.toggle('liked');
+async function toggleLike(btn, postId) {
+  if (!currentUser) { showToast('Log in to like posts ♦'); return; }
+  if (!postId) return;
   const span = btn.querySelector('span');
   const n = parseInt(span.textContent) || 0;
-  span.textContent = btn.classList.contains('liked') ? n + 1 : n - 1;
-  showToast(btn.classList.contains('liked') ? 'Loved ✦' : 'Removed');
-  if (postId) {
-    const newCount = btn.classList.contains('liked') ? n + 1 : n - 1;
-    _supabase.from('posts').update({likes: newCount}).eq('id', postId);
+  const isLiked = btn.classList.contains('liked');
+  // Optimistic update
+  btn.classList.toggle('liked');
+  span.textContent = isLiked ? n - 1 : n + 1;
+  if (!isLiked) {
+    // Add like
+    const {error} = await _supabase.from('post_likes').insert({post_id: postId, user_id: currentUser.id});
+    if (error && error.code !== '23505') {
+      // Revert on error
+      btn.classList.remove('liked'); span.textContent = n;
+      showToast('Could not like post'); return;
+    }
+    await _supabase.from('posts').update({likes: n + 1}).eq('id', postId);
+    showToast('Loved ♦');
+  } else {
+    // Remove like
+    await _supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
+    await _supabase.from('posts').update({likes: Math.max(0, n - 1)}).eq('id', postId);
+    showToast('Removed');
   }
 }
 
