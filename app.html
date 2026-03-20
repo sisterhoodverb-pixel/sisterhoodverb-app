@@ -262,6 +262,7 @@ input[type="file"]{display:none}
       </div>
       <div class="mp-body">
         <div class="mp-name" id="mp-name">Sister</div>
+        <span id="mp-tier-badge" style="display:none;font-size:0.62rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px;color:white;margin-bottom:6px;"></span>
         <div class="mp-handle" id="mp-handle"></div>
         <div class="mp-bio" id="mp-bio"></div>
         <div class="mp-section-title">Circles</div>
@@ -1040,6 +1041,14 @@ async function openMemberProfile(userId) {
   }
 
   document.getElementById('mp-name').textContent = name;
+  const mpBadge = document.getElementById('mp-tier-badge');
+  if (mpBadge) {
+    if (profile?.membership_tier === 'founder') {
+      mpBadge.style.display = 'inline-block'; mpBadge.style.background = 'linear-gradient(135deg,var(--deep),var(--terra))'; mpBadge.textContent = '♦ Founder';
+    } else if (profile?.membership_tier === 'founding') {
+      mpBadge.style.display = 'inline-block'; mpBadge.style.background = 'linear-gradient(135deg,var(--gold),#b8860b)'; mpBadge.textContent = '♦ Founding Sister';
+    } else { mpBadge.style.display = 'none'; }
+  }
   document.getElementById('mp-handle').textContent = profile?.handle ? (profile.handle.startsWith('@') ? profile.handle : '@' + profile.handle) : '';
   document.getElementById('mp-bio').textContent = profile?.bio || 'No bio yet.';
 
@@ -1079,12 +1088,24 @@ async function loadProfile() {
     if (bioIn) bioIn.value = profile.bio || '';
     if (locIn) locIn.value = profile.location || '';
     if (emailIn) emailIn.value = currentUser.email || '';
-    const tierLabel = profile.membership_tier === 'founding' ? '✦ Founding Sister' : profile.membership_tier === 'paid' ? 'Full Member ✦' : 'Free Member';
+    const tierLabel = profile.membership_tier === 'founder' ? '✦ Founder' : profile.membership_tier === 'founding' ? '✦ Founding Sister' : profile.membership_tier === 'paid' ? 'Full Member ✦' : 'Free Member';
     const tierIn = document.getElementById('profile-tier-input');
     if (tierIn) tierIn.value = tierLabel;
     // Show founding badge
     const badge = document.getElementById('founding-badge');
-    if (badge) badge.style.display = (profile.membership_tier === 'founding' || profile.membership_tier === 'paid') ? 'flex' : 'none';
+    if (badge) {
+      if (profile.membership_tier === 'founder') {
+        badge.style.display = 'flex';
+        badge.style.background = 'linear-gradient(135deg,var(--deep),var(--terra))';
+        badge.textContent = '✦ Founder';
+      } else if (profile.membership_tier === 'founding' || profile.membership_tier === 'paid') {
+        badge.style.display = 'flex';
+        badge.style.background = 'linear-gradient(135deg,var(--gold),#b8860b)';
+        badge.textContent = '✦ Founding Sister';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
     // Store tier globally for feature gating
     window._currentUserTier = profile.membership_tier;
   }
