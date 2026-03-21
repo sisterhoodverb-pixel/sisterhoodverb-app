@@ -593,11 +593,33 @@ const circleInfo = {
 
 // ── AUTH ──
 async function initAuth() {
+  // Show loading state
+  const feed = document.getElementById('feed-posts');
+  if (feed) feed.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(28,20,16,0.4);font-size:0.9rem;">Loading your community... ✦</div>';
+
+  // First try to get existing session
   const {data:{session}} = await _supabase.auth.getSession();
-  if (session) { currentUser = session.user; await onLogin(); }
+  if (session) {
+    currentUser = session.user;
+    await onLogin();
+  } else {
+    // No session - show empty state
+    if (feed) feed.innerHTML = '';
+  }
+
+  // Listen for auth changes (handles PWA token refresh)
   _supabase.auth.onAuthStateChange(async (event, session) => {
-    if (session) { currentUser = session.user; await onLogin(); }
-    else { currentUser = null; onLogout(); }
+    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+      if (session && (!currentUser || currentUser.id !== session.user.id)) {
+        currentUser = session.user;
+        await onLogin();
+      }
+    } else if (event === 'SIGNED_OUT') {
+      currentUser = null;
+      onLogout();
+      const feed = document.getElementById('feed-posts');
+      if (feed) feed.innerHTML = '';
+    }
   });
 }
 
@@ -613,6 +635,7 @@ async function onLogin() {
   loadFeed();
   loadJoinedCircles();
   loadNotifications();
+  refreshProfileStats();
   if (notifInterval) clearInterval(notifInterval);
   notifInterval = setInterval(loadNotifications, 60000);
 }
@@ -1378,7 +1401,13 @@ function showView(name, el) {
 
 function showViewWithProfile(name, el) {
   showView(name, el);
-  if (name === 'profile') { loadProfile(); loadProfilePhotos(); }
+  if (name === 'profile') { 
+    if (currentUser) {
+      loadProfile(); 
+      loadProfilePhotos();
+      refreshProfileStats();
+    }
+  }
   if (name === 'circles') loadJoinedCircles();
 }
 
