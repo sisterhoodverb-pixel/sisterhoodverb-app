@@ -1582,5 +1582,26 @@ async function changePassword() {
     <div class="modal-cancel"><button onclick="document.getElementById('report-modal').classList.remove('open')">Cancel</button></div>
   </div>
 </div>
+
+<!-- AVATAR CROP MODAL -->
+<div class="modal-overlay" id="crop-modal" onclick="if(event.target===this)closeCropModal()">
+  <div class="modal" style="max-width:360px;padding:24px;">
+    <div class="modal-title" style="margin-bottom:4px;">Adjust Your Photo</div>
+    <div class="modal-sub" style="margin-bottom:16px;">Drag to reposition · Slide to zoom</div>
+    <div id="crop-container" style="position:relative;width:260px;height:260px;border-radius:50%;overflow:hidden;margin:0 auto 16px;background:var(--cream);cursor:grab;border:3px solid var(--terra);">
+      <img id="crop-img" style="position:absolute;transform-origin:center;user-select:none;-webkit-user-select:none;pointer-events:none;" draggable="false">
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+      <span style="font-size:0.75rem;color:rgba(28,20,16,0.5);">🔍</span>
+      <input type="range" id="crop-zoom" min="100" max="300" value="100" style="flex:1;accent-color:var(--terra);">
+      <span style="font-size:0.75rem;color:rgba(28,20,16,0.5);">🔎</span>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="closeCropModal()" style="flex:1;padding:12px;background:none;border:1.5px solid var(--terra);color:var(--terra);border-radius:2px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;">Cancel</button>
+      <button onclick="saveCroppedAvatar()" style="flex:2;padding:12px;background:var(--terra);color:white;border:none;border-radius:2px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;">Save Photo ✦</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
