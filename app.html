@@ -638,15 +638,61 @@ async function onLogin() {
   document.getElementById('logout-btn').style.display = 'block';
   const joinBtn = document.querySelector('.nav-cta');
   if (joinBtn) { joinBtn.textContent = 'My Account'; joinBtn.onclick = () => showViewWithProfile('profile', joinBtn); }
-  const {data:profile} = await _supabase.from('profiles').select('name,avatar_url').eq('id', currentUser.id).single();
+
+  // Retry profile load up to 3 times (handles PWA session restore delay)
+  let profile = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const {data} = await _supabase.from('profiles').select('name,avatar_url,bio,location,membership_tier').eq('id', currentUser.id).single();
+    if (data) { profile = data; break; }
+    await new Promise(r => setTimeout(r, 1000)); // wait 1s between retries
+  }
+
   const name = profile?.name || currentUser.email?.split('@')[0] || 'S';
   window._currentUserName = name;
+  window._currentUserProfile = profile;
   const initial = name.charAt(0).toUpperCase();
   document.querySelectorAll('#home-composer-avatar, #circle-composer-avatar').forEach(el => el.textContent = initial);
+
+  // Update profile display immediately if on profile page
+  if (profile) {
+    const nameEl = document.querySelector('.profile-name');
+    const handleEl = document.querySelector('.profile-handle');
+    const bioEl = document.querySelector('.profile-bio');
+    if (nameEl) nameEl.textContent = profile.name || 'Sister';
+    if (handleEl) handleEl.textContent = profile.handle || '@member';
+    if (bioEl) bioEl.textContent = profile.bio || 'Tell your sisters a little about yourself...';
+    // Fill form inputs
+    const nameIn = document.getElementById('profile-name-input');
+    const bioIn = document.getElementById('profile-bio-input');
+    const locIn = document.getElementById('profile-location-input');
+    const emailIn = document.getElementById('profile-email-input');
+    const tierIn = document.getElementById('profile-tier-input');
+    if (nameIn) nameIn.value = profile.name || '';
+    if (bioIn) bioIn.value = profile.bio || '';
+    if (locIn) locIn.value = profile.location || '';
+    if (emailIn) emailIn.value = currentUser.email || '';
+    if (tierIn) {
+      const tierLabel = profile.membership_tier === 'founder' ? '♦ Founder' : profile.membership_tier === 'founding' ? '♦ Founding Sister' : profile.membership_tier === 'paid' ? 'Full Member ♦' : 'Free Member';
+      tierIn.value = tierLabel;
+    }
+    // Show badge
+    const badge = document.getElementById('founding-badge');
+    if (badge) {
+      if (profile.membership_tier === 'founder') {
+        badge.style.display = 'flex'; badge.style.background = 'linear-gradient(135deg,var(--deep),var(--terra))'; badge.textContent = '♦ Founder';
+      } else if (profile.membership_tier === 'founding') {
+        badge.style.display = 'flex'; badge.style.background = 'linear-gradient(135deg,var(--gold),#b8860b)'; badge.textContent = '♦ Founding Sister';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+  }
+
   loadFeed();
   loadJoinedCircles();
   loadNotifications();
   refreshProfileStats();
+  loadProfilePhotos();
   if (notifInterval) clearInterval(notifInterval);
   notifInterval = setInterval(loadNotifications, 60000);
 }
