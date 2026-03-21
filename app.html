@@ -54,6 +54,15 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
   .notif-item-text{flex:1;font-size:0.83rem;color:var(--deep);line-height:1.5}
   .notif-item-time{font-size:0.72rem;color:rgba(28,20,16,0.4);margin-top:3px}
   .notif-empty{padding:24px;text-align:center;font-size:0.83rem;color:rgba(28,20,16,0.4)}
+  .onb-step{animation:fadeUp 0.3s ease both}
+  .onb-btn-primary{width:100%;padding:14px;background:var(--terra);color:white;border:none;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;transition:background 0.2s}
+  .onb-btn-primary:hover{background:#a8501f}
+  .onb-btn-secondary{padding:14px;background:none;border:1.5px solid var(--terra);color:var(--terra);border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+  .onb-btn-secondary:hover{background:var(--cream)}
+  .onb-circle-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--cream);border-radius:4px;border:1.5px solid transparent;transition:all 0.2s;cursor:pointer}
+  .onb-circle-item.joined{border-color:var(--terra);background:rgba(196,98,45,0.05)}
+  .onb-circle-join{background:none;border:1.5px solid var(--terra);color:var(--terra);padding:5px 14px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+  .onb-circle-join.joined{background:var(--terra);color:white}
 .view{display:none;padding-top:72px;min-height:100vh}
 .view.active{display:block}
 .home-hero{background:var(--deep);padding:80px 40px 60px;position:relative;overflow:hidden}
@@ -695,6 +704,7 @@ async function onLogin() {
   loadNotifications();
   refreshProfileStats();
   loadProfilePhotos();
+  checkAndShowOnboarding();
   if (notifInterval) clearInterval(notifInterval);
   notifInterval = setInterval(loadNotifications, 60000);
 }
@@ -1003,6 +1013,12 @@ async function joinCircleDB(circleName, btn) {
   if (!currentUser) { openAuthModal('login'); return; }
   const joined = btn.classList.contains('joined');
   if (!joined) {
+    const tier = window._currentUserProfile?.membership_tier || 'free';
+    const isUnlimited = ['founder','founding','paid'].includes(tier);
+    if (!isUnlimited) {
+      const {data:existing} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
+      if (existing && existing.length >= 2) { showToast('Free members can join 2 Circles — upgrade for unlimited ♦'); return; }
+    }
     const {error} = await _supabase.from('circle_members').insert({user_id: currentUser.id, circle_name: circleName});
     if (error && error.code !== '23505') { showToast('Could not join: ' + error.message); return; }
     btn.classList.add('joined'); btn.textContent = 'Joined ✦';
@@ -1718,6 +1734,244 @@ async function changePassword() {
         .catch(function(err) { console.log('SW failed:', err); });
     });
   }
+  // ── ONBOARDING ──
+  const ONB_CIRCLES = [
+    { name: 'Motherhood Speaks', icon: '🌺' },
+    { name: 'Writers Block? I Think Not!', icon: '✍🏾' },
+    { name: 'Burnout to Bloom', icon: '🔥' },
+    { name: 'Speak Poet!', icon: '🎤' },
+    { name: 'Healing As We Hustle', icon: '💼' },
+    { name: 'The Travel Girlies', icon: '✈️' }
+  ];
+
+  async function checkAndShowOnboarding() {
+    if (!currentUser) return;
+    // Check if user has completed onboarding
+    const seen = localStorage.getItem('onb_done_' + currentUser.id);
+    if (seen) return;
+    // Check if profile is empty (new user)
+    const {data:profile} = await _supabase.from('profiles').select('name, bio').eq('id', currentUser.id).single();
+    const isNew = !profile?.bio && (!profile?.name || profile.name === profile?.handle || profile.name.includes('@') || profile.name.includes('.'));
+    if (isNew) {
+      // Pre-fill name if we have it
+      if (profile?.name) document.getElementById('onb-name').value = profile.name;
+      // Customize welcome based on tier
+      const tier = profile?.membership_tier || 'free';
+      const isFounder = tier === 'founder';
+      const isFounding = tier === 'founding';
+      const isFree = tier === 'free';
+      if (isFounder) {
+        document.querySelector('#onb-step-1 h2').textContent = 'Welcome home, Founder ♦';
+        document.querySelector('#onb-step-1 p').textContent = 'You are the heartbeat of this community. Thank you for building this with us.';
+      } else if (isFounding) {
+        document.querySelector('#onb-step-1 h2').textContent = 'Welcome, Founding Sister ♦';
+        document.querySelector('#onb-step-1 p').textContent = 'You are one of the first women to walk through these doors. That means something. Welcome home.';
+      }
+      if (isFree) {
+        // Add note about circle limit in step 3
+        const circleNote = document.createElement('p');
+        circleNote.style.cssText = 'font-size:0.78rem;color:var(--terra);margin-bottom:16px;padding:10px 14px;background:rgba(196,98,45,0.06);border-radius:3px;border-left:2px solid var(--terra);';
+        circleNote.textContent = 'Free members can join up to 2 Circles. Upgrade anytime for unlimited access ♦';
+        const circlesList = document.getElementById('onb-circles-list');
+        if (circlesList) circlesList.parentNode.insertBefore(circleNote, circlesList);
+      }
+      // Populate circles
+      populateOnbCircles();
+      setTimeout(() => {
+        document.getElementById('onboarding-modal').classList.add('open');
+      }, 1000);
+    }
+  }
+
+  function populateOnbCircles() {
+    const list = document.getElementById('onb-circles-list');
+    if (!list) return;
+    list.innerHTML = ONB_CIRCLES.map(circle => {
+      return '<div class="onb-circle-item" id="onb-circle-' + circle.name.replace(/[^a-z]/gi,'') + '">' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<span style="font-size:1.3rem;">' + circle.icon + '</span>' +
+          '<span style="font-size:0.88rem;font-weight:500;color:var(--deep);">' + circle.name + '</span>' +
+        '</div>' +
+        '<button class="onb-circle-join" onclick="onbToggleCircle(this, '' + circle.name.replace(/'/g,"\'") + '')">Join</button>' +
+      '</div>';
+    }).join('');
+  }
+
+  async function onbToggleCircle(btn, circleName) {
+    if (!currentUser) return;
+    const isJoined = btn.classList.contains('joined');
+    if (!isJoined) {
+      const tier = window._currentUserProfile?.membership_tier || 'free';
+      const isUnlimited = ['founder','founding','paid'].includes(tier);
+      if (!isUnlimited) {
+        const {data:existing} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
+        if (existing && existing.length >= 2) {
+          showToast('Free members can join 2 Circles — upgrade for unlimited ♦');
+          return;
+        }
+      }
+      await _supabase.from('circle_members').insert({user_id: currentUser.id, circle_name: circleName});
+      btn.classList.add('joined');
+      btn.textContent = 'Joined ✦';
+      btn.closest('.onb-circle-item').classList.add('joined');
+    } else {
+      await _supabase.from('circle_members').delete().eq('user_id', currentUser.id).eq('circle_name', circleName);
+      btn.classList.remove('joined');
+      btn.textContent = 'Join';
+      btn.closest('.onb-circle-item').classList.remove('joined');
+    }
+  }
+
+  function onbNext(step) {
+    document.querySelectorAll('.onb-step').forEach(s => s.style.display = 'none');
+    document.getElementById('onb-step-' + step).style.display = 'block';
+    document.getElementById('onboarding-progress').style.width = (step * 25) + '%';
+  }
+
+  async function onbSaveProfile() {
+    if (!currentUser) return;
+    const name = document.getElementById('onb-name').value.trim();
+    const bio = document.getElementById('onb-bio').value.trim();
+    const location = document.getElementById('onb-location').value.trim();
+    if (!name) { showToast('Please add your name ✦'); return; }
+    await _supabase.from('profiles').update({name, bio, location}).eq('id', currentUser.id);
+    window._currentUserName = name;
+    showToast('Profile saved ✦');
+    onbNext(3);
+  }
+
+  async function onbFinish() {
+    // Mark onboarding complete
+    localStorage.setItem('onb_done_' + currentUser.id, '1');
+    document.getElementById('onboarding-modal').classList.remove('open');
+    // Refresh everything
+    loadFeed();
+    loadJoinedCircles();
+    loadProfile();
+    refreshProfileStats();
+    showToast('Welcome to the Sisterhood ✦');
+  }
+
+
 </script>
+
+<!-- ONBOARDING MODAL -->
+<div class="modal-overlay" id="onboarding-modal" style="z-index:600;">
+  <div class="modal" style="max-width:480px;padding:0;overflow:hidden;border-radius:8px;">
+
+    <!-- Progress bar -->
+    <div style="height:4px;background:var(--cream);">
+      <div id="onboarding-progress" style="height:100%;background:linear-gradient(90deg,var(--terra),var(--gold));width:25%;transition:width 0.4s ease;"></div>
+    </div>
+
+    <!-- Step 1: Welcome -->
+    <div id="onb-step-1" class="onb-step">
+      <div style="background:var(--deep);padding:48px 40px;text-align:center;">
+        <div style="font-size:0.7rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Welcome home</div>
+        <h2 style="font-family:'Playfair Display',serif;font-size:2rem;color:var(--cream);margin-bottom:16px;">You made it, sis ✦</h2>
+        <p style="color:rgba(245,239,230,0.7);font-size:0.9rem;line-height:1.8;max-width:340px;margin:0 auto;">You've just joined a private community built for women who are ready to practice sisterhood — not just talk about it.</p>
+      </div>
+      <div style="padding:32px 40px;">
+        <div style="background:var(--cream);border-radius:4px;padding:24px;margin-bottom:28px;border-left:3px solid var(--terra);">
+          <p style="font-family:'Playfair Display',serif;font-style:italic;font-size:1rem;color:var(--deep);line-height:1.7;margin:0 0 10px;">"Sisterhood(verb): loving yourself and your kin with ancestral abundance."</p>
+          <p style="font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--terra);margin:0;">— Tayllor Oyewole-Davis, Founder</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.75);line-height:1.6;">
+            <span style="color:var(--terra);flex-shrink:0;">✦</span>Share freely in a space that was made for you
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.75);line-height:1.6;">
+            <span style="color:var(--terra);flex-shrink:0;">✦</span>Join intimate Circles built around your passions
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(28,20,16,0.75);line-height:1.6;">
+            <span style="color:var(--terra);flex-shrink:0;">✦</span>Connect with sisters who get it
+          </div>
+        </div>
+        <button onclick="onbNext(2)" class="onb-btn-primary">Let's Get You Set Up ✦</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Complete Profile -->
+    <div id="onb-step-2" class="onb-step" style="display:none;">
+      <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
+        <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 1 of 3</div>
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Tell us about yourself</h2>
+        <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Your sisters want to know you ✦</p>
+      </div>
+      <div style="padding:28px 40px;">
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Display Name</label>
+          <input id="onb-name" class="form-input" type="text" placeholder="What shall we call you?">
+        </div>
+        <div style="margin-bottom:16px;">
+          <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Bio</label>
+          <textarea id="onb-bio" class="form-input" rows="3" style="resize:none;" placeholder="Tell your sisters a little about yourself..."></textarea>
+        </div>
+        <div style="margin-bottom:24px;">
+          <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Location</label>
+          <input id="onb-location" class="form-input" type="text" placeholder="Where are you based?">
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="onbNext(3)" style="flex:1;" class="onb-btn-secondary">Skip for now</button>
+          <button onclick="onbSaveProfile()" style="flex:2;" class="onb-btn-primary">Save & Continue ✦</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 3: Join Circles -->
+    <div id="onb-step-3" class="onb-step" style="display:none;">
+      <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
+        <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 2 of 3</div>
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Find your Circle</h2>
+        <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Join the spaces that speak to you ✦</p>
+      </div>
+      <div style="padding:24px 40px;max-height:340px;overflow-y:auto;">
+        <div id="onb-circles-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+          <!-- Circles populated by JS -->
+        </div>
+        <div style="display:flex;gap:10px;">
+          <button onclick="onbNext(4)" style="flex:1;" class="onb-btn-secondary">Skip for now</button>
+          <button onclick="onbNext(4)" style="flex:2;" class="onb-btn-primary">Continue ✦</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Community Agreements -->
+    <div id="onb-step-4" class="onb-step" style="display:none;">
+      <div style="background:var(--deep);padding:32px 40px 24px;">
+        <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Step 3 of 3</div>
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--cream);margin-bottom:6px;">Our Community Agreements</h2>
+        <p style="color:rgba(245,239,230,0.6);font-size:0.85rem;">What makes this space sacred ✦</p>
+      </div>
+      <div style="padding:24px 40px;">
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">1</div>
+            <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>Safe Space.</strong> Vulnerability is honored here.</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">2</div>
+            <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>No Judgement.</strong> Offer opinions only when invited.</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">3</div>
+            <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>Assume Best Intentions.</strong> Pause before responding.</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">4</div>
+            <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>Zero Tolerance.</strong> Bigotry and harm are not welcome here.</div>
+          </div>
+          <div style="display:flex;gap:12px;align-items:flex-start;">
+            <div style="width:24px;height:24px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">5</div>
+            <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>What's Said Here Stays Here.</strong> Protect this space.</div>
+          </div>
+        </div>
+        <button onclick="onbFinish()" class="onb-btn-primary">I Agree — Take Me In ✦</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 </body>
 </html>
