@@ -501,9 +501,89 @@ input[type="file"]{display:none}
   <div class="circles-hero"><div class="section-label" style="margin-bottom:12px">Gatherings</div><h1 class="page-title">Upcoming Events</h1><p class="page-sub">Workshops, dialogues, and ceremonies. Every gathering is an invitation to come as you are.</p></div>
   <div class="events-layout">
     <div class="events-main">
-      <div class="section-label">Upcoming</div>
-      <div class="event-card"><div class="event-date"><span class="date-month">Apr</span><span class="date-day">25</span></div><div class="event-info"><div class="event-title">3rd Annual Black Women's Health Equity Day</div><div class="event-meta"><span class="event-detail">📍 Palm Park Beach House, Santa Barbara</span><span class="event-detail">🌺 Community Event</span></div><div class="event-desc">A day of wellness, community, and celebration of Black women's health. Join us for workshops, vendors, and sisterhood.</div><button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button></div></div>
-      <div class="event-card"><div class="event-date"><span class="date-month">Sum</span><span class="date-day" style="font-size:1.1rem">2026</span></div><div class="event-info"><div class="event-title">Sisterhood Speaks — Launching Summer 2026 🌸</div><div class="event-meta"><span class="event-detail">📍 TBD</span><span class="event-detail">💰 Stay tuned</span></div><div class="event-desc">Something big is coming. Join the community now to be the first to know.</div><button class="event-register" onclick="showToast('Stay tuned — announcements coming soon ✦')">Notify Me</button></div></div>
+
+      <div class="section-label">Sisterhood(verb) Events</div>
+
+      <div class="event-card">
+        <div class="event-date"><span class="date-month">Mar</span><span class="date-day">26</span></div>
+        <div class="event-info">
+          <div class="event-title">Motherhood Speaks — Session 3</div>
+          <div class="event-meta"><span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span><span class="event-detail">📍 Virtual (Zoom)</span><span class="event-detail">💰 Members only</span></div>
+          <div class="event-desc">Week 3 of our Wednesday series. Come as you are, bring what you carry.</div>
+          <button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
+        </div>
+      </div>
+
+      <div class="event-card">
+        <div class="event-date"><span class="date-month">Apr</span><span class="date-day">2</span></div>
+        <div class="event-info">
+          <div class="event-title">Motherhood Speaks — Session 4</div>
+          <div class="event-meta"><span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span><span class="event-detail">📍 Virtual (Zoom)</span><span class="event-detail">💰 Members only</span></div>
+          <div class="event-desc">Week 4 of our Wednesday series. We're going deeper — bring your whole self.</div>
+          <button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
+        </div>
+      </div>
+
+      <div class="event-card">
+        <div class="event-date"><span class="date-month">Apr</span><span class="date-day">9</span></div>
+        <div class="event-info">
+          <div class="event-title">Motherhood Speaks — Session 5 (Finale)</div>
+          <div class="event-meta"><span class="event-detail">🕡 6:30 PM – 7:30 PM PT</span><span class="event-detail">📍 Virtual (Zoom)</span><span class="event-detail">💰 Members only</span></div>
+          <div class="event-desc">The final session of this series. We celebrate, reflect, and send each other off rooted and full.</div>
+          <button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">RSVP</button>
+        </div>
+      </div>
+
+      <div class="event-card">
+        <div class="event-date"><span class="date-month">Sum</span><span class="date-day" style="font-size:1.1rem">2026</span></div>
+        <div class="event-info">
+          <div class="event-title">Sisterhood Speaks — Launching Summer 2026 🌸</div>
+          <div class="event-meta"><span class="event-detail">📍 TBD</span><span class="event-detail">💰 Stay tuned</span></div>
+          <div class="event-desc">Something big is coming. Join the community now to be the first to know.</div>
+          <button class="event-register" onclick="showToast('Stay tuned — announcements coming soon ♦')">Notify Me</button>
+        </div>
+      </div>
+
+      <div class="section-label" style="margin-top:32px;">Community Events</div>
+      <p style="font-size:0.82rem;color:rgba(28,20,16,0.5);margin-bottom:20px;line-height:1.7;">Events we love and support in our broader community.</p>
+
+      <!-- Black Family Wellness Expo - TOMORROW -->
+      <div class="event-card" style="border-left:3px solid var(--sage);">
+        <div class="event-date" style="background:linear-gradient(135deg,#2d5a3d,var(--sage));"><span class="date-month">Mar</span><span class="date-day">21</span></div>
+        <div class="event-info">
+          <div style="display:inline-block;background:var(--sage);color:white;font-size:0.62rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:10px;margin-bottom:8px;">Tomorrow!</div>
+          <div class="event-title">Black Family Wellness Expo</div>
+          <div class="event-meta">
+            <span class="event-detail">🕑 1:30 PM – 4:30 PM</span>
+            <span class="event-detail">📍 204 Hampton Drive, Venice, CA 90291</span>
+            <span class="event-detail">🌿 Free & Open to All</span>
+          </div>
+          <div class="event-desc">National Impact Day of Service — a free community wellness event promoting culturally responsive healthy living. Heart health, fitness, and more. All are welcome!</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="event-register" style="background:var(--sage);" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">I'm Going!</button>
+            <span style="font-size:0.75rem;color:rgba(28,20,16,0.45);">Hosted by The Links, Incorporated</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Black Women's Health Equity Day -->
+      <div class="event-card" style="border-left:3px solid var(--gold);margin-top:14px;">
+        <div class="event-date" style="background:linear-gradient(135deg,#b8860b,var(--gold));"><span class="date-month">Apr</span><span class="date-day">25</span></div>
+        <div class="event-info">
+          <div class="event-title">3rd Annual Black Women's Health Equity Day</div>
+          <div class="event-meta">
+            <span class="event-detail">🕙 10:00 AM – 3:00 PM</span>
+            <span class="event-detail">📍 Palm Park Beach House, Santa Barbara</span>
+            <span class="event-detail">🌺 Free & Open to the Public</span>
+          </div>
+          <div class="event-desc">Heart Health and Black Women · Understanding PCOS and Navigating Menopause · Music & Brunch · A day to celebrate our health. Hosted by NAACP Santa Barbara & Santa Maria/Lompoc.</div>
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <button class="event-register" onclick="registerEvent(this,this.closest('.event-card').querySelector('.event-title').textContent)">I'm Coming!</button>
+            <span style="font-size:0.75rem;color:rgba(28,20,16,0.45);">Hosted by NAACP Santa Barbara – Santa Maria/Lompoc</span>
+          </div>
+        </div>
+      </div>
+
     </div>
     <div class="events-sidebar">
       <div class="mini-cal"><div class="cal-header"><div class="cal-title">March 2026</div><button class="cal-nav">‹</button><button class="cal-nav">›</button></div><div class="cal-grid"><div class="cal-day-label">S</div><div class="cal-day-label">M</div><div class="cal-day-label">T</div><div class="cal-day-label">W</div><div class="cal-day-label">T</div><div class="cal-day-label">F</div><div class="cal-day-label">S</div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day">1</div><div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day today">17</div><div class="cal-day has-event">18</div><div class="cal-day">19</div><div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day has-event">25</div><div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div><div class="cal-day">31</div></div></div>
@@ -514,13 +594,118 @@ input[type="file"]{display:none}
 
 <!-- RESOURCES -->
 <div class="view" id="view-resources">
-  <div class="circles-hero"><div class="section-label" style="margin-bottom:12px">Library</div><h1 class="page-title">Resources & Tools</h1><p class="page-sub">Recordings, writing guides, facilitation tools, and curated reading for your practice.</p></div>
+  <div class="circles-hero">
+    <div class="section-label" style="margin-bottom:12px">Library</div>
+    <h1 class="page-title">Resources & Tools</h1>
+    <p class="page-sub">Writing prompts, guided meditations, workshop recordings, and curated reading — all in one place, built for your practice.</p>
+  </div>
   <div class="resources-layout">
-    <div class="resources-filter"><button class="filter-chip active" onclick="filterRes(this)">All</button><button class="filter-chip" onclick="filterRes(this)">Workshops</button><button class="filter-chip" onclick="filterRes(this)">Writing Prompts</button><button class="filter-chip" onclick="filterRes(this)">Guides</button><button class="filter-chip" onclick="filterRes(this)">Audio</button><button class="filter-chip" onclick="filterRes(this)">Reading</button></div>
+
+    <!-- Coming soon banner -->
+    <div style="background:var(--deep);border-radius:6px;padding:32px 40px;margin-bottom:40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Coming Spring 2026</div>
+        <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);margin-bottom:8px;">The Library is being built ✦</h3>
+        <p style="font-size:0.85rem;color:rgba(245,239,230,0.6);line-height:1.7;max-width:480px;">Workshop recordings, healing journals, guided meditations, and curated reading lists are on their way. Members get first access to everything.</p>
+      </div>
+      <div style="font-size:3rem;">📚</div>
+    </div>
+
+    <div class="resources-filter">
+      <button class="filter-chip active" onclick="filterRes(this)">All</button>
+      <button class="filter-chip" onclick="filterRes(this)">Workshops</button>
+      <button class="filter-chip" onclick="filterRes(this)">Writing Prompts</button>
+      <button class="filter-chip" onclick="filterRes(this)">Guides</button>
+      <button class="filter-chip" onclick="filterRes(this)">Audio</button>
+      <button class="filter-chip" onclick="filterRes(this)">Reading</button>
+    </div>
+
     <div class="resources-grid">
-      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be)">📓<span class="resource-type" style="color:var(--sage)">Journal</span></div><div class="resource-body"><div class="resource-title">52 Weeks of Healing — The Journal</div><div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and creative healing.</div><div class="resource-footer"><span class="resource-author">Sisterhood(verb)</span><span class="resource-access" style="color:var(--terra);font-weight:600">Members Free · Buy →</span></div></div></div>
-      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#3d2b1f)">🎙<span class="resource-type" style="color:var(--gold)">Audio</span></div><div class="resource-body"><div class="resource-title">River Meditation (Guided Meditation)</div><div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div><div class="resource-footer"><span class="resource-author">by Tayllor Oyewole-Davis</span><span class="resource-access" style="color:var(--sage)">Coming Soon</span></div></div></div>
-      <div class="resource-card"><div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#f0e0ca)">📖<span class="resource-type" style="color:#8B6914">Reading</span></div><div class="resource-body"><div class="resource-title">Community Care Reading List</div><div class="resource-desc">Curated books on collective healing, Black feminist thought, creative practice, and care work.</div><div class="resource-footer"><span class="resource-author">Sisterhood(verb)</span><span class="resource-access" style="color:var(--sage)">Coming Soon</span></div></div></div>
+
+      <div class="resource-card">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be);">
+          📓<span class="resource-type" style="color:var(--sage);">Journal</span>
+        </div>
+        <div class="resource-body">
+          <div class="resource-title">52 Weeks of Healing — The Journal</div>
+          <div class="resource-desc">A full year of weekly writing prompts for self-inquiry, identity work, and creative healing. Free for paying members.</div>
+          <div class="resource-footer">
+            <span class="resource-author">Sisterhood(verb)</span>
+            <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(122,140,110,0.15);color:var(--sage);font-weight:600;">In Progress</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);">
+          🎙<span class="resource-type" style="color:var(--gold);">Audio</span>
+        </div>
+        <div class="resource-body">
+          <div class="resource-title">River Meditation</div>
+          <div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div>
+          <div class="resource-footer">
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(212,168,83,0.15);color:#b8860b;font-weight:600;">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">
+          📋<span class="resource-type" style="color:var(--terra);">Recap</span>
+        </div>
+        <div class="resource-body">
+          <div class="resource-title">Motherhood Speaks — Session Recaps</div>
+          <div class="resource-desc">Written recaps of key themes, reflections, and takeaways from each session. Available after each gathering.</div>
+          <div class="resource-footer">
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(212,168,83,0.15);color:#b8860b;font-weight:600;">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#f0e0ca);">
+          📖<span class="resource-type" style="color:#8B6914;">Reading</span>
+        </div>
+        <div class="resource-body">
+          <div class="resource-title">Community Care Reading List</div>
+          <div class="resource-desc">Curated books on collective healing, Black feminist thought, creative practice, and care work.</div>
+          <div class="resource-footer">
+            <span class="resource-author">Sisterhood(verb)</span>
+            <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(212,168,83,0.15);color:#b8860b;font-weight:600;">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#eee8f5,#d9c8f0);">
+          🗺<span class="resource-type" style="color:#6B3FA0;">Guide</span>
+        </div>
+        <div class="resource-body">
+          <div class="resource-title">What They Don't Tell You About Building Community</div>
+          <div class="resource-desc">A raw, honest guide to the real work of building connected, resilient communities from the inside out.</div>
+          <div class="resource-footer">
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(212,168,83,0.15);color:#b8860b;font-weight:600;">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="resource-card">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">
+          🎤<span class="resource-type" style="color:var(--terra);">Workshop</span>
+        </div>
+        <div class="resource-body">
+          <div class="resource-title">Poetry Workshop Recording</div>
+          <div class="resource-desc">Full workshop recording for spoken word artists and poets ready to deepen their practice and find their stage voice.</div>
+          <div class="resource-footer">
+            <span class="resource-author">by Tayllor Oyewole-Davis</span>
+            <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(212,168,83,0.15);color:#b8860b;font-weight:600;">Coming Soon</span>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
