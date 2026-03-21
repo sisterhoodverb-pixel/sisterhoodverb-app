@@ -2,8 +2,22 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Sisterhood(verb) — Community</title>
+
+<!-- PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#C4622D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sisterhood(verb)">
+<link rel="apple-touch-icon" href="/icons/icon-192x192.png">
+
+<!-- SEO -->
+<meta name="description" content="A space to be seen, speak freely, and practice sisterhood.">
+<meta property="og:title" content="Sisterhood(verb)">
+<meta property="og:description" content="A space to be seen, speak freely, and practice sisterhood.">
+<meta property="og:image" content="/icons/icon-512x512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.memberstack.com/scripts/webcomponents/memberstack.js" data-memberstack-app="pk_715b7f282440a2747b11" defer></script>
@@ -881,7 +895,11 @@ async function toggleLike(btn, postId) {
   } else {
     // Remove like
     await _supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
-    await _supabase.from('posts').update({likes: Math.max(0, n - 1)}).eq('id', postId);
+    // Get current DB count to avoid going negative
+    const {data:postData} = await _supabase.from('posts').select('likes').eq('id', postId).single();
+    const currentLikes = postData?.likes || 0;
+    await _supabase.from('posts').update({likes: Math.max(0, currentLikes - 1)}).eq('id', postId);
+    span.textContent = Math.max(0, currentLikes - 1);
     showToast('Removed');
   }
 }
@@ -1603,5 +1621,15 @@ async function changePassword() {
   </div>
 </div>
 
+
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/sw.js')
+        .then(function(reg) { console.log('SW registered'); })
+        .catch(function(err) { console.log('SW failed:', err); });
+    });
+  }
+</script>
 </body>
 </html>
