@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sisterhoodverb-v1';
+const CACHE_NAME = 'sisterhoodverb-v3';
 const STATIC_ASSETS = [
   '/app.html',
   '/manifest.json'
