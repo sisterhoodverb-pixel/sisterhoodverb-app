@@ -278,6 +278,12 @@ input[type="file"]{display:none}
 </style>
 </head>
 <body>
+<!-- PWA Loading Screen -->
+<div id="pwa-loading" style="position:fixed;inset:0;background:#1C1410;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+  <img src="/icons/icon-192x192.png" style="width:80px;height:80px;border-radius:20px;">
+  <div style="font-family:Georgia,serif;font-size:1.4rem;color:#F5EFE6;font-weight:700;">Sisterhood<em style="font-style:italic;font-weight:400;">(verb)</em></div>
+  <div style="font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:#D4A853;">Loading your community...</div>
+</div>
 
 <!-- MEMBER PROFILE MODAL -->
 <div class="modal-overlay" id="member-profile-modal" onclick="if(event.target===this)closeMemberProfile()">
@@ -603,7 +609,9 @@ async function initAuth() {
     currentUser = session.user;
     await onLogin();
   } else {
-    // No session - show empty state
+    // No session - hide loader and show empty state
+    const loader = document.getElementById('pwa-loading');
+    if (loader) { loader.style.opacity = '0'; loader.style.transition = 'opacity 0.5s'; setTimeout(() => loader.remove(), 500); }
     if (feed) feed.innerHTML = '';
   }
 
@@ -624,6 +632,9 @@ async function initAuth() {
 }
 
 async function onLogin() {
+  // Hide PWA loading screen
+  const loader = document.getElementById('pwa-loading');
+  if (loader) { loader.style.opacity = '0'; loader.style.transition = 'opacity 0.5s'; setTimeout(() => loader.remove(), 500); }
   document.getElementById('logout-btn').style.display = 'block';
   const joinBtn = document.querySelector('.nav-cta');
   if (joinBtn) { joinBtn.textContent = 'My Account'; joinBtn.onclick = () => showViewWithProfile('profile', joinBtn); }
