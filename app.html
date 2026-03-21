@@ -7,6 +7,9 @@
 
 <!-- PWA -->
 <link rel="manifest" href="/manifest.json">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png">
 <meta name="theme-color" content="#C4622D">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -36,12 +39,11 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .nav-links a.active{color:var(--terra);opacity:1}
 .nav-cta{background:var(--terra);color:white!important;padding:8px 20px;border-radius:2px;opacity:1!important;font-weight:500!important;transition:background 0.2s!important}
 .nav-cta:hover{background:#a8501f!important}
-.hamburger{display:none;cursor:pointer;flex-direction:column;gap:5px}
-.hamburger span{width:24px;height:2px;background:var(--deep);display:block}
-.logout-btn{background:none;border:1.5px solid rgba(196,98,45,0.3);color:var(--terra);padding:6px 14px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;display:none;transition:all 0.2s}
-.logout-btn:hover{background:var(--terra);color:white}
+
   .notif-bell{background:none;border:none;cursor:pointer;font-size:1.1rem;padding:6px;border-radius:50%;position:relative;transition:background 0.2s}
   .notif-bell:hover{background:var(--cream)}
+  .logout-btn{background:none;border:1.5px solid rgba(196,98,45,0.3);color:var(--terra);padding:6px 14px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;display:none;transition:all 0.2s}
+  .logout-btn:hover{background:var(--terra);color:white}
   .notif-badge{position:absolute;top:-2px;right:-2px;background:#e74c3c;color:white;border-radius:50%;width:18px;height:18px;font-size:0.6rem;font-weight:700;display:flex!important;align-items:center;justify-content:center;border:2px solid white}
   .notif-dropdown{position:absolute;right:0;top:calc(100% + 10px);width:320px;background:white;border-radius:6px;box-shadow:0 8px 30px rgba(28,20,16,0.15);border:1px solid rgba(196,98,45,0.12);z-index:200;overflow:hidden}
   .notif-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(196,98,45,0.1);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--deep)}
@@ -232,10 +234,10 @@ input[type="file"]{display:none}
 .form-input:focus{border-color:var(--terra)}
 .save-btn{background:var(--terra);color:white;border:none;padding:12px 32px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
 .save-btn:hover{background:#a8501f}
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(251,247,242,0.96);backdrop-filter:blur(12px);border-top:1px solid rgba(196,98,45,0.12);padding:10px 20px 16px;justify-content:space-around;z-index:100}
-.mobile-nav-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:'DM Sans',sans-serif;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:rgba(28,20,16,0.45);transition:color 0.2s}
-.mobile-nav-btn.active{color:var(--terra)}
-.mobile-nav-btn span:first-child{font-size:1.2rem}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(251,247,242,0.97);backdrop-filter:blur(16px);border-top:1px solid rgba(196,98,45,0.15);padding:8px 8px calc(8px + env(safe-area-inset-bottom));justify-content:space-around;z-index:100}
+  .mobile-nav-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:'DM Sans',sans-serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(28,20,16,0.4);transition:all 0.2s;padding:6px 10px;border-radius:8px;min-width:54px}
+  .mobile-nav-btn.active{color:var(--terra);background:rgba(196,98,45,0.08)}
+  .mobile-nav-btn span:first-child{font-size:1.4rem}
 .modal-overlay{position:fixed;inset:0;background:rgba(28,20,16,0.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
 .modal-overlay.open{display:flex}
 .modal{background:var(--warm-white);border-radius:6px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:40px;box-shadow:0 20px 60px rgba(28,20,16,0.3)}
@@ -278,7 +280,7 @@ input[type="file"]{display:none}
 .mp-post-time{font-size:0.72rem;color:rgba(28,20,16,0.4)}
 .mp-loading{padding:40px;text-align:center;color:rgba(28,20,16,0.4);font-size:0.88rem}
 @media(max-width:768px){
-  nav{padding:14px 20px}.nav-links{display:none}.hamburger{display:flex}
+  nav{padding:14px 20px}.nav-links{display:none}
   .home-hero,.feed-section,.circles-grid,.events-main,.events-sidebar,.resources-layout,.profile-info,.profile-avatar-wrap{padding-left:20px;padding-right:20px}
   .events-layout{grid-template-columns:1fr}.events-sidebar{display:none}
   .hero-accent{display:none}.mobile-nav{display:flex}.view{padding-bottom:70px}
@@ -383,7 +385,6 @@ input[type="file"]{display:none}
     </div>
     <button class="logout-btn" id="logout-btn" onclick="signOut()">Log Out</button>
   </div>
-  <div class="hamburger" onclick="showToast('Use bottom nav on mobile')"><span></span><span></span><span></span></div>
 </nav>
 <div class="toast" id="toast"></div>
 
@@ -463,7 +464,7 @@ input[type="file"]{display:none}
     <div class="circle-card" onclick="openCircle('Speak Poet!')"><div class="circle-banner" style="background:linear-gradient(135deg,#1C1410,#3d2b1f)"><span class="circle-icon">🎤</span></div><div class="circle-body"><div class="circle-name">Speak Poet!</div><div class="circle-desc">For slam poets, performers, and spoken word artists looking for space to share and connect.</div><div class="circle-meta"><button class="join-btn" data-circle="Speak Poet!" onclick="event.stopPropagation();toggleJoin(this,'Speak Poet!')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('Healing As We Hustle')"><div class="circle-banner" style="background:linear-gradient(135deg,#2d1f3d,#5c3d7a)"><span class="circle-icon">💼</span></div><div class="circle-body"><div class="circle-name">Healing As We Hustle</div><div class="circle-desc">Space for entrepreneurs to connect, network, and get support as we go big or go home.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="Healing As We Hustle" onclick="event.stopPropagation();toggleJoin(this,'Healing As We Hustle')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('The Travel Girlies')"><div class="circle-banner" style="background:linear-gradient(135deg,#1a3a4a,#2d6a8a)"><span class="circle-icon">✈️</span></div><div class="circle-body"><div class="circle-name">The Travel Girlies</div><div class="circle-desc">Trip tips, resources, warnings, and storytelling. Booked and busy or still in the group chat — you're welcome.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="The Travel Girlies" onclick="event.stopPropagation();toggleJoin(this,'The Travel Girlies')">Join</button></div></div></div>
-    <div class="circle-card" style="border:1.5px dashed rgba(196,98,45,0.3);background:var(--cream)"><div class="circle-banner" style="background:transparent;height:70px"><span class="circle-icon">✦</span></div><div class="circle-body"><div class="circle-name" style="color:var(--terra)">Start a Circle</div><div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the team.</div><div class="circle-meta"><span class="circle-members">Members only</span><button class="join-btn" onclick="showToast('Proposal form opening...')">Propose</button></div></div></div>
+    <div class="circle-card" style="border:1.5px dashed rgba(196,98,45,0.3);background:var(--cream)"><div class="circle-banner" style="background:transparent;height:70px"><span class="circle-icon">✦</span></div><div class="circle-body"><div class="circle-name" style="color:var(--terra)">Start a Circle</div><div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the team.</div><div class="circle-meta"><span class="circle-members">Members only</span><button class="join-btn" onclick="openProposalModal()">Propose</button></div></div></div>
   </div>
 </div>
 
@@ -2038,6 +2039,67 @@ async function changePassword() {
   }
 
 
+  // ── CIRCLE PROPOSAL ──
+  function openProposalModal() {
+    if (!currentUser) { openAuthModal('login'); return; }
+    document.getElementById('proposal-modal').classList.add('open');
+  }
+
+  function closeProposalModal() {
+    document.getElementById('proposal-modal').classList.remove('open');
+    // Clear form
+    ['prop-name','prop-desc','prop-why','prop-contact-name','prop-contact-email'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    const msg = document.getElementById('prop-msg');
+    if (msg) msg.style.display = 'none';
+  }
+
+  async function submitProposal() {
+    const circleName = document.getElementById('prop-name')?.value.trim();
+    const desc = document.getElementById('prop-desc')?.value.trim();
+    const why = document.getElementById('prop-why')?.value.trim();
+    const contactName = document.getElementById('prop-contact-name')?.value.trim();
+    const contact = document.getElementById('prop-contact-email')?.value.trim();
+    const msg = document.getElementById('prop-msg');
+    const btn = document.getElementById('prop-submit-btn');
+
+    if (!circleName || !desc || !why || !contactName || !contact) {
+      msg.style.display = 'block';
+      msg.style.cssText = 'display:block;padding:12px 14px;border-radius:3px;font-size:0.85rem;margin-bottom:16px;background:rgba(196,98,45,0.08);border:1px solid rgba(196,98,45,0.2);color:var(--terra);';
+      msg.textContent = 'Please fill in all fields before submitting.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Submitting...';
+
+    const {error} = await _supabase.from('circle_proposals').insert({
+      user_id: currentUser.id,
+      circle_name: circleName,
+      description: desc,
+      why_host: why,
+      contact_name: contactName,
+      contact_email: contact
+    });
+
+    if (error) {
+      msg.style.cssText = 'display:block;padding:12px 14px;border-radius:3px;font-size:0.85rem;margin-bottom:16px;background:rgba(196,98,45,0.08);border:1px solid rgba(196,98,45,0.2);color:var(--terra);';
+      msg.textContent = 'Could not submit — please try again.';
+      btn.disabled = false;
+      btn.textContent = 'Submit My Proposal ♦';
+      return;
+    }
+
+    msg.style.cssText = 'display:block;padding:12px 14px;border-radius:3px;font-size:0.85rem;margin-bottom:16px;background:rgba(122,140,110,0.1);border:1px solid rgba(122,140,110,0.3);color:var(--sage);';
+    msg.textContent = 'Proposal submitted! We’ll be in touch soon ♦';
+    btn.disabled = false;
+    btn.textContent = 'Submit My Proposal ♦';
+    setTimeout(() => closeProposalModal(), 2500);
+  }
+
+
 </script>
 
 <!-- ONBOARDING MODAL -->
@@ -2155,6 +2217,45 @@ async function changePassword() {
       </div>
     </div>
 
+  </div>
+</div>
+
+
+<!-- CIRCLE PROPOSAL MODAL -->
+<div class="modal-overlay" id="proposal-modal" onclick="if(event.target===this)closeProposalModal()">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-title">Propose a Circle ✦</div>
+    <div class="modal-sub">Have a practice you want to hold space for? Tell us about it.</div>
+
+    <div class="form-group">
+      <label class="form-label">Circle Name</label>
+      <input class="form-input" id="prop-name" type="text" placeholder="What would you call this Circle?">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">What is it about?</label>
+      <textarea class="form-input" id="prop-desc" rows="3" style="resize:none;" placeholder="Describe the focus and vibe of this Circle..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Why do you want to host it?</label>
+      <textarea class="form-input" id="prop-why" rows="3" style="resize:none;" placeholder="What makes you the right person to hold this space?"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <input class="form-input" id="prop-contact-name" type="text" placeholder="Your full name">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Your Email</label>
+      <input class="form-input" id="prop-contact-email" type="email" placeholder="your@email.com">
+    </div>
+
+    <div id="prop-msg" style="display:none;padding:12px 14px;border-radius:3px;font-size:0.85rem;margin-bottom:16px;"></div>
+
+    <button class="modal-agree-btn" id="prop-submit-btn" onclick="submitProposal()">Submit My Proposal ✦</button>
+    <div class="modal-cancel"><button onclick="closeProposalModal()">Not right now</button></div>
   </div>
 </div>
 
