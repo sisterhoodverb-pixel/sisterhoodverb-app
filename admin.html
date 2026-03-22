@@ -1,228 +1,591 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SV Admin</title>
+<title>SV Admin Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{--terra:#C4622D;--deep:#1C1410;--cream:#F5EFE6;--gold:#D4A853;--sage:#7A8C6E;--warm:#FBF7F2}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',sans-serif;background:var(--warm);color:var(--deep);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.wrap{max-width:660px;width:100%}
-.hdr{text-align:center;margin-bottom:36px}
-.logo{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--terra)}
+body{font-family:'DM Sans',sans-serif;background:var(--warm);color:var(--deep);min-height:100vh}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:white;border:1px solid rgba(196,98,45,0.12);border-radius:6px;padding:48px 40px;max-width:400px;width:100%;box-shadow:0 4px 30px rgba(28,20,16,0.08)}
+.logo{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--terra);text-align:center;margin-bottom:6px}
 .logo em{font-style:italic;font-weight:400}
-.sub{font-size:0.72rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(28,20,16,0.4);margin-top:6px}
-.card{background:white;border:1px solid rgba(196,98,45,0.12);border-radius:6px;padding:40px;box-shadow:0 4px 30px rgba(28,20,16,0.06)}
-.label{display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500}
-.inp{width:100%;padding:12px 16px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.9rem;color:var(--deep);background:white;outline:none;transition:border-color 0.2s}
+.logo-sub{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(28,20,16,0.4);text-align:center;margin-bottom:32px}
+.dash-wrap{display:none;min-height:100vh}
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:220px;background:var(--deep);padding:0;z-index:100;display:flex;flex-direction:column}
+.sidebar-logo{padding:28px 24px;border-bottom:1px solid rgba(245,239,230,0.1)}
+.sidebar-logo div{font-family:'Playfair Display',serif;font-size:1.1rem;color:var(--cream)}
+.sidebar-logo div em{font-style:italic;font-weight:400}
+.sidebar-logo small{font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);display:block;margin-top:4px}
+.nav-items{padding:16px 0;flex:1;overflow-y:auto}
+.nav-item{display:flex;align-items:center;gap:10px;padding:11px 24px;color:rgba(245,239,230,0.55);font-size:0.82rem;cursor:pointer;transition:all 0.2s;border-left:3px solid transparent}
+.nav-item:hover{color:var(--cream);background:rgba(245,239,230,0.05)}
+.nav-item.active{color:var(--cream);border-left-color:var(--terra);background:rgba(196,98,45,0.1)}
+.nav-icon{font-size:1rem;width:20px;text-align:center}
+.sidebar-footer{padding:20px 24px;border-top:1px solid rgba(245,239,230,0.1)}
+.logout-link{color:rgba(245,239,230,0.4);font-size:0.78rem;cursor:pointer;transition:color 0.2s}
+.logout-link:hover{color:var(--cream)}
+.main-content{margin-left:220px;padding:40px;min-height:100vh}
+.page-header{margin-bottom:32px}
+.page-title{font-family:'Playfair Display',serif;font-size:1.8rem;font-weight:700;margin-bottom:4px}
+.page-sub{font-size:0.85rem;color:rgba(28,20,16,0.5)}
+.section{display:none}
+.section.active{display:block}
+.card{background:white;border:1px solid rgba(196,98,45,0.1);border-radius:6px;padding:28px;box-shadow:0 2px 16px rgba(28,20,16,0.04);margin-bottom:20px}
+.card-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(196,98,45,0.1);display:flex;align-items:center;justify-content:space-between}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.stat-card{background:white;border:1px solid rgba(196,98,45,0.1);border-radius:6px;padding:24px;box-shadow:0 2px 16px rgba(28,20,16,0.04);text-align:center}
+.stat-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--terra);line-height:1}
+.stat-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.45);margin-top:6px}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.45);padding:10px 12px;text-align:left;border-bottom:1.5px solid rgba(196,98,45,0.1);font-weight:600}
+.data-table td{padding:12px;font-size:0.84rem;border-bottom:1px solid rgba(196,98,45,0.06);vertical-align:middle}
+.data-table tr:last-child td{border-bottom:none}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.68rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+.badge-founder{background:linear-gradient(135deg,var(--deep),var(--terra));color:white}
+.badge-founding{background:linear-gradient(135deg,var(--gold),#b8860b);color:white}
+.badge-free{background:var(--cream);color:rgba(28,20,16,0.5)}
+.badge-paid{background:var(--terra);color:white}
+.badge-pending{background:rgba(212,168,83,0.2);color:#b8860b}
+.badge-reviewed{background:rgba(122,140,110,0.2);color:var(--sage)}
+.inp{width:100%;padding:11px 14px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--deep);background:white;outline:none;transition:border-color 0.2s}
 .inp:focus{border-color:var(--terra)}
-textarea.inp{resize:vertical;min-height:160px;line-height:1.7}
-.grp{margin-bottom:22px}
-.btn-main{background:var(--terra);color:white;border:none;padding:13px 28px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s;width:100%}
-.btn-main:hover{background:#a8501f}
-.btn-main:disabled{background:rgba(196,98,45,0.3);cursor:not-allowed}
-.btn-sec{background:none;border:1.5px solid var(--terra);color:var(--terra);padding:13px 28px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;border-radius:2px;transition:all 0.2s;flex:1}
-.btn-sec:hover{background:var(--cream)}
-.row{display:flex;gap:12px}
-.msg{margin-top:16px;padding:14px;border-radius:3px;font-size:0.85rem;line-height:1.6;display:none}
+textarea.inp{resize:vertical;line-height:1.7}
+.label{display:block;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:7px;font-weight:500}
+.grp{margin-bottom:18px}
+.btn{border:none;padding:11px 24px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.2s}
+.btn-primary{background:var(--terra);color:white}
+.btn-primary:hover{background:#a8501f}
+.btn-primary:disabled{background:rgba(196,98,45,0.3);cursor:not-allowed}
+.btn-secondary{background:none;border:1.5px solid var(--terra);color:var(--terra)}
+.btn-secondary:hover{background:var(--cream)}
+.btn-danger{background:none;border:1.5px solid #e74c3c;color:#e74c3c;padding:6px 14px;font-size:0.75rem}
+.btn-danger:hover{background:#e74c3c;color:white}
+.btn-sm{padding:6px 14px;font-size:0.75rem}
+.btn-row{display:flex;gap:10px}
+.msg{padding:12px 14px;border-radius:3px;font-size:0.84rem;line-height:1.6;display:none;margin-top:14px}
 .msg.ok{background:rgba(122,140,110,0.1);border:1px solid rgba(122,140,110,0.3);color:var(--sage);display:block}
 .msg.err{background:rgba(196,98,45,0.08);border:1px solid rgba(196,98,45,0.2);color:var(--terra);display:block}
-.sec-lbl{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:18px;display:flex;align-items:center;gap:10px}
-.sec-lbl::after{content:'';flex:1;height:1px;background:rgba(196,98,45,0.15)}
-.stats{display:flex;gap:14px;margin-bottom:28px}
-.stat{flex:1;background:var(--cream);border-radius:4px;padding:16px;text-align:center}
-.stat-n{font-family:'Playfair Display',serif;font-size:1.6rem;color:var(--terra);font-weight:700}
-.stat-l{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.45);margin-top:2px}
-.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}
-.chip{padding:6px 14px;border-radius:20px;border:1.5px solid rgba(196,98,45,0.2);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.78rem;color:rgba(28,20,16,0.6);transition:all 0.2s}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.chip{padding:6px 14px;border-radius:20px;border:1.5px solid rgba(196,98,45,0.2);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.75rem;color:rgba(28,20,16,0.6);transition:all 0.2s}
 .chip:hover{background:var(--cream);border-color:var(--terra);color:var(--terra)}
-.prev{background:var(--cream);border-radius:4px;padding:22px;margin-bottom:20px;display:none}
-.prev.show{display:block}
-.prev-lbl{font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:14px;font-weight:600}
-.prev-box{background:white;border-radius:4px;padding:20px;border:1px solid rgba(196,98,45,0.1)}
-.prev-from{font-size:0.76rem;color:rgba(28,20,16,0.4);margin-bottom:4px}
-.prev-subj{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:12px}
-.prev-body{font-size:0.86rem;line-height:1.8;color:rgba(28,20,16,0.7);white-space:pre-wrap}
-#v-login{display:block}
-#v-admin{display:none}
+.prev-box{background:var(--cream);border-radius:4px;padding:20px;border:1px solid rgba(196,98,45,0.1);margin-bottom:16px;display:none}
+.prev-box.show{display:block}
+.post-item{padding:14px 0;border-bottom:1px solid rgba(196,98,45,0.06);display:flex;gap:14px;align-items:flex-start}
+.post-item:last-child{border-bottom:none}
+.post-likes{background:var(--cream);border-radius:4px;padding:8px 12px;text-align:center;min-width:52px;flex-shrink:0}
+.post-likes .num{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--terra);line-height:1}
+.post-likes .lbl{font-size:0.6rem;text-transform:uppercase;letter-spacing:0.08em;color:rgba(28,20,16,0.4)}
+.empty{text-align:center;padding:40px 20px;color:rgba(28,20,16,0.4)}
+.empty-icon{font-size:2.2rem;display:block;margin-bottom:10px}
+.empty p{font-size:0.85rem;line-height:1.7}
+.ann-preview{background:linear-gradient(135deg,var(--deep),#3d2b1f);color:var(--cream);padding:20px 24px;border-radius:4px;margin-bottom:16px;display:none}
+.ann-preview.show{display:block}
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .two-col{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  .sidebar{width:100%;position:relative;height:auto}
+  .main-content{margin-left:0;padding:20px}
+  .nav-items{display:flex;overflow-x:auto;padding:8px;gap:4px;flex-direction:row}
+  .nav-item{white-space:nowrap;border-left:none;border-bottom:3px solid transparent;padding:8px 12px;flex-direction:row}
+  .nav-item.active{border-left-color:transparent;border-bottom-color:var(--terra)}
+  .sidebar{display:block}
+}
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="hdr">
-    <div class="logo">Sisterhood<em>(verb)</em></div>
-    <div class="sub">Admin Panel</div>
-  </div>
 
-  <div id="v-login">
-    <div class="card" style="max-width:400px;margin:0 auto;">
-      <div class="grp">
-        <label class="label">Admin Password</label>
-        <input class="inp" type="password" id="pw" placeholder="Enter password">
-      </div>
-      <button class="btn-main" id="btn-login">Enter the Portal ✦</button>
-      <div class="msg" id="msg-login"></div>
+<!-- LOGIN -->
+
+<div class="login-wrap" id="v-login">
+  <div class="login-card">
+    <div class="logo">Sisterhood<em>(verb)</em></div>
+    <div class="logo-sub">Admin Dashboard</div>
+    <div class="grp">
+      <label class="label">Admin Password</label>
+      <input class="inp" type="password" id="pw" placeholder="Enter password">
+    </div>
+    <button class="btn btn-primary" style="width:100%;padding:14px;" onclick="doLogin()">Enter the Dashboard ✦</button>
+    <div class="msg" id="msg-login"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+
+<div class="dash-wrap" id="v-admin">
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div>Sisterhood<em>(verb)</em></div>
+      <small>Admin Dashboard</small>
+    </div>
+    <div class="nav-items">
+      <div class="nav-item active" onclick="showSection('overview',this)"><span class="nav-icon">📊</span> Overview</div>
+      <div class="nav-item" onclick="showSection('members',this)"><span class="nav-icon">👥</span> Members</div>
+      <div class="nav-item" onclick="showSection('email',this)"><span class="nav-icon">📮</span> Daily Email</div>
+      <div class="nav-item" onclick="showSection('engagement',this)"><span class="nav-icon">🔥</span> Engagement</div>
+      <div class="nav-item" onclick="showSection('announce',this)"><span class="nav-icon">📌</span> Announce</div>
+      <div class="nav-item" onclick="showSection('proposals',this)"><span class="nav-icon">💡</span> Proposals</div>
+      <div class="nav-item" onclick="showSection('reports',this)"><span class="nav-icon">🚩</span> Reports</div>
+      <div class="nav-item" onclick="showSection('rsvps',this)"><span class="nav-icon">📅</span> RSVPs</div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="logout-link" onclick="doLogout()">← Log Out</div>
     </div>
   </div>
 
-  <div id="v-admin">
-    <div class="card">
-      <div class="stats">
-        <div class="stat"><div class="stat-n" id="n-members">—</div><div class="stat-l">Members</div></div>
-        <div class="stat"><div class="stat-n" id="n-sent">0</div><div class="stat-l">Emails Sent</div></div>
-        <div class="stat"><div class="stat-n" id="n-last">Never</div><div class="stat-l">Last Sent</div></div>
-      </div>
+  <div class="main-content">
 
-      <div class="sec-lbl">Compose Daily Email</div>
+```
+<!-- OVERVIEW -->
+<div class="section active" id="sec-overview">
+  <div class="page-header">
+    <div class="page-title" id="greeting">Good morning, Tayllor ✦</div>
+    <div class="page-sub" id="overview-date"></div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-num" id="s-members">—</div><div class="stat-label">Total Members</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-posts">—</div><div class="stat-label">Total Posts</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-circles">—</div><div class="stat-label">Circle Memberships</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-rsvps">—</div><div class="stat-label">Event RSVPs</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card"><div class="card-title">New Members This Week</div><div id="ov-new-members"><div class="empty"><span class="empty-icon">👥</span><p>Loading...</p></div></div></div>
+    <div class="card"><div class="card-title">Top Posts</div><div id="ov-top-posts"><div class="empty"><span class="empty-icon">🔥</span><p>Loading...</p></div></div></div>
+  </div>
+</div>
 
-      <div class="grp">
-        <label class="label">Subject Line</label>
-        <input class="inp" type="text" id="subj" placeholder="Today's inspiration for your sisters...">
-      </div>
-
-      <div class="grp">
-        <label class="label">Quick Prompts — click to use</label>
-        <div class="chips">
-          <button class="chip" id="c1">Writing Prompt</button>
-          <button class="chip" id="c2">Affirmation</button>
-          <button class="chip" id="c3">Discussion Question</button>
-          <button class="chip" id="c4">Gratitude Practice</button>
-          <button class="chip" id="c5">Weekly Challenge</button>
-        </div>
-      </div>
-
-      <div class="grp">
-        <label class="label">Message</label>
-        <textarea class="inp" id="body" placeholder="Write your daily inspiration, prompt, or message..."></textarea>
-      </div>
-
-      <div class="prev" id="preview">
-        <div class="prev-lbl">Email Preview</div>
-        <div class="prev-box">
-          <div class="prev-from">From: Sisterhood(verb)</div>
-          <div class="prev-subj" id="prev-subj"></div>
-          <hr style="border:none;border-top:1px solid rgba(196,98,45,0.1);margin:10px 0;">
-          <div class="prev-body" id="prev-body"></div>
-        </div>
-      </div>
-
-      <div class="row">
-        <button class="btn-sec" id="btn-prev">Preview</button>
-        <button class="btn-main" style="flex:2;" id="btn-send">Send to All Sisters ✦</button>
-      </div>
-      <div class="msg" id="msg-send"></div>
+<!-- MEMBERS -->
+<div class="section" id="sec-members">
+  <div class="page-header"><div class="page-title">Members</div><div class="page-sub">Everyone who has joined Sisterhood(verb)</div></div>
+  <div class="card">
+    <div class="card-title">All Members <span id="member-count-lbl" style="font-size:0.78rem;color:rgba(28,20,16,0.4);font-family:DM Sans,sans-serif;font-weight:400;"></span></div>
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead><tr><th>Name</th><th>Tier</th><th>Joined</th><th>Posts</th><th>Manage</th></tr></thead>
+        <tbody id="members-tbody"><tr><td colspan="5" style="text-align:center;padding:24px;color:rgba(28,20,16,0.4);">Loading...</td></tr></tbody>
+      </table>
     </div>
   </div>
 </div>
 
+<!-- EMAIL -->
+<div class="section" id="sec-email">
+  <div class="page-header"><div class="page-title">Daily Email</div><div class="page-sub">Send a message to all your sisters</div></div>
+  <div class="card">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;">
+      <div style="background:var(--cream);border-radius:4px;padding:16px;text-align:center"><div class="stat-num" id="e-members">—</div><div class="stat-label">Members</div></div>
+      <div style="background:var(--cream);border-radius:4px;padding:16px;text-align:center"><div class="stat-num" id="e-sent">0</div><div class="stat-label">Sent Today</div></div>
+      <div style="background:var(--cream);border-radius:4px;padding:16px;text-align:center"><div style="font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--terra);" id="e-last">Never</div><div class="stat-label">Last Sent</div></div>
+    </div>
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:12px;">Quick Prompts</div>
+    <div class="chips" id="email-chips"></div>
+    <div class="grp"><label class="label">Subject</label><input class="inp" id="e-subj" type="text" placeholder="Today's inspiration for your sisters..."></div>
+    <div class="grp"><label class="label">Message</label><textarea class="inp" id="e-body" rows="8" placeholder="Write your message..."></textarea></div>
+    <div class="prev-box" id="e-preview">
+      <div style="font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:10px;font-weight:600;">Preview</div>
+      <div style="font-size:0.75rem;color:rgba(28,20,16,0.4);margin-bottom:3px;">From: Sisterhood(verb)</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:8px;" id="e-prev-subj"></div>
+      <hr style="border:none;border-top:1px solid rgba(196,98,45,0.1);margin:8px 0;">
+      <div style="font-size:0.86rem;line-height:1.8;color:rgba(28,20,16,0.7);white-space:pre-wrap;" id="e-prev-body"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="doPreview()">Preview</button>
+      <button class="btn btn-primary" style="flex:1" id="e-send-btn" onclick="doSend()">Send to All Sisters ✦</button>
+    </div>
+    <div class="msg" id="e-msg"></div>
+  </div>
+</div>
+
+<!-- ENGAGEMENT -->
+<div class="section" id="sec-engagement">
+  <div class="page-header"><div class="page-title">Engagement</div><div class="page-sub">See what's resonating with your community</div></div>
+  <div class="two-col">
+    <div class="card"><div class="card-title">Most Liked Posts</div><div id="top-posts-list"><div class="empty"><span class="empty-icon">🔥</span><p>Loading...</p></div></div></div>
+    <div class="card"><div class="card-title">Most Active Circles</div><div id="active-circles-list"><div class="empty"><span class="empty-icon">⭕</span><p>Loading...</p></div></div></div>
+  </div>
+  <div class="card"><div class="card-title">Recent Replies</div><div id="recent-replies-list"><div class="empty"><span class="empty-icon">💬</span><p>Loading...</p></div></div></div>
+</div>
+
+<!-- ANNOUNCE -->
+<div class="section" id="sec-announce">
+  <div class="page-header"><div class="page-title">Pin Announcement</div><div class="page-sub">Post a message that appears at the top of every member's feed</div></div>
+  <div class="card"><div class="card-title">Current Announcement</div><div id="current-announce"><div class="empty"><span class="empty-icon">📌</span><p>No active announcement</p></div></div></div>
+  <div class="card">
+    <div class="card-title">Post New Announcement</div>
+    <div class="grp"><label class="label">Message</label><textarea class="inp" id="ann-content" rows="4" placeholder="e.g. Session 3 is tonight at 6:30pm PT — see you there! ✦"></textarea></div>
+    <div class="ann-preview" id="ann-preview">
+      <div style="font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">📌 From Tayllor</div>
+      <div id="ann-preview-text" style="font-size:0.9rem;line-height:1.7;"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="previewAnnouncement()">Preview</button>
+      <button class="btn btn-primary" onclick="postAnnouncement()">Pin to Feed ✦</button>
+    </div>
+    <div class="msg" id="ann-msg"></div>
+  </div>
+</div>
+
+<!-- PROPOSALS -->
+<div class="section" id="sec-proposals">
+  <div class="page-header"><div class="page-title">Circle Proposals</div><div class="page-sub">Review submitted Circle ideas from your members</div></div>
+  <div class="card">
+    <div class="card-title">Submitted Proposals <span id="proposals-count" style="font-size:0.78rem;color:rgba(28,20,16,0.4);font-family:DM Sans,sans-serif;font-weight:400;"></span></div>
+    <div id="proposals-list"><div class="empty"><span class="empty-icon">💡</span><p>No proposals yet — check back after launch!</p></div></div>
+  </div>
+</div>
+
+<!-- REPORTS -->
+<div class="section" id="sec-reports">
+  <div class="page-header"><div class="page-title">Reported Posts</div><div class="page-sub">Review content flagged by your community</div></div>
+  <div class="card">
+    <div class="card-title">Pending Reports <span id="reports-count" style="font-size:0.78rem;color:rgba(28,20,16,0.4);font-family:DM Sans,sans-serif;font-weight:400;"></span></div>
+    <div id="reports-list"><div class="empty"><span class="empty-icon">🚩</span><p>No reports — your community is thriving! ✦</p></div></div>
+  </div>
+</div>
+
+<!-- RSVPs -->
+<div class="section" id="sec-rsvps">
+  <div class="page-header"><div class="page-title">Event RSVPs</div><div class="page-sub">See who's coming to your events</div></div>
+  <div id="rsvps-container"><div class="empty"><span class="empty-icon">📅</span><p>Loading...</p></div></div>
+</div>
+```
+
+  </div>
+</div>
+
 <script>
-var SURL = 'https' + '://' + 'cqiymqekdtewnorojlus.supabase.co';
+var SURL = 'https://cqiymqekdtewnorojlus.supabase.co';
 var SKEY = 'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381';
 var FN = SURL + '/functions/v1/send-daily-email';
 var PWD = 'sisteradmin2026';
-var SECRET = 'sisteradmin2026';
 var totalSent = 0;
-
-var prompts = {
-  'c1': { s: 'Today\'s Writing Prompt from Sisterhood(verb)', b: 'Good morning, sis\n\nToday\'s writing prompt:\n\n"Write about a moment when you chose yourself. What did it cost you? What did it give you?"\n\nTake 10 minutes and let the words come. Share in the community feed.\n\nWith love,\nTayllor' },
-  'c2': { s: 'A Morning Affirmation Just for You', b: 'Good morning, sis\n\nToday\'s affirmation:\n\n"I am not behind. I am not too much. I am not too little. I am exactly where I am supposed to be."\n\nSay it out loud. Mean it.\n\nWith love,\nTayllor' },
-  'c3': { s: 'A Question for Your Sisters Today', b: 'Good morning, sis\n\nThis week\'s discussion question:\n\n"What does rest look like for you right now — and what\'s getting in the way of it?"\n\nShare your answer in the community feed.\n\nWith love,\nTayllor' },
-  'c4': { s: 'Your Morning Gratitude Practice', b: 'Good morning, sis\n\nBefore the day takes over, take 2 minutes:\n\n1. Something about your body you\'re grateful for\n2. Something hard you survived\n3. Something small that brings you joy\n\nThis is your practice.\n\nWith love,\nTayllor' },
-  'c5': { s: 'Your Sisterhood(verb) Challenge This Week', b: 'Good morning, sis\n\nThis week\'s challenge:\n\n"Do one thing this week that is purely for your joy — not productive, not for anyone else. Just joy."\n\nShare what you did in the community.\n\nWith love,\nTayllor' }
-};
-
-function showMsg(id, type, txt) {
-  var el = document.getElementById(id);
-  el.className = 'msg ' + type;
-  el.textContent = txt;
-}
+var _sb = window.supabase.createClient(SURL, SKEY);
 
 function doLogin() {
-  var val = document.getElementById('pw').value;
-  if (val === PWD) {
+  if (document.getElementById('pw').value === PWD) {
     document.getElementById('v-login').style.display = 'none';
     document.getElementById('v-admin').style.display = 'block';
-    loadStats();
+    initDashboard();
   } else {
-    showMsg('msg-login', 'err', 'Incorrect password — try again');
+    showMsg('msg-login','err','Incorrect password — try again');
   }
 }
 
-function loadStats() {
-  fetch(SURL + '/rest/v1/profiles?select=id', {
-    headers: { 'apikey': SKEY, 'Authorization': 'Bearer ' + SKEY }
-  }).then(function(r) { return r.json(); }).then(function(d) {
-    document.getElementById('n-members').textContent = d.length || 0;
-  }).catch(function() {
-    document.getElementById('n-members').textContent = '—';
-  });
+function doLogout() {
+  document.getElementById('v-admin').style.display = 'none';
+  document.getElementById('v-login').style.display = 'flex';
+  document.getElementById('pw').value = '';
+}
+
+function showSection(name, el) {
+  document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active')});
+  document.querySelectorAll('.nav-item').forEach(function(n){n.classList.remove('active')});
+  document.getElementById('sec-'+name).classList.add('active');
+  el.classList.add('active');
+  if(name==='members') loadMembers();
+  if(name==='engagement') loadEngagement();
+  if(name==='proposals') loadProposals();
+  if(name==='reports') loadReports();
+  if(name==='rsvps') loadRSVPs();
+  if(name==='announce') loadAnnouncements();
+}
+
+async function initDashboard() {
+  var h = new Date().getHours();
+  var g = h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.getElementById('greeting').textContent = g+', Tayllor ✦';
+  var days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  var months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var now = new Date();
+  document.getElementById('overview-date').textContent = days[now.getDay()]+', '+months[now.getMonth()]+' '+now.getDate()+', '+now.getFullYear();
+  loadOverviewStats();
+  loadEmailChips();
+}
+
+async function loadOverviewStats() {
+  var r1 = await _sb.from('profiles').select('id,name,membership_tier,created_at');
+  var members = r1.data || [];
+  document.getElementById('s-members').textContent = members.length;
+  document.getElementById('e-members').textContent = members.length;
+  document.getElementById('member-count-lbl').textContent = '('+members.length+' total)';
+
+  var weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  var newM = members.filter(function(m){return new Date(m.created_at)>weekAgo});
+  var nmEl = document.getElementById('ov-new-members');
+  nmEl.innerHTML = newM.length === 0
+    ? '<div class="empty"><span class="empty-icon">👥</span><p>No new members this week yet</p></div>'
+    : newM.map(function(m){
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(196,98,45,0.06)">'+
+          '<div><div style="font-size:0.88rem;font-weight:600;font-family:Playfair Display,serif">'+(m.name||'Sister')+'</div>'+
+          '<div style="font-size:0.72rem;color:rgba(28,20,16,0.4)">'+timeAgo(m.created_at)+'</div></div>'+
+          '<span class="badge badge-'+(m.membership_tier||'free')+'">'+(m.membership_tier||'free')+'</span></div>';
+      }).join('');
+
+  var r2 = await _sb.from('posts').select('id,content,likes,created_at',{count:'exact'}).order('likes',{ascending:false}).limit(5);
+  document.getElementById('s-posts').textContent = r2.count || 0;
+  var posts = r2.data || [];
+  var tpEl = document.getElementById('ov-top-posts');
+  tpEl.innerHTML = posts.length === 0
+    ? '<div class="empty"><span class="empty-icon">🔥</span><p>No posts yet</p></div>'
+    : posts.slice(0,3).map(function(p){
+        var t=(p.content||'').replace(/\[gif:.*?\]/g,'[GIF]').substring(0,80);
+        return '<div class="post-item"><div class="post-likes"><div class="num">'+(p.likes||0)+'</div><div class="lbl">likes</div></div>'+
+          '<div style="flex:1"><div style="font-size:0.84rem;color:var(--deep);line-height:1.5">'+t+(t.length>=80?'...':'')+'</div>'+
+          '<div style="font-size:0.72rem;color:rgba(28,20,16,0.4);margin-top:3px">'+timeAgo(p.created_at)+'</div></div></div>';
+      }).join('');
+
+  var r3 = await _sb.from('circle_members').select('id',{count:'exact'});
+  document.getElementById('s-circles').textContent = r3.count || 0;
+
+  var r4 = await _sb.from('event_registrations').select('id',{count:'exact'});
+  document.getElementById('s-rsvps').textContent = r4.count || 0;
+}
+
+async function loadMembers() {
+  var r1 = await _sb.from('profiles').select('id,name,handle,membership_tier,created_at');
+  var r2 = await _sb.from('posts').select('user_id');
+  var profiles = r1.data || [];
+  var postCounts = {};
+  (r2.data||[]).forEach(function(p){postCounts[p.user_id]=(postCounts[p.user_id]||0)+1});
+  profiles.sort(function(a,b){return new Date(b.created_at)-new Date(a.created_at)});
+  document.getElementById('member-count-lbl').textContent = '('+profiles.length+' total)';
+  var tbody = document.getElementById('members-tbody');
+  tbody.innerHTML = profiles.length === 0
+    ? '<tr><td colspan="5" style="text-align:center;padding:24px;color:rgba(28,20,16,0.4)">No members yet</td></tr>'
+    : profiles.map(function(m){
+        var tier=m.membership_tier||'free';
+        return '<tr>'+
+          '<td><strong style="font-family:Playfair Display,serif">'+(m.name||'Sister')+'</strong><br>'+
+          '<span style="font-size:0.72rem;color:rgba(28,20,16,0.4)">'+(m.handle||'')+'</span></td>'+
+          '<td><span class="badge badge-'+tier+'">'+tier+'</span></td>'+
+          '<td style="font-size:0.8rem;color:rgba(28,20,16,0.5)">'+fmtDate(m.created_at)+'</td>'+
+          '<td style="font-size:0.88rem;font-weight:600;color:var(--terra)">'+(postCounts[m.id]||0)+'</td>'+
+          '<td><button class="btn btn-secondary btn-sm" onclick="manageMember(\''+m.id+'\',\''+(m.name||'Sister').replace(/'/g,"\\'")+'\',\''+tier+'\')">Manage</button></td>'+
+        '</tr>';
+      }).join('');
+}
+
+async function manageMember(id, name, tier) {
+  var newTier = prompt('Update tier for '+name+'\nCurrent: '+tier+'\n\nEnter new tier (free, founding, paid, founder):');
+  if (!newTier) return;
+  newTier = newTier.toLowerCase().trim();
+  if (!['free','founding','paid','founder'].includes(newTier)) { alert('Invalid tier. Use: free, founding, paid, or founder'); return; }
+  var r = await _sb.from('profiles').update({membership_tier:newTier}).eq('id',id);
+  if (r.error) { alert('Error: '+r.error.message); return; }
+  alert(name+' updated to '+newTier+' ✦');
+  loadMembers();
+}
+
+var prompts = {
+  'Writing Prompt':{s:"Today's Writing Prompt from Sisterhood(verb)",b:"Good morning, sis\n\nToday's writing prompt:\n\n\"Write about a moment when you chose yourself. What did it cost you? What did it give you?\"\n\nTake 10 minutes and let the words come. Share in the community feed.\n\nWith love,\nTayllor"},
+  'Affirmation':{s:'A Morning Affirmation Just for You',b:"Good morning, sis\n\nToday's affirmation:\n\n\"I am not behind. I am not too much. I am not too little. I am exactly where I am supposed to be.\"\n\nSay it out loud. Mean it.\n\nWith love,\nTayllor"},
+  'Discussion':{s:"A Question for Your Sisters Today",b:"Good morning, sis\n\nThis week's discussion question:\n\n\"What does rest look like for you right now — and what's getting in the way of it?\"\n\nShare your answer in the community feed.\n\nWith love,\nTayllor"},
+  'Gratitude':{s:'Your Morning Gratitude Practice',b:"Good morning, sis\n\nBefore the day takes over, take 2 minutes:\n\n1. Something about your body you're grateful for\n2. Something hard you survived\n3. Something small that brings you joy\n\nThis is your practice.\n\nWith love,\nTayllor"},
+  'Challenge':{s:"Your Sisterhood(verb) Challenge This Week",b:"Good morning, sis\n\nThis week's challenge:\n\n\"Do one thing this week that is purely for your joy — not productive, not for anyone else. Just joy.\"\n\nShare what you did in the community.\n\nWith love,\nTayllor"}
+};
+
+function loadEmailChips() {
+  document.getElementById('email-chips').innerHTML = Object.keys(prompts).map(function(k){
+    return '<button class="chip" onclick="usePrompt(\''+k+'\')">'+k+'</button>';
+  }).join('');
+}
+
+function usePrompt(k) {
+  var p=prompts[k];
+  if(p){document.getElementById('e-subj').value=p.s;document.getElementById('e-body').value=p.b;doPreview();}
 }
 
 function doPreview() {
-  var s = document.getElementById('subj').value.trim();
-  var b = document.getElementById('body').value.trim();
-  if (!s || !b) { showMsg('msg-send', 'err', 'Fill in subject and message first'); return; }
-  document.getElementById('prev-subj').textContent = s;
-  document.getElementById('prev-body').textContent = b;
-  document.getElementById('preview').className = 'prev show';
-  document.getElementById('msg-send').className = 'msg';
+  var s=document.getElementById('e-subj').value.trim();
+  var b=document.getElementById('e-body').value.trim();
+  if(!s||!b)return;
+  document.getElementById('e-prev-subj').textContent=s;
+  document.getElementById('e-prev-body').textContent=b;
+  document.getElementById('e-preview').className='prev-box show';
 }
 
-function doSend() {
-  var s = document.getElementById('subj').value.trim();
-  var b = document.getElementById('body').value.trim();
-  if (!s || !b) { showMsg('msg-send', 'err', 'Fill in subject and message first'); return; }
-  var btn = document.getElementById('btn-send');
-  btn.disabled = true;
-  btn.textContent = 'Sending...';
-  showMsg('msg-send', 'ok', 'Sending to all sisters — please wait...');
-  fetch(FN, {
-    method: 'POST',
-    // ✅ FIX 2: added apikey header
-    headers: { 'Content-Type': 'application/json' },
-    // ✅ FIX 1: changed adminSecret → secret
-    body: JSON.stringify({ subject: s, message: b })
-  }).then(function(r) { return r.json(); }).then(function(d) {
-    if (d.success) {
-      showMsg('msg-send', 'ok', 'Sent to ' + d.sent + ' sisters! ✦');
-      document.getElementById('subj').value = '';
-      document.getElementById('body').value = '';
-      document.getElementById('preview').className = 'prev';
-      totalSent += d.sent;
-      document.getElementById('n-sent').textContent = totalSent;
-      document.getElementById('n-last').textContent = 'Today';
-    } else {
-      showMsg('msg-send', 'err', 'Error: ' + (d.error || 'Something went wrong'));
-    }
-    btn.disabled = false;
-    btn.textContent = 'Send to All Sisters ✦';
-  }).catch(function(e) {
-    showMsg('msg-send', 'err', 'Connection error — try again');
-    btn.disabled = false;
-    btn.textContent = 'Send to All Sisters ✦';
-  });
+async function doSend() {
+  var s=document.getElementById('e-subj').value.trim();
+  var b=document.getElementById('e-body').value.trim();
+  if(!s||!b){showMsg('e-msg','err','Fill in subject and message first');return;}
+  var btn=document.getElementById('e-send-btn');
+  btn.disabled=true;btn.textContent='Sending...';
+  showMsg('e-msg','ok','Sending to all sisters — please wait...');
+  try {
+    var res=await fetch(FN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({subject:s,message:b})});
+    var d=await res.json();
+    if(d.success){
+      showMsg('e-msg','ok','Sent to '+d.sent+' sisters! ✦');
+      document.getElementById('e-subj').value='';
+      document.getElementById('e-body').value='';
+      document.getElementById('e-preview').className='prev-box';
+      totalSent+=d.sent;
+      document.getElementById('e-sent').textContent=totalSent;
+      document.getElementById('e-last').textContent='Today';
+    } else {showMsg('e-msg','err','Error: '+(d.error||'Something went wrong'));}
+  } catch(e){showMsg('e-msg','err','Connection error — try again');}
+  btn.disabled=false;btn.textContent='Send to All Sisters ✦';
 }
 
-function usePrompt(id) {
-  var p = prompts[id];
-  if (p) {
-    document.getElementById('subj').value = p.s;
-    document.getElementById('body').value = p.b;
-    doPreview();
+async function loadEngagement() {
+  var r1=await _sb.from('posts').select('id,content,likes,created_at,circle,user_id,profiles(name)').order('likes',{ascending:false}).limit(8);
+  var posts=r1.data||[];
+  document.getElementById('top-posts-list').innerHTML=posts.length===0
+    ? '<div class="empty"><span class="empty-icon">🔥</span><p>No posts yet</p></div>'
+    : posts.map(function(p){
+        var t=(p.content||'').replace(/\[gif:.*?\]/g,'[GIF]').substring(0,100);
+        return '<div class="post-item"><div class="post-likes"><div class="num">'+(p.likes||0)+'</div><div class="lbl">likes</div></div>'+
+          '<div style="flex:1"><div style="font-size:0.84rem;line-height:1.5">'+t+(t.length>=100?'...':'')+'</div>'+
+          '<div style="font-size:0.72rem;color:rgba(28,20,16,0.4);margin-top:3px">'+((p.profiles&&p.profiles.name)||'Sister')+' · '+timeAgo(p.created_at)+' · '+(p.circle||'Community')+'</div></div></div>';
+      }).join('');
+
+  var r2=await _sb.from('circle_members').select('circle_name');
+  var cc={};(r2.data||[]).forEach(function(c){cc[c.circle_name]=(cc[c.circle_name]||0)+1});
+  var sorted=Object.entries(cc).sort(function(a,b){return b[1]-a[1]});
+  document.getElementById('active-circles-list').innerHTML=sorted.length===0
+    ? '<div class="empty"><span class="empty-icon">⭕</span><p>No memberships yet</p></div>'
+    : sorted.map(function(e){
+        return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(196,98,45,0.06)">'+
+          '<div style="font-size:0.88rem;font-weight:500">'+e[0]+'</div>'+
+          '<div style="font-family:Playfair Display,serif;font-size:1.1rem;font-weight:700;color:var(--terra)">'+e[1]+' <span style="font-size:0.7rem;font-family:DM Sans,sans-serif;color:rgba(28,20,16,0.4)">members</span></div></div>';
+      }).join('');
+
+  var r3=await _sb.from('post_replies').select('id,content,created_at,profiles(name)').order('created_at',{ascending:false}).limit(8);
+  var replies=r3.data||[];
+  document.getElementById('recent-replies-list').innerHTML=replies.length===0
+    ? '<div class="empty"><span class="empty-icon">💬</span><p>No replies yet</p></div>'
+    : '<table class="data-table"><thead><tr><th>From</th><th>Reply</th><th>When</th></tr></thead><tbody>'+
+      replies.map(function(r){
+        return '<tr><td><strong style="font-family:Playfair Display,serif">'+((r.profiles&&r.profiles.name)||'Sister')+'</strong></td>'+
+          '<td style="font-size:0.83rem;color:rgba(28,20,16,0.7)">'+r.content.substring(0,80)+'</td>'+
+          '<td style="font-size:0.78rem;color:rgba(28,20,16,0.4)">'+timeAgo(r.created_at)+'</td></tr>';
+      }).join('')+'</tbody></table>';
+}
+
+async function loadAnnouncements() {
+  var r=await _sb.from('announcements').select('*').eq('active',true).order('created_at',{ascending:false}).limit(1);
+  var el=document.getElementById('current-announce');
+  if(!r.data||r.data.length===0){
+    el.innerHTML='<div class="empty"><span class="empty-icon">📌</span><p>No active announcement</p></div>';return;
   }
+  var a=r.data[0];
+  el.innerHTML='<div style="background:linear-gradient(135deg,var(--deep),#3d2b1f);color:var(--cream);padding:20px 24px;border-radius:4px;margin-bottom:14px">'+
+    '<div style="font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">📌 Pinned · '+fmtDate(a.created_at)+'</div>'+
+    '<div style="font-size:0.9rem;line-height:1.7">'+a.content+'</div></div>'+
+    '<button class="btn btn-danger" onclick="clearAnnouncement(\''+a.id+'\')">Remove Announcement</button>';
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  document.getElementById('btn-login').addEventListener('click', doLogin);
-  document.getElementById('pw').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
-  document.getElementById('btn-prev').addEventListener('click', doPreview);
-  document.getElementById('btn-send').addEventListener('click', doSend);
-  ['c1','c2','c3','c4','c5'].forEach(function(id) {
-    document.getElementById(id).addEventListener('click', function() { usePrompt(id); });
-  });
+function previewAnnouncement() {
+  var c=document.getElementById('ann-content').value.trim();if(!c)return;
+  document.getElementById('ann-preview-text').textContent=c;
+  document.getElementById('ann-preview').className='ann-preview show';
+}
+
+async function postAnnouncement() {
+  var c=document.getElementById('ann-content').value.trim();
+  if(!c){showMsg('ann-msg','err','Write your announcement first');return;}
+  await _sb.from('announcements').update({active:false}).eq('active',true);
+  var r=await _sb.from('announcements').insert({content:c,active:true});
+  if(r.error){showMsg('ann-msg','err','Error: '+r.error.message);return;}
+  document.getElementById('ann-content').value='';
+  document.getElementById('ann-preview').className='ann-preview';
+  showMsg('ann-msg','ok','Announcement pinned to the feed! ✦');
+  loadAnnouncements();
+}
+
+async function clearAnnouncement(id) {
+  if(!confirm('Remove this announcement from the feed?'))return;
+  await _sb.from('announcements').update({active:false}).eq('id',id);
+  loadAnnouncements();
+  showMsg('ann-msg','ok','Announcement removed ✦');
+}
+
+async function loadProposals() {
+  var r=await _sb.from('circle_proposals').select('*').order('created_at',{ascending:false});
+  var proposals=r.data||[];
+  document.getElementById('proposals-count').textContent='('+proposals.length+')';
+  document.getElementById('proposals-list').innerHTML=proposals.length===0
+    ? '<div class="empty"><span class="empty-icon">💡</span><p>No proposals yet — check back after launch!</p></div>'
+    : proposals.map(function(p){
+        return '<div style="padding:20px 0;border-bottom:1px solid rgba(196,98,45,0.08)">'+
+          '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">'+
+            '<div><div style="font-family:Playfair Display,serif;font-size:1rem;font-weight:700">'+p.circle_name+'</div>'+
+            '<div style="font-size:0.75rem;color:rgba(28,20,16,0.4);margin-top:2px">'+p.contact_name+' · '+p.contact_email+' · '+fmtDate(p.created_at)+'</div></div>'+
+            '<span class="badge badge-'+(p.status==='pending'?'pending':'reviewed')+'">'+p.status+'</span></div>'+
+          '<div style="font-size:0.85rem;color:rgba(28,20,16,0.7);margin-bottom:6px;line-height:1.6"><strong>About:</strong> '+p.description+'</div>'+
+          '<div style="font-size:0.85rem;color:rgba(28,20,16,0.7);margin-bottom:12px;line-height:1.6"><strong>Why them:</strong> '+p.why_host+'</div>'+
+          '<div class="btn-row">'+
+            '<button class="btn btn-secondary btn-sm" onclick="markProposal(\''+p.id+'\',\'reviewed\')">Mark Reviewed</button>'+
+            '<button class="btn btn-danger" onclick="deleteProposal(\''+p.id+'\')">Delete</button>'+
+          '</div></div>';
+      }).join('');
+}
+
+async function markProposal(id,status){await _sb.from('circle_proposals').update({status:status}).eq('id',id);loadProposals();}
+async function deleteProposal(id){if(!confirm('Delete?'))return;await _sb.from('circle_proposals').delete().eq('id',id);loadProposals();}
+
+async function loadReports() {
+  var r=await _sb.from('post_reports').select('*,posts(content)').order('created_at',{ascending:false});
+  var reports=r.data||[];
+  document.getElementById('reports-count').textContent='('+reports.length+')';
+  document.getElementById('reports-list').innerHTML=reports.length===0
+    ? '<div class="empty"><span class="empty-icon">🚩</span><p>No reports — your community is thriving! ✦</p></div>'
+    : reports.map(function(rep){
+        var pt=rep.posts?(rep.posts.content||'').replace(/\[gif:.*?\]/g,'[GIF]').substring(0,120):'Post not found';
+        return '<div style="padding:16px 0;border-bottom:1px solid rgba(196,98,45,0.08)">'+
+          '<div style="font-size:0.78rem;color:rgba(196,98,45,0.8);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Reason: '+rep.reason+'</div>'+
+          '<div style="font-size:0.85rem;color:rgba(28,20,16,0.7);line-height:1.6;margin-bottom:8px;background:var(--cream);padding:10px 12px;border-radius:3px">'+pt+'</div>'+
+          '<div style="font-size:0.73rem;color:rgba(28,20,16,0.4);margin-bottom:10px">Reported '+timeAgo(rep.created_at)+'</div>'+
+          '<div class="btn-row">'+
+            '<button class="btn btn-danger" onclick="deleteReportedPost(\''+rep.post_id+'\',\''+rep.id+'\')">Delete Post</button>'+
+            '<button class="btn btn-secondary btn-sm" onclick="dismissReport(\''+rep.id+'\')">Dismiss</button>'+
+          '</div></div>';
+      }).join('');
+}
+
+async function deleteReportedPost(pid,rid){if(!confirm('Delete this post?'))return;await _sb.from('posts').delete().eq('id',pid);await _sb.from('post_reports').delete().eq('id',rid);loadReports();}
+async function dismissReport(rid){await _sb.from('post_reports').delete().eq('id',rid);loadReports();}
+
+async function loadRSVPs() {
+  var r=await _sb.from('event_registrations').select('event_name,created_at,user_id,profiles(name)').order('created_at',{ascending:false});
+  var rsvps=r.data||[];
+  var el=document.getElementById('rsvps-container');
+  if(rsvps.length===0){el.innerHTML='<div class="empty"><span class="empty-icon">📅</span><p>No RSVPs yet</p></div>';return;}
+  var grouped={};
+  rsvps.forEach(function(r){if(!grouped[r.event_name])grouped[r.event_name]=[];grouped[r.event_name].push(r);});
+  el.innerHTML=Object.entries(grouped).map(function(e){
+    return '<div class="card">'+
+      '<div class="card-title">'+e[0]+' <span style="font-size:0.78rem;color:rgba(28,20,16,0.4);font-family:DM Sans,sans-serif;font-weight:400">'+e[1].length+' registered</span></div>'+
+      '<table class="data-table"><thead><tr><th>Name</th><th>Registered</th></tr></thead><tbody>'+
+      e[1].map(function(r){return '<tr><td><strong style="font-family:Playfair Display,serif">'+((r.profiles&&r.profiles.name)||'Sister')+'</strong></td><td style="font-size:0.8rem;color:rgba(28,20,16,0.5)">'+fmtDate(r.created_at)+'</td></tr>';}).join('')+
+      '</tbody></table></div>';
+  }).join('');
+}
+
+function timeAgo(d){
+  var diff=Math.floor((new Date()-new Date(d))/1000);
+  if(diff<60)return 'Just now';
+  if(diff<3600)return Math.floor(diff/60)+'m ago';
+  if(diff<86400)return Math.floor(diff/3600)+'h ago';
+  return Math.floor(diff/86400)+'d ago';
+}
+
+function fmtDate(d){return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+
+function showMsg(id,type,text){var e=document.getElementById(id);e.className='msg '+type;e.textContent=text;}
+
+document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('pw').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 });
 </script>
+
 </body>
 </html>
