@@ -941,6 +941,17 @@ async function signUp(email, password, name) {
     } else {
       showToast('Welcome to the Sisterhood ✦');
     }
+    // Send welcome email
+    try {
+      await fetch('https://cqiymqekdtewnorojlus.supabase.co/functions/v1/send-daily-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          welcomeEmail: email,
+          welcomeName: name || email.split('@')[0]
+        })
+      });
+    } catch(e) { console.log('Welcome email error:', e); }
     closeAuthModal();
   }
 }
