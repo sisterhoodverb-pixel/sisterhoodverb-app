@@ -1,181 +1,685 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sisterhood(verb) — A Space to Practice Sisterhood</title>
+<meta name="description" content="A private community for women who are ready to practice sisterhood — not just talk about it.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --terra: #C4622D;
+  --deep: #1C1410;
+  --cream: #F5EFE6;
+  --gold: #D4A853;
+  --warm: #FBF7F2;
+  --sage: #7A8C6E;
+  --muted: rgba(28,20,16,0.55);
+}
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-const WELCOME_HTML = (name: string) => `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#FBF7F2;font-family:'Georgia',serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#FBF7F2;padding:40px 20px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-        <tr>
-          <td style="background:#1C1410;padding:48px 40px 36px;text-align:center;border-radius:6px 6px 0 0;">
-            <p style="margin:0 0 10px;font-size:0.7rem;letter-spacing:0.25em;text-transform:uppercase;color:#D4A853;">You made it home</p>
-            <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:2rem;color:#F5EFE6;font-weight:700;line-height:1.2;">Welcome to Sisterhood<em style="font-style:italic;font-weight:400;">(verb)</em></h1>
-            <p style="margin:0 auto;font-size:0.95rem;color:rgba(245,239,230,0.65);line-height:1.8;max-width:400px;">A space to be seen, speak freely, and practice sisterhood — not just talk about it.</p>
-          </td>
-        </tr>
-        <tr><td style="background:linear-gradient(90deg,#C4622D,#D4A853,#C4622D);height:3px;"></td></tr>
-        <tr>
-          <td style="background:#ffffff;padding:48px 40px;">
-            <p style="margin:0 0 20px;font-size:1rem;color:#1C1410;line-height:1.8;">Good morning, ${name} ✦</p>
-            <p style="margin:0 0 20px;font-size:0.92rem;color:rgba(28,20,16,0.75);line-height:1.9;">I founded Sisterhood(verb) in 2014 — based on a poem, a shirt, and a hurt heart — seeking community with other like-minded women. Over 10+ years, this work has changed and reintroduced itself more times than I want to admit. But I kept coming back because I kept needing it.</p>
-            <p style="margin:0 0 20px;font-size:0.92rem;color:rgba(28,20,16,0.75);line-height:1.9;">This app is the newest chapter. And it's the one that finally feels like home.</p>
-            <div style="background:#F5EFE6;border-left:3px solid #C4622D;padding:20px 24px;margin:28px 0;border-radius:0 4px 4px 0;">
-              <p style="margin:0 0 10px;font-family:Georgia,serif;font-size:1rem;font-style:italic;color:#1C1410;line-height:1.7;">"Sisterhood(verb): loving yourself and your kin with ancestral abundance."</p>
-              <p style="margin:0;font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:#C4622D;">— Tayllor Oyewole-Davis, Founder</p>
-            </div>
-            <p style="margin:0 0 16px;font-size:0.92rem;color:rgba(28,20,16,0.75);line-height:1.9;">This is a space built for us — where:</p>
-            <table cellpadding="0" cellspacing="0" style="margin:0 0 24px;width:100%;">
-              <tr><td style="padding:7px 0;font-size:0.88rem;color:rgba(28,20,16,0.8);line-height:1.6;"><span style="color:#C4622D;margin-right:10px;">✦</span>We can refuel, not perform</td></tr>
-              <tr><td style="padding:7px 0;font-size:0.88rem;color:rgba(28,20,16,0.8);line-height:1.6;"><span style="color:#C4622D;margin-right:10px;">✦</span>We can hear our own voices, not the world's reaction to our existence</td></tr>
-              <tr><td style="padding:7px 0;font-size:0.88rem;color:rgba(28,20,16,0.8);line-height:1.6;"><span style="color:#C4622D;margin-right:10px;">✦</span>We can be courageous in building community and connection</td></tr>
-              <tr><td style="padding:7px 0;font-size:0.88rem;color:rgba(28,20,16,0.8);line-height:1.6;"><span style="color:#C4622D;margin-right:10px;">✦</span>We can prioritize joy and growth, together</td></tr>
-            </table>
-            <p style="margin:0 0 28px;font-size:0.92rem;color:rgba(28,20,16,0.75);line-height:1.9;">You are safe here. Take a load off and stay a while.</p>
-            <div style="background:#F5EFE6;border-radius:4px;padding:28px 32px;margin:0 0 28px;">
-              <p style="margin:0 0 16px;font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:#C4622D;font-weight:600;">Your First Steps ✦</p>
-              <table cellpadding="0" cellspacing="0" style="width:100%;">
-                <tr><td style="padding:10px 0;border-bottom:1px solid rgba(196,98,45,0.12);"><table cellpadding="0" cellspacing="0"><tr><td style="width:32px;height:32px;background:#C4622D;border-radius:50%;text-align:center;vertical-align:middle;font-size:0.75rem;font-weight:700;color:white;font-family:sans-serif;">1</td><td style="padding-left:14px;font-size:0.88rem;color:#1C1410;line-height:1.6;font-family:sans-serif;"><strong>Complete your profile</strong> — add a photo, bio, and location so your sisters can find you</td></tr></table></td></tr>
-                <tr><td style="padding:10px 0;border-bottom:1px solid rgba(196,98,45,0.12);"><table cellpadding="0" cellspacing="0"><tr><td style="width:32px;height:32px;background:#C4622D;border-radius:50%;text-align:center;vertical-align:middle;font-size:0.75rem;font-weight:700;color:white;font-family:sans-serif;">2</td><td style="padding-left:14px;font-size:0.88rem;color:#1C1410;line-height:1.6;font-family:sans-serif;"><strong>Make your first post</strong> — share what's on your heart, ask a question, or just say hello</td></tr></table></td></tr>
-                <tr><td style="padding:10px 0;border-bottom:1px solid rgba(196,98,45,0.12);"><table cellpadding="0" cellspacing="0"><tr><td style="width:32px;height:32px;background:#C4622D;border-radius:50%;text-align:center;vertical-align:middle;font-size:0.75rem;font-weight:700;color:white;font-family:sans-serif;">3</td><td style="padding-left:14px;font-size:0.88rem;color:#1C1410;line-height:1.6;font-family:sans-serif;"><strong>Join a Circle</strong> — find your people in one of our intimate community spaces</td></tr></table></td></tr>
-                <tr><td style="padding:10px 0;"><table cellpadding="0" cellspacing="0"><tr><td style="width:32px;height:32px;background:#C4622D;border-radius:50%;text-align:center;vertical-align:middle;font-size:0.75rem;font-weight:700;color:white;font-family:sans-serif;">4</td><td style="padding-left:14px;font-size:0.88rem;color:#1C1410;line-height:1.6;font-family:sans-serif;"><strong>Reply to a sister</strong> — community is built in the responses, not just the posts</td></tr></table></td></tr>
-              </table>
-            </div>
-            <table cellpadding="0" cellspacing="0" style="margin:0 auto 32px;width:100%;text-align:center;">
-              <tr><td style="text-align:center;"><a href="https://community.sisterhoodverb.com/app.html" style="display:inline-block;background:#C4622D;border-radius:3px;padding:16px 40px;color:white;text-decoration:none;font-family:sans-serif;font-size:0.9rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Come Home ✦</a></td></tr>
-            </table>
-            <hr style="border:none;border-top:1px solid rgba(196,98,45,0.12);margin:0 0 28px;">
-            <p style="margin:0 0 6px;font-size:0.92rem;color:rgba(28,20,16,0.75);line-height:1.9;">With love and gratitude,</p>
-            <p style="margin:0 0 4px;font-family:Georgia,serif;font-size:1rem;font-weight:700;color:#1C1410;">Tayllor Oyewole-Davis</p>
-            <p style="margin:0;font-size:0.78rem;color:#C4622D;letter-spacing:0.06em;">Founder, Sisterhood(verb)</p>
-          </td>
-        </tr>
-        <tr><td style="padding:24px 40px;text-align:center;">
-          <p style="margin:0;font-size:0.72rem;color:rgba(28,20,16,0.35);line-height:1.7;">Sisterhood(verb) · community.sisterhoodverb.com<br>You're receiving this because you just joined our community ✦</p>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--warm);
+  color: var(--deep);
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 20px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(251,247,242,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(196,98,45,0.1);
+}
+
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--terra);
+  text-decoration: none;
+}
+
+.nav-logo em { font-style: italic; font-weight: 400; }
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.nav-links a:hover { color: var(--terra); }
+
+.nav-cta {
+  background: var(--terra);
+  color: white !important;
+  padding: 9px 22px;
+  border-radius: 2px;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.1em !important;
+  font-weight: 600 !important;
+  transition: background 0.2s !important;
+}
+
+.nav-cta:hover { background: #a8501f !important; color: white !important; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  background: var(--deep);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 40px 80px;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(196,98,45,0.15) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 20%, rgba(212,168,83,0.08) 0%, transparent 50%);
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0; right: 0;
+  height: 60px;
+  background: var(--warm);
+  clip-path: ellipse(55% 100% at 50% 100%);
+}
+
+.hero-eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 24px;
+  position: relative;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.2s forwards;
+}
+
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.8rem, 6vw, 4.5rem);
+  color: var(--cream);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 28px;
+  position: relative;
+  max-width: 760px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.4s forwards;
+}
+
+.hero-title em {
+  font-style: italic;
+  font-weight: 400;
+  color: var(--terra);
+}
+
+.hero-sub {
+  font-size: 1rem;
+  color: rgba(245,239,230,0.65);
+  line-height: 1.8;
+  max-width: 480px;
+  margin: 0 auto 48px;
+  position: relative;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.6s forwards;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: center;
+  position: relative;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.8s forwards;
+}
+
+.btn-primary {
+  background: var(--terra);
+  color: white;
+  padding: 16px 36px;
+  border-radius: 2px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.2s, transform 0.2s;
+  display: inline-block;
+}
+
+.btn-primary:hover { background: #a8501f; transform: translateY(-1px); }
+
+.btn-ghost {
+  color: rgba(245,239,230,0.6);
+  text-decoration: none;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid rgba(245,239,230,0.25);
+  padding-bottom: 2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.btn-ghost:hover { color: var(--cream); border-color: var(--cream); }
+
+.founding-badge {
+  position: relative;
+  margin-top: 28px;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 1s forwards;
+}
+
+.founding-badge span {
+  display: inline-block;
+  background: linear-gradient(135deg, rgba(212,168,83,0.2), rgba(212,168,83,0.08));
+  border: 1px solid rgba(212,168,83,0.4);
+  color: var(--gold);
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 8px 20px;
+  border-radius: 20px;
+}
+
+/* ── QUOTE ── */
+.quote-section {
+  padding: 100px 40px;
+  text-align: center;
+  background: var(--warm);
+}
+
+.quote-mark {
+  font-family: 'Playfair Display', serif;
+  font-size: 5rem;
+  color: var(--terra);
+  opacity: 0.2;
+  line-height: 0.5;
+  display: block;
+  margin-bottom: 24px;
+}
+
+.quote-text {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  font-style: italic;
+  color: var(--deep);
+  max-width: 680px;
+  margin: 0 auto 20px;
+  line-height: 1.6;
+}
+
+.quote-attr {
+  font-size: 0.72rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--terra);
+}
+
+/* ── WHY ── */
+.why-section {
+  padding: 100px 40px;
+  background: white;
+}
+
+.why-inner {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.why-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--terra);
+  margin-bottom: 16px;
+}
+
+.why-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 24px;
+  color: var(--deep);
+}
+
+.why-body {
+  font-size: 0.92rem;
+  color: var(--muted);
+  line-height: 1.9;
+}
+
+.why-body p { margin-bottom: 16px; }
+.why-body p:last-child { margin-bottom: 0; }
+
+.why-values {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.value-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  padding: 20px 24px;
+  background: var(--warm);
+  border-radius: 4px;
+  border-left: 3px solid var(--terra);
+  transition: transform 0.2s;
+}
+
+.value-item:hover { transform: translateX(4px); }
+
+.value-icon {
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.value-title {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+  color: var(--deep);
+}
+
+.value-desc {
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ── CIRCLES ── */
+.circles-section {
+  padding: 100px 40px;
+  background: var(--warm);
+}
+
+.section-header {
+  text-align: center;
+  max-width: 560px;
+  margin: 0 auto 60px;
+}
+
+.section-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--terra);
+  margin-bottom: 14px;
+}
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 16px;
+}
+
+.section-sub {
+  font-size: 0.9rem;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.circles-grid {
+  max-width: 1000px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.circle-card {
+  background: white;
+  border-radius: 6px;
+  padding: 28px 24px;
+  border: 1px solid rgba(196,98,45,0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.circle-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(28,20,16,0.08);
+}
+
+.circle-emoji { font-size: 1.8rem; margin-bottom: 12px; display: block; }
+
+.circle-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--deep);
+}
+
+.circle-desc {
+  font-size: 0.8rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+/* ── FOUNDING ── */
+.founding-section {
+  padding: 100px 40px;
+  background: var(--deep);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.founding-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(196,98,45,0.2) 0%, transparent 60%);
+}
+
+.founding-eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.founding-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 4vw, 3rem);
+  color: var(--cream);
+  font-weight: 700;
+  margin-bottom: 20px;
+  line-height: 1.2;
+  position: relative;
+}
+
+.founding-sub {
+  font-size: 0.92rem;
+  color: rgba(245,239,230,0.6);
+  line-height: 1.8;
+  max-width: 480px;
+  margin: 0 auto 40px;
+  position: relative;
+}
+
+.founding-perks {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+  position: relative;
+}
+
+.perk {
+  background: rgba(245,239,230,0.06);
+  border: 1px solid rgba(245,239,230,0.12);
+  color: rgba(245,239,230,0.7);
+  font-size: 0.78rem;
+  padding: 8px 18px;
+  border-radius: 20px;
+}
+
+.founding-cta {
+  position: relative;
+}
+
+.founding-spots {
+  font-size: 0.75rem;
+  color: rgba(245,239,230,0.4);
+  margin-top: 16px;
+  letter-spacing: 0.06em;
+}
+
+/* ── FOOTER ── */
+footer {
+  background: var(--deep);
+  border-top: 1px solid rgba(245,239,230,0.08);
+  padding: 48px;
+  text-align: center;
+}
+
+.footer-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.1rem;
+  color: var(--cream);
+  margin-bottom: 12px;
+}
+
+.footer-logo em { font-style: italic; font-weight: 400; }
+
+.footer-tagline {
+  font-size: 0.8rem;
+  color: rgba(245,239,230,0.35);
+  margin-bottom: 24px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.footer-links a {
+  color: rgba(245,239,230,0.35);
+  text-decoration: none;
+  font-size: 0.78rem;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover { color: var(--cream); }
+
+.footer-copy {
+  font-size: 0.72rem;
+  color: rgba(245,239,230,0.2);
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  nav { padding: 16px 20px; }
+  .nav-links { display: none; }
+  .why-inner { grid-template-columns: 1fr; gap: 48px; }
+  .circles-grid { grid-template-columns: 1fr; }
+  .hero { padding: 100px 24px 80px; }
+  .why-section, .quote-section, .circles-section, .founding-section { padding: 72px 24px; }
+  footer { padding: 40px 24px; }
+  .footer-links { flex-wrap: wrap; gap: 16px; }
+  .mobile-cta { display: block; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">Sisterhood<em>(verb)</em></a>
+  <div class="nav-links">
+    <a href="#why">Our Why</a>
+    <a href="#circles">Circles</a>
+    <a href="https://community.sisterhoodverb.com/app.html" class="nav-cta">Join the Community ✦</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow">Welcome home, sister</p>
+  <h1 class="hero-title">A space to <em>practice</em> sisterhood — not just talk about it</h1>
+  <p class="hero-sub">Sisterhood(verb) is a private community for women who are ready to refuel, connect, and show up authentically — together.</p>
+  <div class="hero-actions">
+    <a href="https://community.sisterhoodverb.com/app.html?founding=yes" class="btn-primary">Claim Your Founding Spot ✦</a>
+    <a href="https://community.sisterhoodverb.com/app.html" class="btn-ghost">Already a member? Log in</a>
+  </div>
+  <div class="founding-badge">
+    <span>✦ First 50 sisters join free for life — no credit card needed</span>
+  </div>
+</section>
+
+<!-- QUOTE -->
+<section class="quote-section">
+  <span class="quote-mark">"</span>
+  <p class="quote-text">Sisterhood(verb): loving yourself and your kin with ancestral abundance.</p>
+  <p class="quote-attr">— Tayllor Oyewole-Davis, Founder</p>
+</section>
+
+<!-- WHY -->
+<section class="why-section" id="why">
+  <div class="why-inner">
+    <div>
+      <p class="why-label">Our Why</p>
+      <h2 class="why-title">Built from a poem, a shirt, and a hurt heart</h2>
+      <div class="why-body">
+        <p>I founded Sisterhood(verb) in 2014 because I kept looking for a space where women — especially Black women — could just be. Not perform. Not educate. Not absorb harm. Just be, in community with each other.</p>
+        <p>Over 10+ years, this work has changed and reintroduced itself more times than I want to admit. But I kept coming back because I kept needing it.</p>
+        <p>This app is the newest chapter. And it's the one that finally feels like home.</p>
+      </div>
+    </div>
+    <div class="why-values">
+      <div class="value-item">
+        <span class="value-icon">🌺</span>
+        <div>
+          <div class="value-title">Refuel, not perform</div>
+          <div class="value-desc">No algorithm. No clout-chasing. Just women showing up as they are.</div>
+        </div>
+      </div>
+      <div class="value-item">
+        <span class="value-icon">🗣</span>
+        <div>
+          <div class="value-title">Hear your own voice</div>
+          <div class="value-desc">A space to speak freely — not react to the world's reaction to your existence.</div>
+        </div>
+      </div>
+      <div class="value-item">
+        <span class="value-icon">✦</span>
+        <div>
+          <div class="value-title">Build real community</div>
+          <div class="value-desc">Courageous connection, not curated highlight reels.</div>
+        </div>
+      </div>
+      <div class="value-item">
+        <span class="value-icon">🌱</span>
+        <div>
+          <div class="value-title">Prioritize joy & growth</div>
+          <div class="value-desc">Together. Sustainably. With ancestral abundance.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CIRCLES -->
+<section class="circles-section" id="circles">
+  <div class="section-header">
+    <p class="section-label">The Circles</p>
+    <h2 class="section-title">Find your people</h2>
+    <p class="section-sub">Intimate spaces built around the things that matter to you. Join the circles that speak to your season.</p>
+  </div>
+  <div class="circles-grid">
+    <div class="circle-card">
+      <span class="circle-emoji">🌺</span>
+      <div class="circle-name">Motherhood Speaks</div>
+      <div class="circle-desc">A space to share your wins, losses, hopes, and fears with moms who get it.</div>
+    </div>
+    <div class="circle-card">
+      <span class="circle-emoji">✍🏾</span>
+      <div class="circle-name">Writers Block? I Think Not!</div>
+      <div class="circle-desc">Weekly prompts to keep pen to paper — in community with fellow writers.</div>
+    </div>
+    <div class="circle-card">
+      <span class="circle-emoji">🔥</span>
+      <div class="circle-name">Burnout to Bloom</div>
+      <div class="circle-desc">For educators, organizers, and artists trying to keep their cup full.</div>
+    </div>
+    <div class="circle-card">
+      <span class="circle-emoji">🎤</span>
+      <div class="circle-name">Speak Poet!</div>
+      <div class="circle-desc">For slam poets and spoken word artists looking for space to share and connect.</div>
+    </div>
+    <div class="circle-card">
+      <span class="circle-emoji">💼</span>
+      <div class="circle-name">Healing As We Hustle</div>
+      <div class="circle-desc">Space for entrepreneurs to connect and get support as we go big or go home.</div>
+    </div>
+    <div class="circle-card">
+      <span class="circle-emoji">✈️</span>
+      <div class="circle-name">The Travel Girlies</div>
+      <div class="circle-desc">Trip tips, warnings, and storytelling. Booked and busy or still in the group chat.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOUNDING CTA -->
+<section class="founding-section">
+  <p class="founding-eyebrow">Founding Membership</p>
+  <h2 class="founding-title">Be one of the first 50 sisters</h2>
+  <p class="founding-sub">Founding members get full access to the community — free for life. No credit card. No catch. Just sisterhood.</p>
+  <div class="founding-perks">
+    <span class="perk">✦ All Circles, unlimited</span>
+    <span class="perk">✦ Community feed & events</span>
+    <span class="perk">✦ Free for life</span>
+    <span class="perk">✦ Founding Sister badge</span>
+  </div>
+  <div class="founding-cta">
+    <a href="https://community.sisterhoodverb.com/app.html?founding=yes" class="btn-primary">Join Free as a Founding Sister ✦</a>
+    <p class="founding-spots">Only 50 spots available — join before they're gone</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Sisterhood<em>(verb)</em></div>
+  <p class="footer-tagline">A space to be seen, speak freely, and practice sisterhood.</p>
+  <div class="footer-links">
+    <a href="https://community.sisterhoodverb.com/app.html">Enter the Community</a>
+    <a href="https://community.sisterhoodverb.com/app.html?founding=yes">Founding Membership</a>
+    <a href="https://www.sisterhoodverb.com">Main Site</a>
+  </div>
+  <p class="footer-copy">© 2026 Sisterhood(verb) · Tayllor Oyewole-Davis · All rights reserved</p>
+</footer>
+
 </body>
-</html>`;
-
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  try {
-    const body = await req.json();
-    const { subject, message, proposalOnly, welcomeEmail, welcomeName } = body;
-
-    const resendKey = Deno.env.get("RESEND_API_KEY")!;
-    const adminEmail = Deno.env.get("GMAIL_USER")!;
-
-    // ── WELCOME EMAIL ──
-    if (welcomeEmail) {
-      const name = welcomeName || "sis";
-      const res = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${resendKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "Tayllor at Sisterhood(verb) <onboarding@resend.dev>",
-          to: welcomeEmail,
-          subject: "Welcome home, " + name + " ✦",
-          html: WELCOME_HTML(name),
-        }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        return new Response(JSON.stringify({ success: true, sent: 1 }), {
-          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      } else {
-        return new Response(JSON.stringify({ error: "Welcome email failed: " + JSON.stringify(data) }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    // ── DAILY / PROPOSAL EMAIL ──
-    if (!subject || !message) {
-      return new Response(JSON.stringify({ error: "Missing subject or message" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    let emails: string[] = [];
-
-    if (proposalOnly) {
-      emails = [adminEmail];
-    } else {
-      const supabase = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-      );
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
-      if (authError) {
-        return new Response(JSON.stringify({ error: "Auth error: " + authError.message }), {
-          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      emails = authUsers.users.filter((u) => u.email).map((u) => u.email!);
-      if (emails.length === 0) {
-        return new Response(JSON.stringify({ error: "No member emails found" }), {
-          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-    }
-
-    let sent = 0;
-    let failed = 0;
-
-    for (const email of emails) {
-      try {
-        const res = await fetch("https://api.resend.com/emails", {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${resendKey}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            from: "Sisterhood(verb) <onboarding@resend.dev>",
-            to: email,
-            subject: subject,
-            html: `<div style="font-family:sans-serif;max-width:600px;margin:auto;padding:32px;">
-              <h2 style="color:#C4622D;font-family:Georgia,serif;">✦ Sisterhood(verb)</h2>
-              <div style="line-height:1.8;font-size:15px;color:#1C1410;white-space:pre-wrap;">${message.replace(/\n/g, "<br>")}</div>
-              <hr style="margin-top:32px;border:none;border-top:1px solid #eee;">
-              <p style="color:#999;font-size:12px;">${proposalOnly ? "Submitted via the Sisterhood(verb) community app." : "You're receiving this as a member of the Sisterhood(verb) community."}</p>
-            </div>`,
-          }),
-        });
-        const data = await res.json();
-        if (res.ok) { sent++; console.log("Sent to: " + email); }
-        else { console.error("Failed: " + JSON.stringify(data)); failed++; }
-      } catch (e) {
-        console.error("Failed to send to " + email + ": " + e.message);
-        failed++;
-      }
-    }
-
-    return new Response(
-      JSON.stringify({ success: true, sent, failed }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
-
-  } catch (err) {
-    console.error("Unexpected error:", err.message);
-    return new Response(JSON.stringify({ error: "Unexpected error: " + err.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-});
+</html>
