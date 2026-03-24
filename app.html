@@ -842,6 +842,8 @@ async function onLogin() {
   // Hide PWA loading screen
   const loader = document.getElementById('pwa-loading');
   if (loader) { loader.style.opacity = '0'; loader.style.transition = 'opacity 0.5s'; setTimeout(() => loader.remove(), 500); }
+  // Mark as returning visitor
+  localStorage.setItem('sv_has_visited', '1');
   document.getElementById('logout-btn').style.display = 'block';
   const joinBtn = document.querySelector('.nav-cta');
   if (joinBtn) { joinBtn.textContent = 'My Account'; joinBtn.onclick = () => showViewWithProfile('profile', joinBtn); }
@@ -938,6 +940,7 @@ async function signUp(email, password, name) {
     await _supabase.from('profiles').insert({id:data.user.id, name, handle:'@'+email.split('@')[0], membership_tier: tier});
     if (tier === 'founding') {
       showToast('Welcome, Founding Sister! ✦');
+      localStorage.removeItem('sv_founding_mode');
     } else {
       showToast('Welcome to the Sisterhood ✦');
     }
@@ -952,15 +955,32 @@ async function signUp(email, password, name) {
         })
       });
     } catch(e) { console.log('Welcome email error:', e); }
+    // Sign in immediately after signup to load the UI
+    const {data: signInData} = await _supabase.auth.signInWithPassword({email, password});
+    if (signInData?.session) {
+      currentUser = signInData.session.user;
+      await onLogin();
+    }
     closeAuthModal();
   }
 }
 
 async function signIn(email, password) {
   const {data, error} = await _supabase.auth.signInWithPassword({email, password});
-  if (error) { showToast('Error: ' + error.message); return; }
-  showToast('Welcome back, sis ✦');
-  closeAuthModal();
+  if (error) {
+    if (error.message.toLowerCase().includes('invalid')) {
+      showToast('Incorrect email or password — try again ♦');
+    } else {
+      showToast('Error: ' + error.message);
+    }
+    return;
+  }
+  if (data.session) {
+    currentUser = data.user;
+    showToast('Welcome back, sis ♦');
+    closeAuthModal();
+    await onLogin();
+  }
 }
 
 async function signOut() {
@@ -1721,7 +1741,9 @@ function setAuthMode(mode) {
     switchBtn.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\')">Log in</a>';
     submitBtn.onclick = () => { signUp(document.getElementById('auth-email').value, document.getElementById('auth-password').value, document.getElementById('auth-name').value); };
   } else {
-    title.textContent = 'Welcome Back, Sis'; submitBtn.textContent = 'Log In'; nameGroup.style.display = 'none';
+    const hasVisited = localStorage.getItem('sv_has_visited');
+    title.textContent = hasVisited ? 'Welcome Back, Sis' : 'Welcome, Sis';
+    submitBtn.textContent = 'Log In'; nameGroup.style.display = 'none';
     switchBtn.innerHTML = 'New here? <a href="#" onclick="setAuthMode(\'signup\')">Join the Sisterhood</a> &nbsp;·&nbsp; <a href="#" onclick="forgotPassword()">Forgot password?</a>';
     submitBtn.onclick = () => { signIn(document.getElementById('auth-email').value, document.getElementById('auth-password').value); };
   }
@@ -1736,7 +1758,12 @@ window.addEventListener('load', function() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('founding') === 'yes') {
     window._foundingMode = true;
-    // Show founding banner, hide regular
+    localStorage.setItem('sv_founding_mode', 'yes');
+  } else if (localStorage.getItem('sv_founding_mode') === 'yes') {
+    window._foundingMode = true;
+  }
+  // Show correct banner
+  if (window._foundingMode) {
     const foundingBanner = document.getElementById('founding-banner');
     const regularBanner = document.getElementById('regular-banner');
     if (foundingBanner) foundingBanner.style.display = 'flex';
