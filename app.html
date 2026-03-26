@@ -734,7 +734,7 @@ input[type="file"]{display:none}
     </div>
   </div>
   <div class="profile-info">
-    <div class="profile-name">Sister</div>
+    <div class="profile-name"></div>
     <div class="profile-handle">@member</div>
     <div class="profile-bio">Tell your sisters a little about yourself...</div>
     <div class="profile-stats">
@@ -1235,35 +1235,22 @@ async function toggleLike(btn, postId) {
   if (!postId) return;
   const span = btn.querySelector('span');
   const isLiked = btn.classList.contains('liked');
-
-  // Optimistic UI update
-  btn.classList.toggle('liked');
   btn.disabled = true;
+  btn.classList.toggle('liked');
 
   if (!isLiked) {
-    // Add like to post_likes table
-    const {error} = await _supabase.from('post_likes').insert({post_id: postId, user_id: currentUser.id});
-    if (error && error.code !== '23505') {
-      btn.classList.remove('liked');
-      btn.disabled = false;
-      showToast('Could not like post');
-      return;
-    }
-    // Get fresh count from DB
-    const {data:countData} = await _supabase.from('post_likes').select('id', {count:'exact'}).eq('post_id', postId);
-    const newCount = countData?.length || (parseInt(span.textContent) || 0) + 1;
-    await _supabase.from('posts').update({likes: newCount}).eq('id', postId);
-    span.textContent = newCount;
-    showToast('Loved ♦');
+    await _supabase.from('post_likes').insert({post_id: postId, user_id: currentUser.id});
   } else {
-    // Remove like
     await _supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
-    // Get fresh count from DB
-    const {data:countData} = await _supabase.from('post_likes').select('id', {count:'exact'}).eq('post_id', postId);
-    const newCount = Math.max(0, countData?.length || (parseInt(span.textContent) || 1) - 1);
-    await _supabase.from('posts').update({likes: newCount}).eq('id', postId);
-    span.textContent = newCount;
   }
+
+  // Always get the true count from post_likes table
+  const {data:likes} = await _supabase.from('post_likes').select('id').eq('post_id', postId);
+  const trueCount = likes ? likes.length : parseInt(span.textContent) || 0;
+  span.textContent = trueCount;
+
+  // Sync posts table
+  await _supabase.from('posts').update({likes: trueCount}).eq('id', postId);
   btn.disabled = false;
 }
 
