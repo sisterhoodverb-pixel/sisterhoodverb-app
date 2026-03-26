@@ -266,7 +266,7 @@ input[type=“file”]{display:none}
 .auth-title{font-family:‘Playfair Display’,serif;font-size:1.5rem;font-weight:700;margin-bottom:6px}
 .auth-sub{font-size:0.85rem;color:var(–terra);margin-bottom:24px}
 .auth-switch{text-align:center;font-size:0.82rem;color:rgba(28,20,16,0.5);margin-top:16px}
-.auth-switch a{color:var(–terra);text-decoration:none;font-weight:600}
+.auth-switch a{color:var(–terra)!important;text-decoration:none;font-weight:600}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(–deep);color:var(–cream);padding:12px 24px;border-radius:3px;font-size:0.85rem;opacity:0;transition:all 0.3s;pointer-events:none;z-index:600;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .mp-modal{max-width:520px;padding:0;overflow:hidden}
@@ -837,19 +837,18 @@ async function initAuth() {
   } else {
     // No session yet - wait to see if onAuthStateChange restores it
     const loader = document.getElementById('pwa-loading');
-    // Give Supabase 3s to restore session
+    // Give Supabase 5s to restore session before deciding to show login
     setTimeout(() => {
       if (!currentUser) {
         if (loader) { loader.style.opacity = '0'; loader.style.transition = 'opacity 0.5s'; setTimeout(() => loader.remove(), 500); }
         if (feed) feed.innerHTML = '';
-        // Only auto-show login on PWA (installed app) - not regular browser visits
+        // Only auto-show login on PWA installed app for returning users
         const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
         const hasVisited = localStorage.getItem('sv_has_visited');
         const anyOpen = document.querySelector('.modal-overlay.open');
-        // Only prompt login if: running as PWA AND has visited before (returning user)
         if (isPWA && hasVisited && !anyOpen) openAuthModal('login');
       }
-    }, 3000);
+    }, 5000);
   }
 
   // Listen for auth changes (handles PWA token refresh)
@@ -857,6 +856,11 @@ async function initAuth() {
     if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
       if (session && (!currentUser || currentUser.id !== session.user.id)) {
         currentUser = session.user;
+        // Close any open login modal since we're now authenticated
+        const authModal = document.getElementById('auth-modal');
+        if (authModal && authModal.classList.contains('open')) {
+          authModal.classList.remove('open');
+        }
         await onLogin();
       }
     } else if (event === 'SIGNED_OUT') {
