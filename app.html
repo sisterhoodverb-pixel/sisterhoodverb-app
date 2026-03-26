@@ -116,7 +116,7 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .card-time{font-size:0.75rem;color:rgba(28,20,16,0.45);margin-top:2px}
 .card-tag{font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;padding:4px 10px;border-radius:20px;background:var(–cream);color:var(–terra);font-weight:500}
 .card-tag.question-tag{background:linear-gradient(135deg,var(–gold),#b8860b);color:white}
-.card-body{font-size:0.93rem;line-height:1.75;color:rgba(28,20,16,0.8);margin-bottom:18px}
+.card-body{font-size:0.93rem;line-height:1.75;color:rgba(28,20,16,0.8);margin-bottom:18px;white-space:pre-wrap;word-wrap:break-word}
 .card-body.question-body{font-family:‘Playfair Display’,serif;font-style:italic;font-size:1rem}
 .card-footer{display:flex;gap:20px;padding-top:14px;border-top:1px solid rgba(196,98,45,0.08)}
 .react-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:‘DM Sans’,sans-serif;font-size:0.8rem;color:rgba(28,20,16,0.5);transition:all 0.2s;padding:4px 0}
@@ -243,7 +243,7 @@ input[type=“file”]{display:none}
 .mobile-nav-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:‘DM Sans’,sans-serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(28,20,16,0.4);transition:all 0.2s;padding:6px 10px;border-radius:8px;min-width:54px}
 .mobile-nav-btn.active{color:var(–terra);background:rgba(196,98,45,0.08)}
 .mobile-nav-btn span:first-child{font-size:1.4rem}
-.modal-overlay{position:fixed;inset:0;background:rgba(28,20,16,0.7);z-index:500;display:none;align-items:center;justify-content:center;padding:20px}
+.modal-overlay{position:fixed;inset:0;background:rgba(28,20,16,0.85);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
 .modal-overlay.open{display:flex}
 .modal{background:var(–warm-white);border-radius:6px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:40px;box-shadow:0 20px 60px rgba(28,20,16,0.3)}
 .modal-title{font-family:‘Playfair Display’,serif;font-size:1.5rem;font-weight:700;margin-bottom:6px;color:var(–deep)}
@@ -836,14 +836,19 @@ async function initAuth() {
   } else {
     // No session yet - wait to see if onAuthStateChange restores it
     const loader = document.getElementById('pwa-loading');
-    // Give Supabase 2.5s to restore session before showing login
+    // Give Supabase 3s to restore session
     setTimeout(() => {
       if (!currentUser) {
         if (loader) { loader.style.opacity = '0'; loader.style.transition = 'opacity 0.5s'; setTimeout(() => loader.remove(), 500); }
         if (feed) feed.innerHTML = '';
-        openAuthModal('login');
+        // Only auto-show login on PWA (installed app) - not regular browser visits
+        const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+        const hasVisited = localStorage.getItem('sv_has_visited');
+        const anyOpen = document.querySelector('.modal-overlay.open');
+        // Only prompt login if: running as PWA AND has visited before (returning user)
+        if (isPWA && hasVisited && !anyOpen) openAuthModal('login');
       }
-    }, 2500);
+    }, 3000);
   }
 
   // Listen for auth changes (handles PWA token refresh)
@@ -1066,7 +1071,7 @@ function buildPostCard(post, profileMap, isCircle) {
       '</div>' +
       (isCircle ? '' : tagHtml) +
     '</div>' +
-    '<div class="' + bodyClass + '">' + textContent + gifHtml + '</div>' +
+    '<div class="' + bodyClass + '" style="' + (post.circle === 'Speak Poet!' ? 'font-family:Playfair Display,Georgia,serif;font-style:italic;font-size:1rem;line-height:1.9;' : '') + '">' + textContent + gifHtml + '</div>' +
     '<div class="card-footer">' +
       '<button class="react-btn like-btn" id="like-btn-' + post.id + '" onclick="toggleLike(this,\'' + post.id + '\')">🫂 <span>' + (post.likes || 0) + '</span></button>' +
       '<button class="react-btn" onclick="toggleReplies(\'' + post.id + '\',this)">💬 <span>Reply</span></button>' +
