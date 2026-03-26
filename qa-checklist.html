@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sisterhood(verb) — Beta Tester Checklist</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --terra: #C4622D;
+  --deep: #1C1410;
+  --cream: #F5EFE6;
+  --gold: #D4A853;
+  --warm: #FBF7F2;
+  --sage: #7A8C6E;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'DM Sans', sans-serif; background: var(--warm); color: var(--deep); padding: 32px 20px; max-width: 680px; margin: 0 auto; }
+
+.header { text-align: center; background: var(–deep); color: var(–cream); padding: 40px 32px; border-radius: 8px; margin-bottom: 32px; }
+.header-eyebrow { font-size: 0.65rem; letter-spacing: 0.3em; text-transform: uppercase; color: var(–gold); margin-bottom: 12px; }
+.header-title { font-family: ‘Playfair Display’, serif; font-size: 1.8rem; font-weight: 700; margin-bottom: 10px; }
+.header-title em { font-style: italic; font-weight: 400; color: var(–terra); }
+.header-sub { font-size: 0.85rem; color: rgba(245,239,230,0.6); line-height: 1.7; max-width: 440px; margin: 0 auto 20px; }
+.header-link { display: inline-block; background: var(–terra); color: white; padding: 10px 24px; border-radius: 2px; text-decoration: none; font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+
+.tester-info { background: white; border: 1px solid rgba(196,98,45,0.12); border-radius: 6px; padding: 20px 24px; margin-bottom: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.info-field label { display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(28,20,16,0.45); margin-bottom: 6px; font-weight: 600; }
+.info-field input { width: 100%; border: none; border-bottom: 1.5px solid rgba(196,98,45,0.2); padding: 6px 0; font-family: ‘DM Sans’, sans-serif; font-size: 0.88rem; background: transparent; outline: none; color: var(–deep); }
+.info-field input:focus { border-bottom-color: var(–terra); }
+
+.section { margin-bottom: 24px; }
+.section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.section-icon { font-size: 1.2rem; }
+.section-title { font-family: ‘Playfair Display’, serif; font-size: 1rem; font-weight: 700; color: var(–deep); }
+.section-line { flex: 1; height: 1px; background: rgba(196,98,45,0.15); }
+
+.check-item { background: white; border: 1px solid rgba(196,98,45,0.1); border-radius: 4px; padding: 14px 16px; margin-bottom: 8px; display: flex; gap: 14px; align-items: flex-start; cursor: pointer; transition: all 0.15s; }
+.check-item:hover { border-color: rgba(196,98,45,0.3); }
+.check-item.checked { background: rgba(122,140,110,0.06); border-color: rgba(122,140,110,0.3); }
+.check-item.failed { background: rgba(196,98,45,0.04); border-color: rgba(196,98,45,0.4); }
+
+.checkbox { width: 20px; height: 20px; border: 2px solid rgba(196,98,45,0.3); border-radius: 3px; flex-shrink: 0; margin-top: 1px; display: flex; align-items: center; justify-content: center; transition: all 0.15s; font-size: 0.75rem; }
+.check-item.checked .checkbox { background: var(–sage); border-color: var(–sage); color: white; }
+.check-item.failed .checkbox { background: var(–terra); border-color: var(–terra); color: white; }
+
+.check-content { flex: 1; }
+.check-label { font-size: 0.88rem; font-weight: 500; color: var(–deep); margin-bottom: 3px; }
+.check-desc { font-size: 0.76rem; color: rgba(28,20,16,0.5); line-height: 1.5; }
+.check-note { margin-top: 8px; }
+.check-note textarea { width: 100%; border: 1px solid rgba(196,98,45,0.2); border-radius: 3px; padding: 7px 10px; font-family: ‘DM Sans’, sans-serif; font-size: 0.78rem; color: var(–deep); resize: none; height: 52px; outline: none; background: var(–warm); display: none; }
+.check-note textarea:focus { border-color: var(–terra); }
+
+.btn-row { display: flex; gap: 8px; margin-top: 10px; }
+.btn-pass { background: none; border: 1.5px solid var(–sage); color: var(–sage); padding: 4px 12px; border-radius: 2px; font-family: ‘DM Sans’, sans-serif; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.btn-pass:hover { background: var(–sage); color: white; }
+.btn-fail { background: none; border: 1.5px solid var(–terra); color: var(–terra); padding: 4px 12px; border-radius: 2px; font-family: ‘DM Sans’, sans-serif; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+.btn-fail:hover { background: var(–terra); color: white; }
+
+.progress-bar-wrap { background: rgba(196,98,45,0.1); border-radius: 20px; height: 8px; margin-bottom: 8px; overflow: hidden; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(–terra), var(–gold)); border-radius: 20px; transition: width 0.3s ease; width: 0%; }
+.progress-label { font-size: 0.75rem; color: rgba(28,20,16,0.5); text-align: right; margin-bottom: 24px; }
+
+.summary { background: var(–deep); color: var(–cream); border-radius: 6px; padding: 24px 28px; margin-top: 32px; display: none; }
+.summary.show { display: block; }
+.summary-title { font-family: ‘Playfair Display’, serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 16px; color: var(–gold); }
+.summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.summary-stat { text-align: center; }
+.summary-num { font-family: ‘Playfair Display’, serif; font-size: 1.8rem; font-weight: 700; color: var(–terra); line-height: 1; }
+.summary-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(245,239,230,0.45); margin-top: 4px; }
+.failed-list { font-size: 0.82rem; line-height: 1.8; color: rgba(245,239,230,0.7); }
+.btn-copy { background: var(–terra); color: white; border: none; padding: 12px 24px; border-radius: 2px; font-family: ‘DM Sans’, sans-serif; font-size: 0.82rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; width: 100%; margin-top: 16px; transition: background 0.2s; }
+.btn-copy:hover { background: #a8501f; }
+
+.note-box { background: rgba(212,168,83,0.1); border: 1px solid rgba(212,168,83,0.3); border-radius: 4px; padding: 14px 18px; margin-bottom: 24px; font-size: 0.82rem; color: rgba(28,20,16,0.7); line-height: 1.7; }
+.note-box strong { color: var(–terra); }
+</style>
+
+</head>
+<body>
+
+<!-- Header -->
+
+<div class="header">
+  <p class="header-eyebrow">Beta Tester Guide</p>
+  <h1 class="header-title">Sisterhood<em>(verb)</em><br>QA Checklist</h1>
+  <p class="header-sub">Thank you for helping us test! Work through each item below, mark pass or fail, and add notes where something felt off.</p>
+  <a href="https://community.sisterhoodverb.com/app.html?founding=yes" class="header-link" target="_blank">Open the App ✦</a>
+</div>
+
+<!-- Tester Info -->
+
+<div class="tester-info">
+  <div class="info-field">
+    <label>Your Name</label>
+    <input type="text" placeholder="e.g. Amber Fletcher" id="tester-name">
+  </div>
+  <div class="info-field">
+    <label>Device & Browser</label>
+    <input type="text" placeholder="e.g. iPhone 14, Safari" id="tester-device">
+  </div>
+  <div class="info-field">
+    <label>Date Tested</label>
+    <input type="text" placeholder="e.g. March 26, 2026" id="tester-date">
+  </div>
+  <div class="info-field">
+    <label>Member Type</label>
+    <input type="text" placeholder="e.g. Founding Sister" id="tester-type">
+  </div>
+</div>
+
+<!-- Progress -->
+
+<div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+<div class="progress-label" id="progress-label">0 of 20 checks complete</div>
+
+<div class="note-box">
+  <strong>How to use this:</strong> Tap each item to expand it. Click ✓ Pass if it works correctly, or ✗ Fail if something is wrong. Add notes to describe what you saw. When you're done, tap "Copy My Results" to send your feedback to Tayllor.
+</div>
+
+<!-- SECTION 1: First Impression -->
+
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">👁</span>
+    <span class="section-title">First Impression</span>
+    <span class="section-line"></span>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Landing page loads correctly</div>
+      <div class="check-desc">Visit community.sisterhoodverb.com/app.html — you should see a dark hero with "Welcome home, sis" and a Join button. No jumbled text.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">No login popup on first visit</div>
+      <div class="check-desc">When you first open the app, a login modal should NOT automatically pop up. You should see the page freely without any interruption.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Colors look correct</div>
+      <div class="check-desc">The hero section should have a dark (almost black) background with cream/terra text. Not light or washed out.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2: Signup Flow -->
+
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">✍🏾</span>
+    <span class="section-title">Signing Up</span>
+    <span class="section-line"></span>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Community agreements appear before signup</div>
+      <div class="check-desc">Click Join — you should see the 5 community agreements and a checkbox. The button should be grayed out until you check the box.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Signup form works correctly</div>
+      <div class="check-desc">After agreeing, fill in your name, email, and password. The button should show "Creating your account..." while processing — not freeze or go blank.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Email confirmation screen appears</div>
+      <div class="check-desc">After signup you should see a screen that says "Check your inbox ✦" with your email address shown and clear next steps.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Confirmation email received</div>
+      <div class="check-desc">Check your inbox (and spam). You should receive a branded Sisterhood(verb) email. Check that the confirm link works.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Welcome email received</div>
+      <div class="check-desc">After confirming, check your inbox for a second email — a warm welcome from Tayllor with your first steps. Does it arrive? Does it look good?</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3: Login -->
+
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">🔑</span>
+    <span class="section-title">Logging In</span>
+    <span class="section-line"></span>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Login works and loads the app</div>
+      <div class="check-desc">After confirming your email, log in. The page should update — nav should show "My Account" and you should see the community feed with posts.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Onboarding modal appears on first login</div>
+      <div class="check-desc">On your very first login, a welcome modal should appear walking you through: welcome message, profile setup, joining a circle, and community agreements.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 4: Core Features -->
+
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">🌺</span>
+    <span class="section-title">Core Features</span>
+    <span class="section-line"></span>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Post to the community feed</div>
+      <div class="check-desc">Type something in the "What's on your heart today?" box and hit Share. Your post should appear at the top of the feed immediately.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Post preserves line breaks</div>
+      <div class="check-desc">Type a post with multiple lines (like a poem or list). After sharing, the line breaks should be preserved exactly as you typed them.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Like a post — count stays</div>
+      <div class="check-desc">Tap the 🫂 button on any post. The count should go up. Refresh the page — the like count should still be there and your like should still show.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Reply to a post</div>
+      <div class="check-desc">Tap 💬 Reply on any post. Type a reply and submit. It should appear below the post. The original poster should get a notification.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Join a Circle</div>
+      <div class="check-desc">Go to Circles in the bottom nav. Tap Join on a circle. It should say "Joined ✦". Go to your profile — your circle count should go up.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Post inside a Circle</div>
+      <div class="check-desc">Open a Circle you've joined. Type a post in the circle composer and share. It should appear in that circle's feed.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 5: Profile -->
+
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">👤</span>
+    <span class="section-title">Profile</span>
+    <span class="section-line"></span>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Edit and save profile info</div>
+      <div class="check-desc">Go to Profile. Fill in your display name, bio, and location. Tap Save Changes. Refresh the page — your info should still be there.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Upload a profile photo</div>
+      <div class="check-desc">Tap the 📷 button on your avatar. Select a photo. The crop modal should open. Crop it and save. Your photo should appear on your profile.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 6: Overall Feel -->
+
+<div class="section">
+  <div class="section-header">
+    <span class="section-icon">💬</span>
+    <span class="section-title">Overall Feel</span>
+    <span class="section-line"></span>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Mobile experience feels smooth</div>
+      <div class="check-desc">Does the app feel comfortable on your phone? Easy to scroll, tap, and navigate? Nothing feels cramped or hard to reach?</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">The space feels welcoming</div>
+      <div class="check-desc">This is a vibe check. When you look at the feed, read the copy, and interact with the app — does it feel like a safe, warm, intentional space for women?</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Pass</button><button class="btn-fail" onclick="markFail(event,this)">✗ Fail</button></div>
+        <textarea placeholder="Notes (optional)..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="check-item" onclick="expand(this)">
+    <div class="checkbox"></div>
+    <div class="check-content">
+      <div class="check-label">Would you invite another woman to join?</div>
+      <div class="check-desc">The most important question. If yes — great. If no or not sure — please tell us why in the notes. That hesitation is valuable.</div>
+      <div class="check-note">
+        <div class="btn-row"><button class="btn-pass" onclick="markPass(event,this)">✓ Yes!</button><button class="btn-fail" onclick="markFail(event,this)">✗ Not yet</button></div>
+        <textarea placeholder="Tell us why either way..."></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Summary -->
+
+<div class="summary" id="summary">
+  <div class="summary-title">Your Test Results ✦</div>
+  <div class="summary-stats">
+    <div class="summary-stat"><div class="summary-num" id="s-total">0</div><div class="summary-label">Total Checked</div></div>
+    <div class="summary-stat"><div class="summary-num" id="s-pass" style="color:var(--sage)">0</div><div class="summary-label">Passed</div></div>
+    <div class="summary-stat"><div class="summary-num" id="s-fail" style="color:var(--terra)">0</div><div class="summary-label">Failed</div></div>
+  </div>
+  <div id="failed-items"></div>
+  <button class="btn-copy" onclick="copyResults()">Copy My Results to Send to Tayllor ✦</button>
+</div>
+
+<script>
+var total = 20;
+
+function expand(item) {
+  const note = item.querySelector('.check-note');
+  const ta = note.querySelector('textarea');
+  if (!item.classList.contains('checked') && !item.classList.contains('failed')) {
+    ta.style.display = ta.style.display === 'block' ? 'none' : 'block';
+  }
+}
+
+function markPass(e, btn) {
+  e.stopPropagation();
+  const item = btn.closest('.check-item');
+  item.classList.remove('failed');
+  item.classList.add('checked');
+  item.querySelector('.checkbox').textContent = '✓';
+  item.querySelector('textarea').style.display = 'none';
+  updateProgress();
+}
+
+function markFail(e, btn) {
+  e.stopPropagation();
+  const item = btn.closest('.check-item');
+  item.classList.remove('checked');
+  item.classList.add('failed');
+  item.querySelector('.checkbox').textContent = '✗';
+  item.querySelector('textarea').style.display = 'block';
+  item.querySelector('textarea').focus();
+  updateProgress();
+}
+
+function updateProgress() {
+  const checked = document.querySelectorAll('.check-item.checked').length;
+  const failed = document.querySelectorAll('.check-item.failed').length;
+  const done = checked + failed;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = done + ' of ' + total + ' checks complete';
+  document.getElementById('s-total').textContent = done;
+  document.getElementById('s-pass').textContent = checked;
+  document.getElementById('s-fail').textContent = failed;
+
+  if (done > 0) {
+    document.getElementById('summary').classList.add('show');
+    // List failed items
+    var failedItems = document.querySelectorAll('.check-item.failed');
+    var failedHtml = '';
+    if (failedItems.length > 0) {
+      failedHtml = '<div style="margin-bottom:12px;font-size:0.78rem;color:rgba(245,239,230,0.5);text-transform:uppercase;letter-spacing:0.1em;">Issues found:</div>';
+      failedItems.forEach(function(item) {
+        var label = item.querySelector('.check-label').textContent;
+        var note = item.querySelector('textarea').value;
+        failedHtml += '<div style="padding:8px 0;border-bottom:1px solid rgba(245,239,230,0.08);font-size:0.83rem;color:rgba(245,239,230,0.7);">✗ ' + label + (note ? '<br><span style="font-size:0.76rem;color:rgba(245,239,230,0.4);padding-left:14px;">' + note + '</span>' : '') + '</div>';
+      });
+    } else if (done === total) {
+      failedHtml = '<div style="font-size:0.88rem;color:rgba(245,239,230,0.7);text-align:center;padding:8px 0;">Everything passed! 🌺 You're a great tester.</div>';
+    }
+    document.getElementById('failed-items').innerHTML = failedHtml;
+  }
+}
+
+function copyResults() {
+  var name = document.getElementById('tester-name').value || 'Beta Tester';
+  var device = document.getElementById('tester-device').value || 'Unknown device';
+  var date = document.getElementById('tester-date').value || new Date().toLocaleDateString();
+  var checked = document.querySelectorAll('.check-item.checked').length;
+  var failed = document.querySelectorAll('.check-item.failed').length;
+
+  var text = 'SISTERHOOD(VERB) BETA TEST RESULTS\n';
+  text += '================================\n';
+  text += 'Tester: ' + name + '\n';
+  text += 'Device: ' + device + '\n';
+  text += 'Date: ' + date + '\n';
+  text += 'Results: ' + checked + ' passed, ' + failed + ' failed\n\n';
+
+  var failedItems = document.querySelectorAll('.check-item.failed');
+  if (failedItems.length > 0) {
+    text += 'ISSUES FOUND:\n';
+    failedItems.forEach(function(item) {
+      var label = item.querySelector('.check-label').textContent;
+      var note = item.querySelector('textarea').value;
+      text += '✗ ' + label + '\n';
+      if (note) text += '  Notes: ' + note + '\n';
+    });
+  } else {
+    text += 'All checks passed! ✦\n';
+  }
+
+  // Additional notes from passed items
+  var notes = [];
+  document.querySelectorAll('.check-item.checked textarea').forEach(function(ta) {
+    if (ta.value.trim()) notes.push(ta.value.trim());
+  });
+  if (notes.length > 0) {
+    text += '\nADDITIONAL NOTES:\n';
+    notes.forEach(function(n) { text += '• ' + n + '\n'; });
+  }
+
+  navigator.clipboard.writeText(text).then(function() {
+    var btn = document.querySelector('.btn-copy');
+    btn.textContent = 'Copied! ✦ Now paste and send to Tayllor';
+    btn.style.background = 'var(--sage)';
+    setTimeout(function() {
+      btn.textContent = 'Copy My Results to Send to Tayllor ✦';
+      btn.style.background = '';
+    }, 3000);
+  }).catch(function() {
+    alert('Please manually copy the results above and send to Tayllor.');
+  });
+}
+</script>
+
+</body>
+</html>
