@@ -1253,31 +1253,37 @@ async function toggleLike(btn, postId) {
   if (!currentUser) { showToast('Log in to like posts ♦'); return; }
   if (!postId) return;
   const span = btn.querySelector('span');
-  const n = parseInt(span.textContent) || 0;
   const isLiked = btn.classList.contains('liked');
-  // Optimistic update
+
+  // Optimistic UI update
   btn.classList.toggle('liked');
-  span.textContent = isLiked ? n - 1 : n + 1;
+  btn.disabled = true;
+
   if (!isLiked) {
-    // Add like
+    // Add like to post_likes table
     const {error} = await _supabase.from('post_likes').insert({post_id: postId, user_id: currentUser.id});
     if (error && error.code !== '23505') {
-      // Revert on error
-      btn.classList.remove('liked'); span.textContent = n;
-      showToast('Could not like post'); return;
+      btn.classList.remove('liked');
+      btn.disabled = false;
+      showToast('Could not like post');
+      return;
     }
-    await _supabase.from('posts').update({likes: n + 1}).eq('id', postId);
+    // Get fresh count from DB
+    const {data:countData} = await _supabase.from('post_likes').select('id', {count:'exact'}).eq('post_id', postId);
+    const newCount = countData?.length || (parseInt(span.textContent) || 0) + 1;
+    await _supabase.from('posts').update({likes: newCount}).eq('id', postId);
+    span.textContent = newCount;
     showToast('Loved ♦');
   } else {
     // Remove like
     await _supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
-    // Get current DB count to avoid going negative
-    const {data:postData} = await _supabase.from('posts').select('likes').eq('id', postId).single();
-    const currentLikes = postData?.likes || 0;
-    await _supabase.from('posts').update({likes: Math.max(0, currentLikes - 1)}).eq('id', postId);
-    span.textContent = Math.max(0, currentLikes - 1);
-    showToast('Removed');
+    // Get fresh count from DB
+    const {data:countData} = await _supabase.from('post_likes').select('id', {count:'exact'}).eq('post_id', postId);
+    const newCount = Math.max(0, countData?.length || (parseInt(span.textContent) || 1) - 1);
+    await _supabase.from('posts').update({likes: newCount}).eq('id', postId);
+    span.textContent = newCount;
   }
+  btn.disabled = false;
 }
 
 // ── CIRCLES ──
