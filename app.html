@@ -822,7 +822,8 @@ async function initAuth() {
         const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
         const hasVisited = localStorage.getItem('sv_has_visited');
         const anyOpen = document.querySelector('.modal-overlay.open');
-        if (isPWA && hasVisited && !anyOpen) openAuthModal('login');
+        // Show login on PWA whether first time or returning — session is always fresh on install
+        if (isPWA && !anyOpen) openAuthModal('login');
       }
     }, 5000);
   }
