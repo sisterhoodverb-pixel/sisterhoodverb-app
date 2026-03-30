@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms of Service — Sisterhood(verb)</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root { --terra:#C4622D; --deep:#1C1410; --cream:#F5EFE6; --warm:#FBF7F2; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--warm); color:var(--deep); padding:40px 20px; }
+.wrap { max-width:760px; margin:0 auto; }
+.header { border-bottom:2px solid var(--terra); padding-bottom:24px; margin-bottom:40px; }
+.logo { font-family:'Playfair Display',serif; font-size:1.1rem; color:var(--terra); margin-bottom:8px; }
+.logo em { font-style:italic; font-weight:400; }
+h1 { font-family:'Playfair Display',serif; font-size:2rem; font-weight:700; margin-bottom:8px; }
+.date { font-size:0.82rem; color:rgba(28,20,16,0.5); }
+h2 { font-family:'Playfair Display',serif; font-size:1.1rem; font-weight:700; margin:32px 0 12px; color:var(--terra); }
+p { font-size:0.92rem; line-height:1.9; color:rgba(28,20,16,0.8); margin-bottom:14px; }
+ul { padding-left:20px; margin-bottom:14px; }
+li { font-size:0.92rem; line-height:1.9; color:rgba(28,20,16,0.8); margin-bottom:6px; }
+.contact-box { background:white; border:1px solid rgba(196,98,45,0.15); border-radius:4px; padding:24px; margin-top:40px; }
+.highlight { background:rgba(196,98,45,0.06); border-left:3px solid var(--terra); padding:16px 20px; border-radius:0 4px 4px 0; margin-bottom:14px; }
+a { color:var(--terra); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="logo">Sisterhood<em>(verb)</em></div>
+    <h1>Terms of Service</h1>
+    <div class="date">Effective Date: April 1, 2026 · Last Updated: April 1, 2026</div>
+  </div>
+
+  <div class="highlight">
+    <p style="margin:0;">Please read these Terms of Service carefully before using Sisterhood(verb). By creating an account or using our Service, you agree to be bound by these terms.</p>
+  </div>
+
+  <h2>1. About Sisterhood(verb)</h2>
+  <p>Sisterhood(verb) is a private community platform for women to connect, create, and practice sisterhood. The Service is operated by Tayllor Oyewole-Davis ("we," "us," or "our") and is accessible at community.sisterhoodverb.com and through our mobile application.</p>
+
+  <h2>2. Eligibility</h2>
+  <p>To use Sisterhood(verb), you must:</p>
+  <ul>
+    <li>Be at least 18 years of age</li>
+    <li>Identify as a woman or as someone who belongs in women's community spaces</li>
+    <li>Provide accurate and complete registration information</li>
+    <li>Agree to these Terms of Service and our Community Agreements</li>
+  </ul>
+  <p>We reserve the right to refuse service to anyone for any reason at any time, including if we believe you do not meet these eligibility requirements.</p>
+
+  <h2>3. Your Account</h2>
+  <p>You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. You agree to notify us immediately at sisterhoodverb@gmail.com if you suspect any unauthorized use of your account.</p>
+  <p>You may not create more than one account, share your account with others, or transfer your account to another person.</p>
+
+  <h2>4. Membership Tiers and Payments</h2>
+  <p><strong>Free Membership:</strong> Access to the community feed, up to 2 Circles, and community events at no charge.</p>
+  <p><strong>Founding Membership:</strong> Available to the first 50 members who join using a founding member link. Founding members receive full access to all features at no charge for the lifetime of their membership, as long as their account remains in good standing.</p>
+  <p><strong>Paid Membership (coming soon):</strong> Premium tiers with additional features will be available in the future. Paid members will be billed on a recurring basis. Cancellation policies will be outlined at the time paid tiers are introduced.</p>
+  <p>We reserve the right to modify membership pricing and features with reasonable notice to members.</p>
+
+  <h2>5. Community Agreements and Conduct</h2>
+  <p>All members must agree to our Community Agreements upon joining. By using the Service, you agree to:</p>
+  <ul>
+    <li><strong>Honor the safe space.</strong> Treat all members with dignity and respect.</li>
+    <li><strong>No judgment.</strong> Offer opinions only when invited. This is a space for sharing, not advising.</li>
+    <li><strong>Assume best intentions.</strong> Pause before responding to anything that feels offensive.</li>
+    <li><strong>Zero tolerance.</strong> Bigotry, racism, homophobia, transphobia, ableism, and any form of harm are not welcome and will result in immediate removal.</li>
+    <li><strong>Confidentiality.</strong> What is shared in this community stays in this community. Do not share other members' posts, stories, or personal information outside the platform.</li>
+  </ul>
+
+  <h2>6. Prohibited Content and Behavior</h2>
+  <p>You agree NOT to post, share, or engage in:</p>
+  <ul>
+    <li>Harassment, bullying, threatening, or abusive behavior toward any member</li>
+    <li>Hate speech, discriminatory content, or content that demeans any group</li>
+    <li>Spam, unsolicited promotions, or commercial solicitation without permission</li>
+    <li>Content that violates the privacy of others, including sharing personal information without consent</li>
+    <li>Illegal content or content that promotes illegal activity</li>
+    <li>Impersonation of any person or organization</li>
+    <li>Content that infringes on the intellectual property rights of others</li>
+    <li>Misinformation, harmful health claims, or content intended to deceive</li>
+  </ul>
+  <p>We reserve the right to remove any content and terminate any account that violates these terms, without notice and at our sole discretion.</p>
+
+  <h2>7. Your Content</h2>
+  <p>You retain ownership of the content you post on Sisterhood(verb). By posting content, you grant us a non-exclusive, royalty-free license to display and distribute that content within the Service for the purpose of operating the platform.</p>
+  <p>You represent and warrant that you own or have the rights to all content you post, and that your content does not violate any third-party rights or applicable laws.</p>
+  <p>We do not claim ownership of your original writing, poetry, or creative work. Your words are yours.</p>
+
+  <h2>8. Moderation and Enforcement</h2>
+  <p>We take community safety seriously. We reserve the right to:</p>
+  <ul>
+    <li>Remove any content that violates these Terms or our Community Agreements</li>
+    <li>Suspend or terminate accounts for violations, without prior notice</li>
+    <li>Investigate reports of misconduct and take appropriate action</li>
+  </ul>
+  <p>If your account is terminated for a violation, you will not be entitled to a refund of any paid membership fees. If you believe a moderation decision was made in error, you may contact us at sisterhoodverb@gmail.com to appeal.</p>
+
+  <h2>9. Intellectual Property</h2>
+  <p>The Sisterhood(verb) name, logo, design, and all original content created by us are protected by copyright and trademark law. You may not reproduce, distribute, or create derivative works from our intellectual property without our express written permission.</p>
+
+  <h2>10. Disclaimers</h2>
+  <p>Sisterhood(verb) is provided "as is" without warranties of any kind. We do not guarantee that the Service will be uninterrupted, error-free, or completely secure. We are not responsible for the actions, content, or conduct of other members.</p>
+  <p>The content shared in Sisterhood(verb) is for community connection purposes only and does not constitute professional medical, legal, financial, or therapeutic advice. Always consult a qualified professional for advice specific to your situation.</p>
+
+  <h2>11. Limitation of Liability</h2>
+  <p>To the fullest extent permitted by law, Sisterhood(verb) and Tayllor Oyewole-Davis shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of or inability to use the Service, even if we have been advised of the possibility of such damages.</p>
+
+  <h2>12. Termination</h2>
+  <p>You may close your account at any time by contacting us at sisterhoodverb@gmail.com. We may terminate or suspend your access to the Service at any time, with or without cause, with or without notice.</p>
+  <p>Upon termination, your right to use the Service ceases immediately. Provisions of these Terms that by their nature should survive termination will survive, including ownership provisions, warranty disclaimers, and limitations of liability.</p>
+
+  <h2>13. Changes to These Terms</h2>
+  <p>We may modify these Terms from time to time. When we make material changes, we will notify members through the app or via email at least 14 days before the changes take effect. Your continued use of the Service after that date constitutes your acceptance of the updated Terms.</p>
+
+  <h2>14. Governing Law</h2>
+  <p>These Terms are governed by the laws of the State of California, without regard to its conflict of law provisions. Any disputes arising from these Terms or your use of the Service shall be resolved in the courts of Santa Barbara County, California.</p>
+
+  <h2>15. Entire Agreement</h2>
+  <p>These Terms of Service, together with our Privacy Policy and Community Agreements, constitute the entire agreement between you and Sisterhood(verb) regarding your use of the Service.</p>
+
+  <div class="contact-box">
+    <h2 style="margin-top:0;">Questions?</h2>
+    <p>If you have questions about these Terms of Service, please contact us:</p>
+    <p><strong>Sisterhood(verb)</strong><br>
+    Tayllor Oyewole-Davis, Founder<br>
+    Email: <a href="mailto:sisterhoodverb@gmail.com">sisterhoodverb@gmail.com</a><br>
+    Phone: 310-741-7500<br>
+    Website: <a href="https://www.sisterhoodverb.com">www.sisterhoodverb.com</a></p>
+  </div>
+
+</div>
+</body>
+</html>
