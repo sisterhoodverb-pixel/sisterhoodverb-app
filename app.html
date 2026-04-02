@@ -799,6 +799,7 @@ nav{padding:14px 20px}.nav-links{display:none}
   <button class="mobile-nav-btn" onclick="showView('events',this)" id="mob-events"><span>📅</span>Events</button>
   <button class="mobile-nav-btn" onclick="showView('resources',this)" id="mob-resources"><span>📚</span>Library</button>
   <button class="mobile-nav-btn" onclick="showViewWithProfile('profile',this)" id="mob-profile"><span>👤</span>Profile</button>
+  <button class="mobile-nav-btn" id="mob-notif" onclick="toggleNotifDropdown()" style="position:relative;"><span>🔔</span>Alerts<span id="mob-notif-badge" style="display:none;position:absolute;top:4px;right:8px;background:#e74c3c;color:white;border-radius:50%;width:16px;height:16px;font-size:0.55rem;font-weight:700;align-items:center;justify-content:center;border:2px solid white;"></span></button>
 </div>
 
 <script>
@@ -1912,6 +1913,8 @@ async function changePassword() {
     const wrap = document.getElementById('notif-wrap');
 
     if (wrap) wrap.style.display = 'block';
+    const mobBadge = document.getElementById('mob-notif-badge');
+    if (mobBadge) { mobBadge.style.display = unread > 0 ? 'flex' : 'none'; if (unread > 0) mobBadge.textContent = unread > 9 ? '9+' : unread; }
     if (badge) {
       if (unread > 0) {
         badge.style.display = 'flex';
@@ -2453,7 +2456,7 @@ async function changePassword() {
         </div>
       </div>
     </div>
-    <p style="font-size:0.78rem;color:rgba(28,20,16,0.4);margin-bottom:20px;line-height:1.7;">Don't see it? Check your spam or junk folder. The email comes from <strong>onboarding@resend.dev</strong></p>
+    <p style="font-size:0.78rem;color:rgba(28,20,16,0.4);margin-bottom:20px;line-height:1.7;">Don't see it? Check your spam or junk folder. The email comes from <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="d9b6b7bbb6b8abbdb0b7be99abbcaabcb7bdf7bdbcaf">[email&#160;protected]</a></strong></p>
     <button class="modal-agree-btn" onclick="closeConfirmationScreen()" style="margin-bottom:12px;">I'll go check my email ✦</button>
     <div class="modal-cancel"><button onclick="closeConfirmationScreen();openAuthModal('login');">Already confirmed? Log in</button></div>
   </div>
@@ -2468,8 +2471,4 @@ async function changePassword() {
     <a href="/terms-of-service.html" style="color:rgba(245,239,230,0.45);font-size:0.72rem;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--cream)'" onmouseout="this.style.color='rgba(245,239,230,0.45)'">Terms of Service</a>
     <a href="https://www.sisterhoodverb.com" style="color:rgba(245,239,230,0.45);font-size:0.72rem;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--cream)'" onmouseout="this.style.color='rgba(245,239,230,0.45)'">Main Site</a>
   </div>
-  <div style="font-size:0.68rem;color:rgba(245,239,230,0.2);">© 2026 Sisterhood(verb) · Tayllor Oyewole-Davis · All rights reserved</div>
-</div>
-
-</body>
-</html>
+  <div style="font-size:0.68rem;color:rgb
