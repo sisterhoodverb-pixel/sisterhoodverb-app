@@ -532,6 +532,21 @@ footer {
   .mobile-cta { display: block; }
 }
 </style>
+<script>
+// If this page was loaded with ?founding=yes, make sure all app links carry it through
+(function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('founding') === 'yes') {
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('a[href*="app.html"]').forEach(function(link) {
+        if (!link.href.includes('founding=yes') && !link.textContent.includes('Log in')) {
+          link.href = link.href + (link.href.includes('?') ? '&' : '?') + 'founding=yes';
+        }
+      });
+    });
+  }
+})();
+</script>
 </head>
 <body>
 
@@ -541,7 +556,7 @@ footer {
   <div class="nav-links">
     <a href="#why">Our Why</a>
     <a href="#circles">Circles</a>
-    <a href="https://community.sisterhoodverb.com/app.html" class="nav-cta">Join the Community ✦</a>
+    <a href="https://community.sisterhoodverb.com/app.html?founding=yes" class="nav-cta">Join the Community ✦</a>
   </div>
 </nav>
 
@@ -674,7 +689,7 @@ footer {
   <div class="footer-logo">Sisterhood<em>(verb)</em></div>
   <p class="footer-tagline">A space to be seen, speak freely, and practice sisterhood.</p>
   <div class="footer-links">
-    <a href="https://community.sisterhoodverb.com/app.html">Enter the Community</a>
+    <a href="https://community.sisterhoodverb.com/app.html?founding=yes">Enter the Community</a>
     <a href="https://community.sisterhoodverb.com/app.html?founding=yes">Founding Membership</a>
     <a href="https://www.sisterhoodverb.com">Main Site</a>
   </div>
