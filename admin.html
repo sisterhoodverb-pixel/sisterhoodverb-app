@@ -129,6 +129,8 @@ textarea.inp{resize:vertical;line-height:1.7}
     <div class="nav-items">
       <div class="nav-item active" onclick="showSection('overview',this)"><span class="nav-icon">📊</span> Overview</div>
       <div class="nav-item" onclick="showSection('members',this)"><span class="nav-icon">👥</span> Members</div>
+      <div class="nav-item" onclick="showSection('trials',this)"><span class="nav-icon">⏳</span> Trial Members</div>
+      <div class="nav-item" onclick="showSection('circles',this)"><span class="nav-icon">🔐</span> Private Circles</div>
       <div class="nav-item" onclick="showSection('email',this);renderScheduled()"><span class="nav-icon">📮</span> Daily Email</div>
       <div class="nav-item" onclick="showSection('engagement',this)"><span class="nav-icon">🔥</span> Engagement</div>
       <div class="nav-item" onclick="showSection('announce',this)"><span class="nav-icon">📌</span> Announce</div>
@@ -176,7 +178,41 @@ textarea.inp{resize:vertical;line-height:1.7}
   </div>
 </div>
 
+<!-- TRIAL MEMBERS -->
+<div class="section" id="sec-trials">
+  <div class="page-header"><div class="page-title">Trial Members</div><div class="page-sub">Women who joined via the Health Equity Day event ✦</div></div>
+  <div class="card">
+    <div style="background:linear-gradient(135deg,#2d5a3d,var(--sage));border-radius:4px;padding:16px 20px;margin-bottom:20px;color:white;">
+      <div style="font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:4px;">Event Trial Link</div>
+      <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;">community.sisterhoodverb.com/app.html?trial=yes</div>
+      <div style="font-size:0.78rem;color:rgba(255,255,255,0.7);margin-top:4px;">Share this at the April 25th event — gives 60 days full access</div>
+    </div>
+    <div id="trial-members-list"><div style="text-align:center;padding:24px;color:rgba(28,20,16,0.4);">Loading trial members...</div></div>
+  </div>
+</div>
+
+<!-- PRIVATE CIRCLES -->
+<div class="section" id="sec-circles">
+  <div class="page-header"><div class="page-title">Private Circles</div><div class="page-sub">Password-protected spaces for organizations ✦</div></div>
+  <div class="card" style="margin-bottom:20px;">
+    <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:4px;">Create a Private Circle</div>
+    <div style="font-size:0.82rem;color:rgba(28,20,16,0.5);margin-bottom:20px;">Organizations pay a subscription fee to have their own private space ✦</div>
+    <div class="grp"><label class="label">Circle Name</label><input class="inp" id="pc-name" type="text" placeholder="e.g. NAACP SB Members Circle"></div>
+    <div class="grp"><label class="label">Description</label><input class="inp" id="pc-desc" type="text" placeholder="What is this circle for?"></div>
+    <div class="grp"><label class="label">Access Code</label><input class="inp" id="pc-code" type="text" placeholder="e.g. naacp2026 — members enter this to join"></div>
+    <div class="grp"><label class="label">Organization / Subscriber</label><input class="inp" id="pc-org" type="text" placeholder="e.g. NAACP Santa Barbara"></div>
+    <div class="grp"><label class="label">Monthly Fee ($)</label><input class="inp" id="pc-fee" type="number" placeholder="e.g. 99"></div>
+    <button class="btn btn-primary" onclick="createPrivateCircle()">Create Private Circle ✦</button>
+    <div class="msg" id="pc-msg"></div>
+  </div>
+  <div class="card">
+    <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;margin-bottom:20px;">Active Private Circles</div>
+    <div id="private-circles-list"><div style="text-align:center;padding:24px;color:rgba(28,20,16,0.4);">No private circles yet ✦</div></div>
+  </div>
+</div>
+
 <!-- EMAIL -->
+
 <div class="section" id="sec-email">
   <div class="page-header"><div class="page-title">Daily Email</div><div class="page-sub">Write now, send now or schedule for later ✦</div></div>
 
@@ -327,6 +363,8 @@ function showSection(name, el) {
   document.getElementById('sec-'+name).classList.add('active');
   el.classList.add('active');
   if(name==='members') loadMembers();
+  if(name==='trials') loadTrialMembers();
+  if(name==='circles') renderPrivateCircles();
   if(name==='engagement') loadEngagement();
   if(name==='proposals') loadProposals();
   if(name==='reports') loadReports();
@@ -760,6 +798,127 @@ function checkDueToday() {
     banner.style.display = 'none';
   }
 }
+
+
+// ── TRIAL MEMBERS ──
+async function loadTrialMembers() {
+  const container = document.getElementById('trial-members-list');
+  if (!container) return;
+
+  const { data: trials } = await _supabase
+    .from('profiles')
+    .select('id, name, handle, trial_expires_at, membership_tier')
+    .eq('membership_tier', 'event_trial')
+    .order('created_at', { ascending: false });
+
+  if (!trials || trials.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(28,20,16,0.4);">No trial members yet — share the event link at April 25th! 🌺</div>';
+    return;
+  }
+
+  container.innerHTML = trials.map(m => {
+    const expires = m.trial_expires_at ? new Date(m.trial_expires_at) : null;
+    const daysLeft = expires ? Math.ceil((expires - new Date()) / (1000 * 60 * 60 * 24)) : 0;
+    const statusColor = daysLeft > 14 ? 'var(--sage)' : daysLeft > 0 ? 'var(--terra)' : '#c0392b';
+    const statusText = daysLeft > 0 ? daysLeft + ' days left' : 'Expired';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(196,98,45,0.08);">
+      <div>
+        <div style="font-weight:600;font-size:0.9rem;">${m.name || 'Sister'}</div>
+        <div style="font-size:0.78rem;color:rgba(28,20,16,0.45);">${m.handle || ''}</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <span style="font-size:0.72rem;font-weight:700;color:${statusColor};">${statusText}</span>
+        <button onclick="convertToFounding('${m.id}')" style="background:var(--gold);color:white;border:none;padding:5px 12px;border-radius:2px;cursor:pointer;font-size:0.72rem;font-family:'DM Sans',sans-serif;font-weight:600;">→ Founding</button>
+        <button onclick="convertToFree('${m.id}')" style="background:none;border:1.5px solid rgba(196,98,45,0.3);color:rgba(28,20,16,0.5);padding:5px 12px;border-radius:2px;cursor:pointer;font-size:0.72rem;font-family:'DM Sans',sans-serif;">→ Free</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function convertToFounding(userId) {
+  await _supabase.from('profiles').update({membership_tier: 'founding', trial_expires_at: null}).eq('id', userId);
+  showMsg('trial-msg', 'ok', 'Converted to Founding Sister ✦');
+  loadTrialMembers();
+}
+
+async function convertToFree(userId) {
+  await _supabase.from('profiles').update({membership_tier: 'free', trial_expires_at: null}).eq('id', userId);
+  showMsg('trial-msg', 'ok', 'Converted to Free member');
+  loadTrialMembers();
+}
+
+// ── PRIVATE CIRCLES ──
+const PRIVATE_CIRCLES_KEY = 'sv_private_circles';
+
+function getPrivateCircles() {
+  try { return JSON.parse(localStorage.getItem(PRIVATE_CIRCLES_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function createPrivateCircle() {
+  const name = document.getElementById('pc-name').value.trim();
+  const desc = document.getElementById('pc-desc').value.trim();
+  const code = document.getElementById('pc-code').value.trim();
+  const org = document.getElementById('pc-org').value.trim();
+  const fee = document.getElementById('pc-fee').value.trim();
+
+  if (!name || !code || !org) {
+    showMsg('pc-msg', 'err', 'Please fill in circle name, access code, and organization');
+    return;
+  }
+
+  const circles = getPrivateCircles();
+  if (circles.find(c => c.name === name)) {
+    showMsg('pc-msg', 'err', 'A circle with this name already exists');
+    return;
+  }
+
+  circles.push({ id: Date.now(), name, desc, code, org, fee: fee || '0', created: new Date().toISOString() });
+  localStorage.setItem(PRIVATE_CIRCLES_KEY, JSON.stringify(circles));
+
+  document.getElementById('pc-name').value = '';
+  document.getElementById('pc-desc').value = '';
+  document.getElementById('pc-code').value = '';
+  document.getElementById('pc-org').value = '';
+  document.getElementById('pc-fee').value = '';
+
+  showMsg('pc-msg', 'ok', 'Private circle created! Add it to app.html circleInfo to activate ✦');
+  renderPrivateCircles();
+}
+
+function renderPrivateCircles() {
+  const container = document.getElementById('private-circles-list');
+  if (!container) return;
+  const circles = getPrivateCircles();
+
+  if (circles.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(28,20,16,0.4);">No private circles yet ✦</div>';
+    return;
+  }
+
+  container.innerHTML = circles.map(c => `
+    <div style="border:1px solid rgba(196,98,45,0.12);border-radius:4px;padding:16px 20px;margin-bottom:10px;background:white;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="font-weight:600;font-size:0.9rem;margin-bottom:2px;">🔐 ${c.name}</div>
+          <div style="font-size:0.78rem;color:rgba(28,20,16,0.45);">${c.org} · $${c.fee}/month</div>
+        </div>
+        <button onclick="deletePrivateCircle(${c.id})" style="background:none;border:none;color:rgba(196,98,45,0.4);cursor:pointer;font-size:0.82rem;">✕</button>
+      </div>
+      <div style="font-size:0.82rem;color:rgba(28,20,16,0.6);margin-bottom:10px;">${c.desc || 'No description'}</div>
+      <div style="display:flex;gap:16px;font-size:0.78rem;">
+        <span style="color:var(--terra);">Code: <strong>${c.code}</strong></span>
+        <span style="color:rgba(28,20,16,0.4);">Created: ${new Date(c.created).toLocaleDateString()}</span>
+      </div>
+    </div>`).join('');
+}
+
+function deletePrivateCircle(id) {
+  if (!confirm('Delete this private circle?')) return;
+  const circles = getPrivateCircles().filter(c => c.id !== id);
+  localStorage.setItem(PRIVATE_CIRCLES_KEY, JSON.stringify(circles));
+  renderPrivateCircles();
+}
+
 
 </script>
 
