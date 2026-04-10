@@ -1423,8 +1423,43 @@ async function openCircle(name) {
 
   const {count} = await _supabase.from('circle_members').select('*',{count:'exact'}).eq('circle_name', name);
   document.getElementById('circle-detail-count').textContent = (count || 0) + ' sisters';
+  loadCircleResources(name);
   loadCircleFeed(name);
   showView('circle-detail', null);
+}
+
+async function loadCircleResources(circleName) {
+  const existing = document.getElementById('circle-resources-section');
+  if (existing) existing.remove();
+
+  const {data:resources} = await _supabase
+    .from('circle_resources')
+    .select('*')
+    .eq('circle_name', circleName)
+    .order('created_at', {ascending: true});
+
+  if (!resources || resources.length === 0) return;
+
+  const section = document.createElement('div');
+  section.id = 'circle-resources-section';
+  section.innerHTML = `
+    <div style="margin-bottom:28px;">
+      <div class="section-label" style="margin-bottom:16px;">Resources & Links</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${resources.map(r => `
+          <a href="${r.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">
+            <span style="font-size:1.4rem;flex-shrink:0;">${r.type === 'pdf' ? '📄' : r.type === 'video' ? '🎥' : '🔗'}</span>
+            <div style="flex:1;">
+              <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">${r.title}</div>
+              ${r.description ? `<div style="font-size:0.82rem;color:rgba(28,20,16,0.6);line-height:1.6;">${r.description}</div>` : ''}
+            </div>
+            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">${r.type === 'pdf' ? 'Download' : 'Visit →'}</span>
+          </a>`).join('')}
+      </div>
+    </div>`;
+
+  const feed = document.getElementById('circle-feed-posts');
+  if (feed) feed.parentNode.insertBefore(section, feed);
 }
 
 async function loadCircleFeed(circleName) {
