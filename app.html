@@ -1368,22 +1368,100 @@ async function refreshProfileStats() {
 async function openCircle(name) {
   currentCircle = name;
   const info = circleInfo[name] || {icon:'✦', desc:'', bg:'var(--deep)'};
+  const isPublicCircle = !!info.isPublic;
+
   document.getElementById('circle-detail-icon').textContent = info.icon;
   document.getElementById('circle-detail-name').textContent = name;
   document.getElementById('circle-detail-desc').textContent = info.desc;
   document.getElementById('circle-detail-header').style.background = info.bg;
-  if (currentUser) {
-    const {data:m} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id).eq('circle_name', name).single();
-    circleIsJoined = !!m;
-    const joinBtn = document.getElementById('circle-detail-join-btn');
-    joinBtn.textContent = circleIsJoined ? 'Joined ✦' : 'Join Circle';
-    joinBtn.className = circleIsJoined ? 'circle-join-btn joined' : 'circle-join-btn';
-    document.getElementById('circle-composer').style.display = circleIsJoined ? 'block' : 'none';
+
+  const joinBtn = document.getElementById('circle-detail-join-btn');
+  const existingPrompt = document.getElementById('public-join-prompt');
+  if (existingPrompt) existingPrompt.remove();
+  const existingResources = document.getElementById('circle-resources-section');
+  if (existingResources) existingResources.remove();
+
+  if (isPublicCircle) {
+    joinBtn.style.display = currentUser ? 'inline-block' : 'none';
+    circleIsJoined = false;
+    if (currentUser) {
+      const {data:m} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id).eq('circle_name', name).single();
+      circleIsJoined = !!m;
+      joinBtn.textContent = circleIsJoined ? 'Joined ✦' : 'Join Circle';
+      joinBtn.className = circleIsJoined ? 'circle-join-btn joined' : 'circle-join-btn';
+    }
+    document.getElementById('circle-composer').style.display = (currentUser && circleIsJoined) ? 'block' : 'none';
+    if (!currentUser) {
+      const prompt = document.createElement('div');
+      prompt.id = 'public-join-prompt';
+      prompt.innerHTML = `
+        <div style="background:linear-gradient(135deg,var(--deep),#3d2b1f);border-radius:6px;padding:32px;margin-bottom:28px;text-align:center;">
+          <div style="font-size:2rem;margin-bottom:12px;">🌺</div>
+          <div style="font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Welcome, Sister</div>
+          <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);margin-bottom:12px;line-height:1.4;">Sisterhood(verb) is a private community for women who are ready to refuel, connect, and show up — together.</h3>
+          <p style="color:rgba(245,239,230,0.65);font-size:0.85rem;line-height:1.8;max-width:380px;margin:0 auto 20px;">You can read this circle freely. To join the conversation and access all our spaces, create a free account — it takes less than a minute.</p>
+          <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+            <button onclick="openModal()" style="background:var(--terra);color:white;border:none;padding:12px 28px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;">Join Free ✦</button>
+            <button onclick="openAuthModal('login')" style="background:none;border:1.5px solid rgba(245,239,230,0.3);color:var(--cream);padding:12px 28px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;border-radius:2px;">Log In</button>
+          </div>
+        </div>`;
+      const feed = document.getElementById('circle-feed-posts');
+      feed.parentNode.insertBefore(prompt, feed);
+    }
+  } else {
+    if (currentUser) {
+      const {data:m} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id).eq('circle_name', name).single();
+      circleIsJoined = !!m;
+      joinBtn.textContent = circleIsJoined ? 'Joined ✦' : 'Join Circle';
+      joinBtn.className = circleIsJoined ? 'circle-join-btn joined' : 'circle-join-btn';
+      joinBtn.style.display = 'inline-block';
+      document.getElementById('circle-composer').style.display = circleIsJoined ? 'block' : 'none';
+    } else {
+      joinBtn.style.display = 'none';
+      document.getElementById('circle-composer').style.display = 'none';
+    }
   }
+
   const {count} = await _supabase.from('circle_members').select('*',{count:'exact'}).eq('circle_name', name);
   document.getElementById('circle-detail-count').textContent = (count || 0) + ' sisters';
+
   loadCircleFeed(name);
+  loadCircleResources(name);
   showView('circle-detail', null);
+}
+
+async function loadCircleResources(circleName) {
+  const existing = document.getElementById('circle-resources-section');
+  if (existing) existing.remove();
+
+  const {data:resources} = await _supabase
+    .from('circle_resources')
+    .select('*')
+    .eq('circle_name', circleName)
+    .order('created_at', {ascending: true});
+
+  if (!resources || resources.length === 0) return;
+
+  const section = document.createElement('div');
+  section.id = 'circle-resources-section';
+  section.innerHTML = `
+    <div style="margin-bottom:28px;">
+      <div class="section-label" style="margin-bottom:16px;">Resources & Links</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${resources.map(r => `
+          <a href="${r.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;transition:box-shadow 0.2s;box-shadow:0 1px 8px rgba(28,20,16,0.04);" onmouseover="this.style.boxShadow='0 4px 20px rgba(28,20,16,0.1)'" onmouseout="this.style.boxShadow='0 1px 8px rgba(28,20,16,0.04)'">
+            <span style="font-size:1.4rem;flex-shrink:0;">${r.type === 'pdf' ? '📄' : r.type === 'video' ? '🎥' : '🔗'}</span>
+            <div style="flex:1;">
+              <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">${r.title}</div>
+              ${r.description ? `<div style="font-size:0.82rem;color:rgba(28,20,16,0.6);line-height:1.6;">${r.description}</div>` : ''}
+            </div>
+            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">${r.type === 'pdf' ? 'Download' : 'Visit →'}</span>
+          </a>`).join('')}
+      </div>
+    </div>`;
+
+  const feed = document.getElementById('circle-feed-posts');
+  feed.parentNode.insertBefore(section, feed);
 }
 
 async function loadCircleFeed(circleName) {
