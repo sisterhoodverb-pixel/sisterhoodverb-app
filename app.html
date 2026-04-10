@@ -835,7 +835,7 @@ const circleInfo = {
   'Speak Poet!':{icon:'🎤',desc:'For slam poets, performers, and spoken word artists looking for space to share your work and connect.',bg:'linear-gradient(135deg,#1C1410,#2d1f3d)'},
   'Healing As We Hustle':{icon:'💼',desc:'Space for entrepreneurs to connect, network, and get support.',bg:'linear-gradient(135deg,#1C1410,#3d2b5c)'},
   'The Travel Girlies':{icon:'✈️',desc:'Trip tips, resources, warnings, and storytelling.',bg:'linear-gradient(135deg,#1C1410,#1a3a4a)'},
-  'NAACP Black Women\'s Health Equity Day':{icon:'🌺',desc:'A community space for Black Women\'s Health Equity Day — hosted by NAACP Santa Barbara. Read posts and resources freely. Create a free Sisterhood(verb) account to join the conversation.',bg:'linear-gradient(135deg,#1C1410,#b8860b)',isPublic:true}
+  "NAACP Black Women's Health Equity Day":{icon:'🌺',desc:"A community space for Black Women's Health Equity Day — hosted by NAACP Santa Barbara. Read posts and resources freely. Create a free Sisterhood(verb) account to join the conversation.",bg:'linear-gradient(135deg,#1C1410,#b8860b)',isPublic:true}
 };
 
 // ── AUTH ──
@@ -974,7 +974,7 @@ async function onLogin() {
   if (window._pendingCircleOpen) {
     const cn = window._pendingCircleOpen;
     window._pendingCircleOpen = null;
-    setTimeout(() => openCircle(cn), 300);
+    setTimeout(() => openCircle(cn), 800);
   }
 }
 
