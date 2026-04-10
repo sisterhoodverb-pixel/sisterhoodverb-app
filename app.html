@@ -416,7 +416,7 @@ nav{padding:14px 20px}.nav-links{display:none}
     </div>
     <button class="membership-cta" onclick="openModal()">Claim Your Spot ✦</button>
   </div>
-  <div class="membership-banner" id="regular-banner">
+  <div class="membership-banner" id="regular-banner" style="display:none;">
     <div class="membership-text"><strong>Upgrade to Full Member</strong><span>Unlock all Circles, workshop recordings, and 1:1 mentorship access</span></div>
     <button class="membership-cta" onclick="openModal()">Explore Plans</button>
   </div>
@@ -851,27 +851,14 @@ async function initAuth() {
         // Show login on PWA whether first time or returning — session is always fresh on install
         if (isPWA && !anyOpen) openAuthModal('login');
         // Auto-open circle for guests from direct URL
-        if (window._autoOpenCircle) {
-          setTimeout(() => {
-            if (window._autoOpenCircle) {
-              openCircle(window._autoOpenCircle);
-              window._autoOpenCircle = null;
-            }
-          }, 500);
+        if (window._pendingCircleOpen) {
+          const circleName = window._pendingCircleOpen;
+          window._pendingCircleOpen = null;
+          openCircle(circleName);
         }
+
       }
     }, 5000);
-  }
-
-  // Auto-open circle from URL param (works for both guests and logged-in)
-  if (window._autoOpenCircle) {
-    // Longer delay to let the app fully render and auth settle
-    setTimeout(() => {
-      if (window._autoOpenCircle) {
-        openCircle(window._autoOpenCircle);
-        window._autoOpenCircle = null;
-      }
-    }, 1500);
   }
 
   // Listen for auth changes (handles PWA token refresh)
@@ -954,6 +941,13 @@ async function onLogin() {
     }
   }
 
+  // Hide upgrade banner — only show for free tier
+  const regularBanner = document.getElementById('regular-banner');
+  if (regularBanner) {
+    const tier = profile?.membership_tier || 'free';
+    regularBanner.style.display = (tier === 'free') ? 'flex' : 'none';
+  }
+
   loadFeed();
   loadAnnouncement();
   loadJoinedCircles();
@@ -963,6 +957,13 @@ async function onLogin() {
   checkAndShowOnboarding();
   if (notifInterval) clearInterval(notifInterval);
   notifInterval = setInterval(loadNotifications, 60000);
+
+  // Auto-open circle from URL param after login is complete
+  if (window._pendingCircleOpen) {
+    const circleName = window._pendingCircleOpen;
+    window._pendingCircleOpen = null;
+    setTimeout(() => openCircle(circleName), 300);
+  }
 }
 
 function onLogout() {
@@ -1849,7 +1850,7 @@ window.addEventListener('load', function() {
   // Check for direct circle link e.g. ?circle=naacp
   const circleParam = params.get('circle');
   if (circleParam === 'naacp') {
-    window._autoOpenCircle = "NAACP Black Women's Health Equity Day";
+    window._pendingCircleOpen = "NAACP Black Women's Health Equity Day";
   }
 
   initAuth();
