@@ -416,6 +416,13 @@ nav{padding:14px 20px}.nav-links{display:none}
     </div>
     <button class="membership-cta" onclick="openModal()">Claim Your Spot ✦</button>
   </div>
+  <div class="membership-banner" id="trial-banner" style="display:none;background:linear-gradient(135deg,#2d5a3d,var(--sage));">
+    <div class="membership-text">
+      <strong>✦ Welcome from Black Women's Health Equity Day!</strong>
+      <span>You have 60 days of full access — explore every Circle, resource, and space.</span>
+    </div>
+    <button class="membership-cta" onclick="openModal()">Join Free ✦</button>
+  </div>
   <div class="membership-banner" id="regular-banner" style="display:none;">
     <div class="membership-text"><strong>Upgrade to Full Member</strong><span>Unlock all Circles, workshop recordings, and 1:1 mentorship access</span></div>
     <button class="membership-cta" onclick="openModal()">Explore Plans</button>
@@ -953,12 +960,23 @@ async function onLogin() {
     }
   }
 
-  // Hide upgrade banner — only show for free tier
+  // Banner logic based on tier
   const regularBanner = document.getElementById('regular-banner');
-  if (regularBanner) {
-    const tier = profile?.membership_tier || 'free';
-    regularBanner.style.display = (tier === 'free') ? 'flex' : 'none';
+  const trialBanner = document.getElementById('trial-banner');
+  const tier = profile?.membership_tier || 'free';
+
+  // Check if trial has expired
+  if (tier === 'event_trial' && profile?.trial_expires_at) {
+    const expired = new Date(profile.trial_expires_at) < new Date();
+    if (expired) {
+      await _supabase.from('profiles').update({membership_tier: 'free', trial_expires_at: null}).eq('id', currentUser.id);
+      profile.membership_tier = 'free';
+      showToast('Your trial has ended — you can still access the community for free ✦');
+    }
   }
+
+  if (regularBanner) regularBanner.style.display = (tier === 'free') ? 'flex' : 'none';
+  if (trialBanner) trialBanner.style.display = (tier === 'event_trial') ? 'flex' : 'none';
 
   loadFeed();
   loadAnnouncement();
@@ -1009,17 +1027,24 @@ async function signUp(email, password, name) {
     // Check if founding member link was used
     const isFoundingLink = window._foundingMode === true;
     let tier = 'free';
+    let trialExpiresAt = null;
+    const isTrialLink = window._trialMode === true;
     if (isFoundingLink) {
-      // Check count hasn't exceeded 50
       const {data: countData} = await _supabase.rpc('founding_member_count');
-      if ((countData || 0) < 50) {
-        tier = 'founding';
-      }
+      if ((countData || 0) < 50) { tier = 'founding'; }
+    } else if (isTrialLink) {
+      tier = 'event_trial';
+      const exp = new Date();
+      exp.setDate(exp.getDate() + 60);
+      trialExpiresAt = exp.toISOString();
     }
-    await _supabase.from('profiles').insert({id:data.user.id, name, handle:'@'+email.split('@')[0], membership_tier: tier});
+    await _supabase.from('profiles').insert({id:data.user.id, name, handle:'@'+email.split('@')[0], membership_tier: tier, trial_expires_at: trialExpiresAt});
     if (tier === 'founding') {
       showToast('Welcome, Founding Sister! ✦');
       localStorage.removeItem('sv_founding_mode');
+    } else if (tier === 'event_trial') {
+      showToast('Welcome! You have 60 days of full access ✦');
+      localStorage.removeItem('sv_trial_mode');
     } else {
       showToast('Welcome to the Sisterhood ✦');
     }
@@ -1344,7 +1369,7 @@ async function joinCircleDB(circleName, btn) {
   const joined = btn.classList.contains('joined');
   if (!joined) {
     const tier = window._currentUserProfile?.membership_tier || 'free';
-    const isUnlimited = ['founder','founding','paid'].includes(tier);
+    const isUnlimited = ['founder','founding','paid','event_trial'].includes(tier);
     if (!isUnlimited) {
       const {data:existing} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
       if (existing && existing.length >= 2) { showToast('Free members can join 2 Circles — upgrade for unlimited ♦'); return; }
@@ -1380,6 +1405,18 @@ async function openCircle(name) {
   currentCircle = name;
   const info = circleInfo[name] || {icon:'✦', desc:'', bg:'var(--deep)'};
   const isPublicCircle = !!info.isPublic;
+  const isPrivateCircle = !!info.isPrivate;
+
+  // Check password for private circles
+  if (isPrivateCircle && !window._unlockedCircles?.includes(name)) {
+    const code = prompt('This is a private Circle. Enter the access code:');
+    if (!code || code.trim().toLowerCase() !== (info.accessCode || '').toLowerCase()) {
+      showToast('Incorrect access code ♦');
+      return;
+    }
+    window._unlockedCircles = window._unlockedCircles || [];
+    window._unlockedCircles.push(name);
+  }
 
   document.getElementById('circle-detail-icon').textContent = info.icon;
   document.getElementById('circle-detail-name').textContent = name;
@@ -1893,8 +1930,8 @@ function setAuthMode(mode) {
   const nameGroup = document.getElementById('auth-name-group');
   const switchBtn = document.getElementById('auth-switch');
   if (mode === 'signup') {
-    title.textContent = window._foundingMode ? 'Claim Your Founding Sister Spot ✦' : 'Join the Sisterhood';
-    submitBtn.textContent = window._foundingMode ? 'Join Free for Life ✦' : 'Create Account';
+    title.textContent = window._foundingMode ? 'Claim Your Founding Sister Spot ✦' : window._trialMode ? 'Join with 60 Days Full Access ✦' : 'Join the Sisterhood';
+    submitBtn.textContent = window._foundingMode ? 'Join Free for Life ✦' : window._trialMode ? 'Start My Free Trial ✦' : 'Create Account';
     nameGroup.style.display = 'block';
     switchBtn.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\')">Log in</a>';
     submitBtn.onclick = () => { signUp(document.getElementById('auth-email').value, document.getElementById('auth-password').value, document.getElementById('auth-name').value); };
@@ -1927,6 +1964,13 @@ window.addEventListener('load', function() {
     localStorage.setItem('sv_founding_mode', 'yes');
   } else if (localStorage.getItem('sv_founding_mode') === 'yes') {
     window._foundingMode = true;
+  }
+  // Trial mode detection
+  if (params.get('trial') === 'yes') {
+    window._trialMode = true;
+    localStorage.setItem('sv_trial_mode', 'yes');
+  } else if (localStorage.getItem('sv_trial_mode') === 'yes') {
+    window._trialMode = true;
   }
   // Show correct banner
   if (window._foundingMode) {
@@ -2228,7 +2272,7 @@ async function changePassword() {
     const isJoined = btn.classList.contains('joined');
     if (!isJoined) {
       const tier = window._currentUserProfile?.membership_tier || 'free';
-      const isUnlimited = ['founder','founding','paid'].includes(tier);
+      const isUnlimited = ['founder','founding','paid','event_trial'].includes(tier);
       if (!isUnlimited) {
         const {data:existing} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
         if (existing && existing.length >= 2) {
