@@ -799,6 +799,7 @@ nav{padding:14px 20px}.nav-links{display:none}
   <button class="mobile-nav-btn" onclick="showView('events',this)" id="mob-events"><span>📅</span>Events</button>
   <button class="mobile-nav-btn" onclick="showView('resources',this)" id="mob-resources"><span>📚</span>Library</button>
   <button class="mobile-nav-btn" onclick="showViewWithProfile('profile',this)" id="mob-profile"><span>👤</span>Profile</button>
+  <button class="mobile-nav-btn" id="mob-notif" onclick="toggleNotifDropdown()" style="position:relative;"><span>🔔</span>Alerts<span id="mob-notif-badge" style="display:none;position:absolute;top:4px;right:8px;background:#e74c3c;color:white;border-radius:50%;width:16px;height:16px;font-size:0.55rem;font-weight:700;align-items:center;justify-content:center;border:2px solid white;"></span></button>
 </div>
 
 <script>
@@ -849,17 +850,28 @@ async function initAuth() {
         const anyOpen = document.querySelector('.modal-overlay.open');
         // Show login on PWA whether first time or returning — session is always fresh on install
         if (isPWA && !anyOpen) openAuthModal('login');
+        // Auto-open circle for guests from direct URL
+        if (window._autoOpenCircle) {
+          setTimeout(() => {
+            if (window._autoOpenCircle) {
+              openCircle(window._autoOpenCircle);
+              window._autoOpenCircle = null;
+            }
+          }, 500);
+        }
       }
     }, 5000);
   }
 
   // Auto-open circle from URL param (works for both guests and logged-in)
   if (window._autoOpenCircle) {
-    // Small delay to let the app render first
+    // Longer delay to let the app fully render and auth settle
     setTimeout(() => {
-      openCircle(window._autoOpenCircle);
-    }, 800);
-    window._autoOpenCircle = null;
+      if (window._autoOpenCircle) {
+        openCircle(window._autoOpenCircle);
+        window._autoOpenCircle = null;
+      }
+    }, 1500);
   }
 
   // Listen for auth changes (handles PWA token refresh)
