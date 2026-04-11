@@ -1919,6 +1919,29 @@ function toggleJoin(btn, circleName) { joinCircleDB(circleName, btn); }
 function registerEvent(btn, eventName) { registerEventDB(eventName, btn); }
 function filterRes(btn) { document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); btn.classList.add('active'); showToast('Filtering by: ' + btn.textContent); }
 
+async function checkDay3Email(profile) {
+  if (!currentUser) return;
+  const key = 'sv_day3_sent_' + currentUser.id;
+  if (localStorage.getItem(key)) return; // already sent
+
+  // Check if account is 2-4 days old
+  const created = new Date(currentUser.created_at);
+  const daysSince = (new Date() - created) / (1000 * 60 * 60 * 24);
+  if (daysSince < 2 || daysSince > 4) return;
+
+  // Send Day 3 email
+  try {
+    const name = profile?.name || currentUser.email?.split('@')[0] || 'Sis';
+    await fetch('https://cqiymqekdtewnorojlus.supabase.co/functions/v1/send-daily-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ day3Email: currentUser.email, day3Name: name })
+    });
+    localStorage.setItem(key, '1');
+    console.log('Day 3 follow-up sent ✦');
+  } catch(e) { console.log('Day 3 email error:', e); }
+}
+
 window.addEventListener('load', function() {
   // Check for founding member link
   const params = new URLSearchParams(window.location.search);
