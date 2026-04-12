@@ -2274,7 +2274,7 @@ async function changePassword() {
   function onbNext(step) {
     document.querySelectorAll('.onb-step').forEach(s => s.style.display = 'none');
     document.getElementById('onb-step-' + step).style.display = 'block';
-    document.getElementById('onboarding-progress').style.width = (step * 25) + '%';
+    document.getElementById('onboarding-progress').style.width = (step * 20) + '%';
   }
 
   async function onbSaveProfile() {
@@ -2534,7 +2534,36 @@ async function changePassword() {
         <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>What's Said Here Stays Here.</strong> Protect this space.</div>
       </div>
     </div>
-    <button onclick="onbFinish()" class="onb-btn-primary">I Agree — Take Me In ✦</button>
+    <button onclick="onbNext(5)" class="onb-btn-primary">I Agree — Take Me In ✦</button>
+  </div>
+</div>
+
+<!-- Step 5: Support -->
+<div id="onb-step-5" class="onb-step" style="display:none;">
+  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">One more thing</div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Support the Sisterhood</h2>
+    <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Completely optional — but deeply appreciated ✦</p>
+  </div>
+  <div style="padding:28px 40px;">
+    <p style="font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.8;margin-bottom:24px;">Some sisters choose to support Sisterhood(verb) with a monthly or annual subscription. It keeps this space independent, ad-free, and growing. Your free membership is always honored — but if you want to invest in this community from the start, here's how.</p>
+
+    <!-- Annual - highlighted -->
+    <a href="https://buy.stripe.com/8x26oG5S3bP4g1ffKsbEA01" target="_blank" style="display:block;text-decoration:none;background:var(--deep);border-radius:4px;padding:20px 24px;margin-bottom:12px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:10px;right:12px;background:var(--gold);color:var(--deep);font-size:0.58rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:10px;">Best Value</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--cream);font-weight:700;margin-bottom:4px;">Inner Circle — Annual</div>
+      <div style="font-size:0.82rem;color:var(--gold);margin-bottom:6px;">$79 / year <span style="color:rgba(245,239,230,0.4);font-size:0.75rem;">· saves $29 vs monthly</span></div>
+      <div style="font-size:0.78rem;color:rgba(245,239,230,0.55);line-height:1.6;">Full access · all Circles · resources · recordings ✦</div>
+    </a>
+
+    <!-- Monthly -->
+    <a href="https://buy.stripe.com/4gM7sK80b4mC4ix69SbEA00" target="_blank" style="display:block;text-decoration:none;border:1.5px solid rgba(196,98,45,0.2);border-radius:4px;padding:20px 24px;margin-bottom:20px;">
+      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--deep);font-weight:700;margin-bottom:4px;">Sister — Monthly</div>
+      <div style="font-size:0.82rem;color:var(--terra);margin-bottom:6px;">$9 / month</div>
+      <div style="font-size:0.78rem;color:rgba(28,20,16,0.5);line-height:1.6;">Full access · all Circles · resources · recordings ✦</div>
+    </a>
+
+    <button onclick="onbFinish()" style="width:100%;padding:14px;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:rgba(28,20,16,0.4);cursor:pointer;text-decoration:underline;">Continue with free membership</button>
   </div>
 </div>
 ```
