@@ -416,6 +416,13 @@ nav{padding:14px 20px}.nav-links{display:none}
     </div>
     <button class="membership-cta" onclick="openModal()">Claim Your Spot ✦</button>
   </div>
+  <div class="membership-banner" id="trial-banner" style="display:none;background:linear-gradient(135deg,#2d5a3d,var(--sage));">
+    <div class="membership-text">
+      <strong>✦ Welcome from Black Women's Health Equity Day!</strong>
+      <span>You have 60 days of full access — explore every Circle, resource, and space.</span>
+    </div>
+    <button class="membership-cta" onclick="openModal()">Join Free ✦</button>
+  </div>
   <div class="membership-banner" id="regular-banner" style="display:none;">
     <div class="membership-text"><strong>Upgrade to Full Member</strong><span>Unlock all Circles, workshop recordings, and 1:1 mentorship access</span></div>
     <button class="membership-cta" onclick="openModal()">Explore Plans</button>
@@ -960,6 +967,20 @@ async function onLogin() {
     regularBanner.style.display = (tier === 'free') ? 'flex' : 'none';
   }
 
+  // Banner logic
+  const regularBanner = document.getElementById('regular-banner');
+  const trialBanner = document.getElementById('trial-banner');
+  const tier = profile?.membership_tier || 'free';
+  if (tier === 'event_trial' && profile?.trial_expires_at) {
+    const expired = new Date(profile.trial_expires_at) < new Date();
+    if (expired) {
+      await _supabase.from('profiles').update({membership_tier:'free',trial_expires_at:null}).eq('id',currentUser.id);
+      showToast('Your trial has ended — you can still access the community for free ✦');
+    }
+  }
+  if (regularBanner) regularBanner.style.display = (tier === 'free') ? 'flex' : 'none';
+  if (trialBanner) trialBanner.style.display = (tier === 'event_trial') ? 'flex' : 'none';
+
   loadFeed();
   loadAnnouncement();
   loadJoinedCircles();
@@ -1009,17 +1030,24 @@ async function signUp(email, password, name) {
     // Check if founding member link was used
     const isFoundingLink = window._foundingMode === true;
     let tier = 'free';
+    let trialExpiresAt = null;
+    const isTrialLink = window._trialMode === true;
     if (isFoundingLink) {
-      // Check count hasn't exceeded 50
       const {data: countData} = await _supabase.rpc('founding_member_count');
-      if ((countData || 0) < 50) {
-        tier = 'founding';
-      }
+      if ((countData || 0) < 50) { tier = 'founding'; }
+    } else if (isTrialLink) {
+      tier = 'event_trial';
+      const exp = new Date();
+      exp.setDate(exp.getDate() + 60);
+      trialExpiresAt = exp.toISOString();
     }
-    await _supabase.from('profiles').insert({id:data.user.id, name, handle:'@'+email.split('@')[0], membership_tier: tier});
+    await _supabase.from('profiles').insert({id:data.user.id, name, handle:'@'+email.split('@')[0], membership_tier: tier, trial_expires_at: trialExpiresAt});
     if (tier === 'founding') {
       showToast('Welcome, Founding Sister! ✦');
       localStorage.removeItem('sv_founding_mode');
+    } else if (tier === 'event_trial') {
+      showToast('Welcome! You have 60 days of full access ✦');
+      localStorage.removeItem('sv_trial_mode');
     } else {
       showToast('Welcome to the Sisterhood ✦');
     }
@@ -1344,7 +1372,7 @@ async function joinCircleDB(circleName, btn) {
   const joined = btn.classList.contains('joined');
   if (!joined) {
     const tier = window._currentUserProfile?.membership_tier || 'free';
-    const isUnlimited = ['founder','founding','paid'].includes(tier);
+    const isUnlimited = ['founder','founding','paid','event_trial'].includes(tier);
     if (!isUnlimited) {
       const {data:existing} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
       if (existing && existing.length >= 2) { showToast('Free members can join 2 Circles — upgrade for unlimited ♦'); return; }
@@ -1893,8 +1921,8 @@ function setAuthMode(mode) {
   const nameGroup = document.getElementById('auth-name-group');
   const switchBtn = document.getElementById('auth-switch');
   if (mode === 'signup') {
-    title.textContent = window._foundingMode ? 'Claim Your Founding Sister Spot ✦' : 'Join the Sisterhood';
-    submitBtn.textContent = window._foundingMode ? 'Join Free for Life ✦' : 'Create Account';
+    title.textContent = window._foundingMode ? 'Claim Your Founding Sister Spot ✦' : window._trialMode ? 'Join with 60 Days Full Access ✦' : 'Join the Sisterhood';
+    submitBtn.textContent = window._foundingMode ? 'Join Free for Life ✦' : window._trialMode ? 'Start My Free Trial ✦' : 'Create Account';
     nameGroup.style.display = 'block';
     switchBtn.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\')">Log in</a>';
     submitBtn.onclick = () => { signUp(document.getElementById('auth-email').value, document.getElementById('auth-password').value, document.getElementById('auth-name').value); };
@@ -1922,14 +1950,10 @@ function filterRes(btn) { document.querySelectorAll('.filter-chip').forEach(c =>
 async function checkDay3Email(profile) {
   if (!currentUser) return;
   const key = 'sv_day3_sent_' + currentUser.id;
-  if (localStorage.getItem(key)) return; // already sent
-
-  // Check if account is 2-4 days old
+  if (localStorage.getItem(key)) return;
   const created = new Date(currentUser.created_at);
   const daysSince = (new Date() - created) / (1000 * 60 * 60 * 24);
   if (daysSince < 2 || daysSince > 4) return;
-
-  // Send Day 3 email
   try {
     const name = profile?.name || currentUser.email?.split('@')[0] || 'Sis';
     await fetch('https://cqiymqekdtewnorojlus.supabase.co/functions/v1/send-daily-email', {
@@ -1938,7 +1962,6 @@ async function checkDay3Email(profile) {
       body: JSON.stringify({ day3Email: currentUser.email, day3Name: name })
     });
     localStorage.setItem(key, '1');
-    console.log('Day 3 follow-up sent ✦');
   } catch(e) { console.log('Day 3 email error:', e); }
 }
 
@@ -1951,6 +1974,12 @@ window.addEventListener('load', function() {
   } else if (localStorage.getItem('sv_founding_mode') === 'yes') {
     window._foundingMode = true;
   }
+  if (params.get('trial') === 'yes') {
+    window._trialMode = true;
+    localStorage.setItem('sv_trial_mode', 'yes');
+  } else if (localStorage.getItem('sv_trial_mode') === 'yes') {
+    window._trialMode = true;
+  }
   // Show correct banner
   if (window._foundingMode) {
     const foundingBanner = document.getElementById('founding-banner');
@@ -1959,6 +1988,11 @@ window.addEventListener('load', function() {
     if (regularBanner) regularBanner.style.display = 'none';
   }
   // Check for direct circle link ?circle=naacp
+  const circleParam = params.get('circle');
+  if (circleParam === 'naacp') {
+    window._pendingCircleOpen = "NAACP Black Women's Health Equity Day";
+  }
+
   const circleParam = params.get('circle');
   if (circleParam === 'naacp') {
     window._pendingCircleOpen = "NAACP Black Women's Health Equity Day";
@@ -2251,7 +2285,7 @@ async function changePassword() {
     const isJoined = btn.classList.contains('joined');
     if (!isJoined) {
       const tier = window._currentUserProfile?.membership_tier || 'free';
-      const isUnlimited = ['founder','founding','paid'].includes(tier);
+      const isUnlimited = ['founder','founding','paid','event_trial'].includes(tier);
       if (!isUnlimited) {
         const {data:existing} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
         if (existing && existing.length >= 2) {
@@ -2300,7 +2334,6 @@ async function changePassword() {
   }
 
   function skipOnboarding() {
-    // Allow skipping — mark as done so it doesn't show again
     if (currentUser) localStorage.setItem('onb_done_' + currentUser.id, '1');
     document.getElementById('onboarding-modal').classList.remove('open');
     showToast('You can update your profile anytime in the Profile tab ✦');
@@ -2428,7 +2461,7 @@ async function changePassword() {
 ```
 <!-- Progress bar + close -->
 <div style="height:4px;background:var(--cream);position:relative;">
-  <div id="onboarding-progress" style="height:100%;background:linear-gradient(90deg,var(--terra),var(--gold));width:25%;transition:width 0.4s ease;"></div>
+  <div id="onboarding-progress" style="height:100%;background:linear-gradient(90deg,var(--terra),var(--gold));width:20%;transition:width 0.4s ease;"></div>
   <button onclick="skipOnboarding()" style="position:absolute;top:8px;right:12px;background:none;border:none;color:rgba(28,20,16,0.3);font-size:1rem;cursor:pointer;line-height:1;z-index:10;">✕</button>
 </div>
 
@@ -2537,6 +2570,10 @@ async function changePassword() {
     <button onclick="onbNext(5)" class="onb-btn-primary">I Agree — Take Me In ✦</button>
   </div>
 </div>
+```
+
+  </div>
+</div>
 
 <!-- Step 5: Support -->
 <div id="onb-step-5" class="onb-step" style="display:none;">
@@ -2546,28 +2583,19 @@ async function changePassword() {
     <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Completely optional — but deeply appreciated ✦</p>
   </div>
   <div style="padding:28px 40px;">
-    <p style="font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.8;margin-bottom:24px;">Some sisters choose to support Sisterhood(verb) with a monthly or annual subscription. It keeps this space independent, ad-free, and growing. Your free membership is always honored — but if you want to invest in this community from the start, here's how.</p>
-
-    <!-- Annual - highlighted -->
+    <p style="font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.8;margin-bottom:24px;">Some sisters choose to support Sisterhood(verb) with a subscription. It keeps this space independent, ad-free, and growing. Your free membership is always honored — but if you want to invest from the start, here's how.</p>
     <a href="https://buy.stripe.com/8x26oG5S3bP4g1ffKsbEA01" target="_blank" style="display:block;text-decoration:none;background:var(--deep);border-radius:4px;padding:20px 24px;margin-bottom:12px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:10px;right:12px;background:var(--gold);color:var(--deep);font-size:0.58rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:10px;">Best Value</div>
       <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--cream);font-weight:700;margin-bottom:4px;">Inner Circle — Annual</div>
       <div style="font-size:0.82rem;color:var(--gold);margin-bottom:6px;">$79 / year <span style="color:rgba(245,239,230,0.4);font-size:0.75rem;">· saves $29 vs monthly</span></div>
       <div style="font-size:0.78rem;color:rgba(245,239,230,0.55);line-height:1.6;">Full access · all Circles · resources · recordings ✦</div>
     </a>
-
-    <!-- Monthly -->
     <a href="https://buy.stripe.com/4gM7sK80b4mC4ix69SbEA00" target="_blank" style="display:block;text-decoration:none;border:1.5px solid rgba(196,98,45,0.2);border-radius:4px;padding:20px 24px;margin-bottom:20px;">
       <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--deep);font-weight:700;margin-bottom:4px;">Sister — Monthly</div>
       <div style="font-size:0.82rem;color:var(--terra);margin-bottom:6px;">$9 / month</div>
       <div style="font-size:0.78rem;color:rgba(28,20,16,0.5);line-height:1.6;">Full access · all Circles · resources · recordings ✦</div>
     </a>
-
     <button onclick="onbFinish()" style="width:100%;padding:14px;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:rgba(28,20,16,0.4);cursor:pointer;text-decoration:underline;">Continue with free membership</button>
-  </div>
-</div>
-```
-
   </div>
 </div>
 
