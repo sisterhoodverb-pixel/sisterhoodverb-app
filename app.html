@@ -1304,6 +1304,9 @@ async function toggleLike(btn, postId) {
     await _supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
   }
 
+  // Small delay to ensure insert/delete is committed before counting
+  await new Promise(r => setTimeout(r, 300));
+
   // Always get the true count from post_likes table
   const {data:likes} = await _supabase.from('post_likes').select('id').eq('post_id', postId);
   const trueCount = likes ? likes.length : parseInt(span.textContent) || 0;
