@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>National Poetry Month — COMMA x Sisterhood(verb)</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --terra:#C4622D;
+  --deep:#1C1410;
+  --cream:#F5EFE6;
+  --gold:#D4A853;
+  --sage:#7A8C6E;
+  --warm:#FBF7F2;
+  --navy:#0F1B3D;
+  --comma-gold:#D4A020;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--warm);color:var(--deep);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:rgba(251,247,242,0.95);backdrop-filter:blur(12px);border-bottom:1px solid rgba(196,98,45,0.12);z-index:100}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--terra)}
+.nav-logo span{font-style:italic;font-weight:400}
+.nav-back{background:none;border:1.5px solid rgba(196,98,45,0.3);color:var(--terra);padding:6px 16px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.nav-back:hover{background:var(--terra);color:white}
+
+/* HERO */
+.hero{background:var(--navy);padding:120px 40px 72px;position:relative;overflow:hidden;text-align:center}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 60%,rgba(212,160,32,0.12),transparent 55%),radial-gradient(ellipse at 80% 40%,rgba(196,98,45,0.1),transparent 55%)}
+.hero::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:40px;background:var(--warm);clip-path:ellipse(55% 100% at 50% 100%)}
+
+.collab-badge{display:inline-flex;align-items:center;gap:12px;background:rgba(212,160,32,0.12);border:1px solid rgba(212,160,32,0.25);border-radius:40px;padding:8px 20px;margin-bottom:28px;position:relative;z-index:1}
+.collab-text{font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--comma-gold)}
+.collab-dot{width:4px;height:4px;border-radius:50%;background:var(--comma-gold);opacity:0.5}
+
+.hero-eyebrow{font-size:0.7rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--comma-gold);margin-bottom:14px;position:relative;z-index:1}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,5vw,3.6rem);color:white;line-height:1.15;margin-bottom:8px;position:relative;z-index:1}
+.hero-title em{color:var(--comma-gold);font-style:italic}
+.hero-month{font-family:'Playfair Display',serif;font-size:clamp(1rem,2.5vw,1.3rem);color:rgba(255,255,255,0.5);font-style:italic;margin-bottom:24px;position:relative;z-index:1}
+.hero-sub{color:rgba(255,255,255,0.55);font-size:0.9rem;line-height:1.9;max-width:500px;margin:0 auto 36px;position:relative;z-index:1}
+
+.comma-logo-wrap{margin-bottom:24px;position:relative;z-index:1}
+.comma-logo{width:72px;height:72px;border-radius:12px;object-fit:cover;border:2px solid rgba(212,160,32,0.3)}
+
+.hero-stats{display:flex;gap:32px;justify-content:center;position:relative;z-index:1}
+.hero-stat{text-align:center}
+.hero-stat-n{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--comma-gold);font-weight:700;line-height:1}
+.hero-stat-l{font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-top:4px}
+
+/* MAIN */
+.main{max-width:900px;margin:0 auto;padding:56px 40px 80px}
+
+/* TODAY'S PROMPT */
+.today-section{margin-bottom:56px}
+.today-label{font-size:0.68rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--terra);margin-bottom:20px;display:flex;align-items:center;gap:12px}
+.today-label::after{content:'';flex:1;height:1px;background:rgba(196,98,45,0.2)}
+
+.today-card{background:var(--navy);border-radius:6px;padding:48px;position:relative;overflow:hidden;box-shadow:0 8px 40px rgba(15,27,61,0.25)}
+.today-card::before{content:'';position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(212,160,32,0.15),transparent 70%)}
+.today-card::after{content:'"';font-family:'Playfair Display',serif;font-size:12rem;color:rgba(212,160,32,0.06);position:absolute;top:-40px;left:20px;line-height:1;pointer-events:none}
+.today-day{font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--comma-gold);margin-bottom:16px;position:relative;z-index:1}
+.today-prompt{font-family:'Playfair Display',serif;font-size:clamp(1.4rem,3vw,2rem);color:white;line-height:1.5;font-style:italic;margin-bottom:24px;position:relative;z-index:1}
+.today-prompt-num{font-size:0.72rem;color:rgba(255,255,255,0.3);letter-spacing:0.1em;margin-bottom:8px;position:relative;z-index:1}
+.today-actions{display:flex;gap:12px;flex-wrap:wrap;position:relative;z-index:1}
+.write-btn{background:var(--comma-gold);color:var(--navy);border:none;padding:12px 28px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+.write-btn:hover{background:#e8b822}
+.share-btn{background:none;border:1.5px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);padding:12px 28px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;border-radius:2px;transition:all 0.2s}
+.share-btn:hover{border-color:white;color:white}
+
+/* COUNTDOWN */
+.coming-next{background:rgba(15,27,61,0.06);border:1px solid rgba(15,27,61,0.1);border-radius:4px;padding:16px 20px;margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.coming-next-text{font-size:0.82rem;color:rgba(28,20,16,0.5)}
+.coming-next-time{font-family:'Playfair Display',serif;font-size:0.92rem;color:var(--navy);font-weight:700}
+
+/* ALL PROMPTS */
+.all-section{margin-bottom:48px}
+.section-header{display:flex;align-items:center;gap:16px;margin-bottom:28px}
+.section-header h2{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--deep);white-space:nowrap}
+.section-line{flex:1;height:1px;background:rgba(196,98,45,0.2)}
+
+.prompts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+
+.prompt-card{background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:22px;box-shadow:0 2px 14px rgba(28,20,16,0.04);transition:transform 0.2s,box-shadow 0.2s;animation:fadeUp 0.35s ease both;position:relative;overflow:hidden}
+.prompt-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(28,20,16,0.09)}
+.prompt-card.today-highlight{border-color:var(--comma-gold);border-width:2px;background:linear-gradient(135deg,#fffdf5,white)}
+.prompt-card.locked{background:rgba(28,20,16,0.03);border-style:dashed;cursor:default}
+.prompt-card.locked:hover{transform:none;box-shadow:0 2px 14px rgba(28,20,16,0.04)}
+
+.prompt-day-label{font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;font-weight:600}
+.prompt-day-label.today-lbl{color:var(--comma-gold)}
+.prompt-text{font-family:'Playfair Display',serif;font-size:0.95rem;font-style:italic;color:var(--deep);line-height:1.6;margin-bottom:0}
+.prompt-text.locked-text{color:rgba(28,20,16,0.25);font-style:normal;font-size:0.82rem;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px}
+.today-pip{position:absolute;top:14px;right:14px;width:8px;height:8px;border-radius:50%;background:var(--comma-gold)}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* COMMA FOOTER */
+.comma-footer{background:var(--navy);border-radius:6px;padding:40px;text-align:center;margin-top:48px}
+.comma-footer-logo{width:56px;height:56px;border-radius:10px;object-fit:cover;margin:0 auto 16px;display:block}
+.comma-footer-title{font-family:'Playfair Display',serif;font-size:1.1rem;color:white;margin-bottom:8px}
+.comma-footer-sub{font-size:0.82rem;color:rgba(255,255,255,0.5);line-height:1.7;max-width:420px;margin:0 auto 20px}
+.comma-link{display:inline-flex;align-items:center;gap:6px;color:var(--comma-gold);font-size:0.82rem;font-weight:600;text-decoration:none;border-bottom:1px solid rgba(212,160,32,0.3);padding-bottom:2px;transition:border-color 0.2s}
+.comma-link:hover{border-color:var(--comma-gold)}
+
+/* OPEN MIC BANNER */
+.open-mic{background:linear-gradient(135deg,var(--terra),#a8501f);border-radius:4px;padding:24px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:40px;flex-wrap:wrap}
+.open-mic-text strong{font-family:'Playfair Display',serif;font-size:1rem;color:white;display:block;margin-bottom:4px}
+.open-mic-text span{font-size:0.82rem;color:rgba(255,255,255,0.8)}
+.open-mic-btn{background:white;color:var(--terra);border:none;padding:10px 24px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;white-space:nowrap;transition:opacity 0.2s;text-decoration:none}
+.open-mic-btn:hover{opacity:0.9}
+
+/* TOAST */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--deep);color:var(--cream);padding:12px 24px;border-radius:3px;font-size:0.85rem;opacity:0;transition:all 0.3s;pointer-events:none;z-index:600;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media(max-width:768px){
+  nav{padding:14px 20px}
+  .hero{padding:100px 20px 64px}
+  .main{padding:36px 20px 60px}
+  .today-card{padding:32px 24px}
+  .prompts-grid{grid-template-columns:1fr 1fr}
+  .hero-stats{gap:20px}
+  .open-mic{flex-direction:column;text-align:center}
+}
+@media(max-width:480px){
+  .prompts-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Sisterhood<span>(verb)</span></div>
+  <a href="/app.html" class="nav-back">← Back to Community</a>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<div class="hero">
+  <div class="comma-logo-wrap">
+    <img src="/comma-logo.png" class="comma-logo" alt="COMMA">
+  </div>
+  <div class="collab-badge">
+    <span class="collab-text">COMMA</span>
+    <span class="collab-dot"></span>
+    <span class="collab-text">Sisterhood(verb)</span>
+  </div>
+  <div class="hero-eyebrow">April 2026</div>
+  <h1 class="hero-title">National <em>Poetry</em> Month</h1>
+  <div class="hero-month">30 days. 30 prompts. One pen.</div>
+  <p class="hero-sub">A new writing prompt every day of April — curated by COMMA to spark your voice, honor your story, and call your poem forward.</p>
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-n" id="stat-revealed">—</div>
+      <div class="hero-stat-l">Prompts Revealed</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-n" id="stat-remaining">—</div>
+      <div class="hero-stat-l">Days Remaining</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-n">30</div>
+      <div class="hero-stat-l">Total Prompts</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- OPEN MIC BANNER -->
+  <div class="open-mic">
+    <div class="open-mic-text">
+      <strong>✦ Free Community Open Mic — April 26th</strong>
+      <span>Bring a poem inspired by any of these prompts. All are welcome.</span>
+    </div>
+    <a href="/app.html" class="open-mic-btn">RSVP in the Community</a>
+  </div>
+
+  <!-- TODAY'S PROMPT -->
+  <div class="today-section">
+    <div class="today-label">Today's Prompt</div>
+    <div class="today-card" id="today-card">
+      <div class="today-prompt-num" id="today-num">Day —</div>
+      <div class="today-day" id="today-date">—</div>
+      <div class="today-prompt" id="today-prompt">Loading today's prompt...</div>
+      <div class="today-actions">
+        <a href="/app.html" class="write-btn">✍🏾 Share Your Response</a>
+        <button class="share-btn" onclick="copyPrompt()">Copy Prompt</button>
+      </div>
+    </div>
+    <div class="coming-next" id="coming-next" style="display:none;">
+      <span class="coming-next-text">Next prompt unlocks in</span>
+      <span class="coming-next-time" id="countdown">—</span>
+    </div>
+  </div>
+
+  <!-- ALL PROMPTS -->
+  <div class="all-section">
+    <div class="section-header">
+      <h2>All April Prompts</h2>
+      <div class="section-line"></div>
+    </div>
+    <div class="prompts-grid" id="prompts-grid"></div>
+  </div>
+
+  <!-- COMMA FOOTER -->
+  <div class="comma-footer">
+    <img src="/comma-logo.png" class="comma-footer-logo" alt="COMMA">
+    <div class="comma-footer-title">About COMMA</div>
+    <p class="comma-footer-sub">Community Organizing Multidisciplinary Mentorship through the Arts — a Santa Barbara-based nonprofit using storytelling, arts integration, and facilitated dialogue to support wellness, belonging, and cultural connection.</p>
+    <a href="https://www.creativityisourbusiness.com" target="_blank" class="comma-link">Learn more at creativityisourbusiness.com →</a>
+  </div>
+
+</div>
+
+<script>
+// All 30 prompts — first 13 filled in, rest are placeholders (update as you go!)
+const PROMPTS = [
+  "You Are What You Eat",
+  "You stared into the abyss, and it said, \"What next?\"",
+  "Silence is Golden",
+  "You are a soldier in a war with one bullet left",
+  "You start life over with all of your current memories. What do you do? Live the same life or change events?",
+  "Title of your poem: This Poem Is a Trashcan",
+  "This Poem is a Mirror",
+  "Words Left Unsaid",
+  "What does sunshine smell like",
+  "A haiku or series of haikus about what expectations taste like",
+  "A Response Poem: \"Poets are death doulas for a dying empire\" — Saul Williams",
+  "The Day the Earth Stood Still",
+  "Your poem is a breakup text with fear",
+  // Days 14–30 — add prompts here as you receive them
+  null, null, null, null, null, null, null,
+  null, null, null, null, null, null, null,
+  null, null, null, null, null, null, null, null
+];
+
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+function getAprilDay() {
+  const now = new Date();
+  // If it's April 2026, return the day of month (1-30)
+  // Otherwise for testing, you can adjust this
+  if (now.getFullYear() === 2026 && now.getMonth() === 3) {
+    return now.getDate(); // 1-30
+  }
+  // Outside April — show last available prompt for preview
+  return Math.min(13, 30);
+}
+
+function formatDate(day) {
+  const d = new Date(2026, 3, day); // April 2026
+  return DAY_NAMES[d.getDay()] + ', April ' + day;
+}
+
+function renderToday() {
+  const today = getAprilDay();
+  const prompt = PROMPTS[today - 1];
+  const todayNum = document.getElementById('today-num');
+  const todayDate = document.getElementById('today-date');
+  const todayPrompt = document.getElementById('today-prompt');
+
+  document.getElementById('stat-revealed').textContent = Math.min(today, 13);
+  document.getElementById('stat-remaining').textContent = Math.max(30 - today, 0);
+
+  todayNum.textContent = 'Day ' + today;
+  todayDate.textContent = formatDate(today);
+
+  if (prompt) {
+    todayPrompt.textContent = prompt;
+    window._todayPrompt = prompt;
+    // Show countdown to tomorrow
+    const tomorrow = new Date(2026, 3, today + 1);
+    if (today < 30) {
+      document.getElementById('coming-next').style.display = 'flex';
+      startCountdown(tomorrow);
+    }
+  } else {
+    todayPrompt.textContent = 'Today\'s prompt is coming soon — check back! ✦';
+    window._todayPrompt = null;
+  }
+}
+
+function startCountdown(target) {
+  function update() {
+    const now = new Date();
+    const diff = target - now;
+    if (diff <= 0) { document.getElementById('countdown').textContent = 'Any moment now ✦'; return; }
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    const s = Math.floor((diff % 60000) / 1000);
+    document.getElementById('countdown').textContent =
+      h + 'h ' + String(m).padStart(2,'0') + 'm ' + String(s).padStart(2,'0') + 's';
+  }
+  update();
+  setInterval(update, 1000);
+}
+
+function renderGrid() {
+  const today = getAprilDay();
+  const grid = document.getElementById('prompts-grid');
+  grid.innerHTML = '';
+
+  for (let i = 0; i < 30; i++) {
+    const day = i + 1;
+    const prompt = PROMPTS[i];
+    const isToday = day === today;
+    const isUnlocked = day <= today && prompt !== null;
+    const card = document.createElement('div');
+    card.style.animationDelay = (i * 0.03) + 's';
+
+    if (isToday && prompt) {
+      card.className = 'prompt-card today-highlight';
+      card.innerHTML =
+        '<div class="today-pip"></div>' +
+        '<div class="prompt-day-label today-lbl">Day ' + day + ' — Today ✦</div>' +
+        '<div class="prompt-text">' + prompt + '</div>';
+    } else if (isUnlocked) {
+      card.className = 'prompt-card';
+      card.innerHTML =
+        '<div class="prompt-day-label">Day ' + day + ' · ' + formatDate(day).split(',')[0] + '</div>' +
+        '<div class="prompt-text">' + prompt + '</div>';
+    } else {
+      card.className = 'prompt-card locked';
+      card.innerHTML =
+        '<div class="prompt-day-label" style="color:rgba(28,20,16,0.25);">Day ' + day + '</div>' +
+        '<div class="prompt-text locked-text">🔒 Unlocks April ' + day + '</div>';
+    }
+    grid.appendChild(card);
+  }
+}
+
+function copyPrompt() {
+  if (!window._todayPrompt) return;
+  const text = 'Day ' + getAprilDay() + ' — National Poetry Month Prompt by COMMA:\n\n"' + window._todayPrompt + '"\n\nShare your response at community.sisterhoodverb.com';
+  navigator.clipboard.writeText(text).then(() => showToast('Prompt copied ✦'));
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+renderToday();
+renderGrid();
+</script>
+</body>
+</html>
