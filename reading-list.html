@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Community Care Reading List — Sisterhood(verb)</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--terra:#C4622D;--deep:#1C1410;--cream:#F5EFE6;--gold:#D4A853;--sage:#7A8C6E;--blush:#E8C4A0;--warm:#FBF7F2}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--warm);color:var(--deep);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:rgba(251,247,242,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(196,98,45,0.12);z-index:100}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--terra)}
+.nav-logo span{font-style:italic;font-weight:400}
+.nav-back{background:none;border:1.5px solid rgba(196,98,45,0.3);color:var(--terra);padding:6px 16px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.nav-back:hover{background:var(--terra);color:white}
+
+/* HERO */
+.hero{background:var(--deep);padding:120px 40px 64px;position:relative;overflow:hidden;text-align:center}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(196,98,45,0.15),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(212,168,83,0.1),transparent 60%)}
+.hero::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:40px;background:var(--warm);clip-path:ellipse(55% 100% at 50% 100%)}
+.hero-label{font-size:0.68rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;position:relative;z-index:1}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.2rem);color:var(--cream);line-height:1.2;margin-bottom:16px;position:relative;z-index:1}
+.hero-title em{color:var(--gold);font-style:italic}
+.hero-sub{color:rgba(245,239,230,0.65);font-size:0.95rem;line-height:1.8;max-width:520px;margin:0 auto 32px;position:relative;z-index:1}
+.download-btn{display:inline-flex;align-items:center;gap:10px;background:var(--terra);color:white;padding:13px 28px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;text-decoration:none;transition:background 0.2s;position:relative;z-index:1;border:none;cursor:pointer}
+.download-btn:hover{background:#a8501f}
+.download-btn svg{width:16px;height:16px;fill:white}
+
+/* MAIN LAYOUT */
+.main{max-width:860px;margin:0 auto;padding:56px 40px 80px}
+
+/* SECTION HEADERS */
+.section-header{display:flex;align-items:center;gap:16px;margin-bottom:32px}
+.section-header h2{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--deep);white-space:nowrap}
+.section-line{flex:1;height:1px;background:rgba(196,98,45,0.2)}
+.section-count{font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:rgba(28,20,16,0.35);white-space:nowrap}
+
+/* CATEGORY FILTER */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:32px}
+.filter-btn{padding:6px 16px;border-radius:20px;border:1.5px solid rgba(196,98,45,0.2);background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;color:rgba(28,20,16,0.55);transition:all 0.2s}
+.filter-btn:hover,.filter-btn.active{background:var(--terra);color:white;border-color:var(--terra)}
+
+/* BOOK GRID */
+.books-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:56px}
+.book-card{background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:20px;box-shadow:0 2px 16px rgba(28,20,16,0.05);transition:transform 0.2s,box-shadow 0.2s;animation:fadeUp 0.4s ease both}
+.book-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(28,20,16,0.09)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.book-cat{font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);font-weight:600;margin-bottom:8px}
+.book-title{font-family:'Playfair Display',serif;font-size:0.98rem;font-weight:700;color:var(--deep);line-height:1.4;margin-bottom:5px}
+.book-author{font-size:0.8rem;color:rgba(28,20,16,0.5);margin-bottom:14px;font-style:italic}
+.book-footer{display:flex;align-items:center;justify-content:space-between}
+.like-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:'DM Sans',sans-serif;font-size:0.8rem;color:rgba(28,20,16,0.4);transition:all 0.2s;padding:4px 0}
+.like-btn:hover,.like-btn.liked{color:var(--terra)}
+.like-btn.liked .heart{fill:var(--terra)}
+.heart{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;transition:fill 0.2s}
+.cat-badge{font-size:0.62rem;padding:3px 10px;border-radius:10px;font-weight:600;background:var(--cream);color:var(--deep)}
+.cat-badge.feminist{background:rgba(196,98,45,0.1);color:var(--terra)}
+.cat-badge.creativity{background:rgba(212,168,83,0.15);color:#8B6914}
+.cat-badge.wellness{background:rgba(122,140,110,0.15);color:var(--sage)}
+.cat-badge.health{background:rgba(232,196,160,0.4);color:#8B4513}
+.cat-badge.intersectional{background:rgba(28,20,16,0.08);color:var(--deep)}
+
+/* COMMUNITY SECTION */
+.community-section{background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:40px;box-shadow:0 2px 16px rgba(28,20,16,0.05);margin-bottom:32px}
+.community-intro{font-size:0.9rem;color:rgba(28,20,16,0.6);line-height:1.8;margin-bottom:28px;max-width:520px}
+.suggest-form{display:flex;flex-direction:column;gap:14px;margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid rgba(196,98,45,0.1)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);font-weight:500}
+.form-input{padding:10px 14px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.88rem;color:var(--deep);outline:none;transition:border-color 0.2s;background:white}
+.form-input:focus{border-color:var(--terra)}
+select.form-input{cursor:pointer}
+.submit-btn{background:var(--terra);color:white;border:none;padding:11px 28px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s;align-self:flex-start}
+.submit-btn:hover{background:#a8501f}
+.submit-btn:disabled{background:rgba(196,98,45,0.3);cursor:not-allowed}
+
+/* COMMUNITY BOOKS */
+.community-books{display:flex;flex-direction:column;gap:12px}
+.community-book{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--warm);border-radius:4px;gap:16px}
+.community-book-info{flex:1}
+.community-book-title{font-family:'Playfair Display',serif;font-size:0.92rem;font-weight:700;color:var(--deep);margin-bottom:2px}
+.community-book-author{font-size:0.78rem;color:rgba(28,20,16,0.5);font-style:italic}
+.community-book-by{font-size:0.7rem;color:rgba(28,20,16,0.35);margin-top:3px}
+.empty-state{text-align:center;padding:32px;color:rgba(28,20,16,0.35);font-size:0.88rem;line-height:1.8}
+.empty-state span{display:block;font-size:1.8rem;margin-bottom:8px}
+
+/* TOAST */
+.toast{position:fixed;bottom:32px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--deep);color:var(--cream);padding:12px 24px;border-radius:3px;font-size:0.85rem;opacity:0;transition:all 0.3s;pointer-events:none;z-index:600;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* LOGIN NOTICE */
+.login-notice{background:rgba(196,98,45,0.06);border:1px solid rgba(196,98,45,0.15);border-radius:4px;padding:14px 18px;font-size:0.82rem;color:var(--terra);margin-bottom:20px;display:none}
+.login-notice a{color:var(--terra);font-weight:600;cursor:pointer}
+
+@media(max-width:768px){
+  nav{padding:14px 20px}
+  .hero{padding:100px 20px 56px}
+  .main{padding:40px 20px 60px}
+  .books-grid{grid-template-columns:1fr}
+  .form-row{grid-template-columns:1fr}
+  .community-section{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Sisterhood<span>(verb)</span></div>
+  <a href="/app.html" class="nav-back">← Back to Community</a>
+</nav>
+
+<div class="toast" id="toast"></div>
+
+<div class="hero">
+  <div class="hero-label">Community Library ✦</div>
+  <h1 class="hero-title">Community Care<br><em>Reading List</em></h1>
+  <p class="hero-sub">Books that heal, challenge, and expand us. Curated with love — and always growing with your suggestions.</p>
+  <a href="/sisterhood-reading-list.pdf" download class="download-btn" id="download-btn">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 16l-6-6h4V4h4v6h4l-6 6zm-6 2h12v2H6v-2z"/></svg>
+    Download the List (PDF)
+  </a>
+</div>
+
+<div class="main">
+
+  <!-- CURATED LIST -->
+  <div class="section-header">
+    <h2>Curated by Tayllor</h2>
+    <div class="section-line"></div>
+    <div class="section-count" id="curated-count">25 books</div>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="filter-btn active" onclick="filterBooks('all', this)">All</button>
+    <button class="filter-btn" onclick="filterBooks('Feminist Thought', this)">Feminist Thought</button>
+    <button class="filter-btn" onclick="filterBooks('Creativity', this)">Creativity</button>
+    <button class="filter-btn" onclick="filterBooks('Wellness', this)">Wellness</button>
+    <button class="filter-btn" onclick="filterBooks("Women's Health", this)">Women's Health</button>
+    <button class="filter-btn" onclick="filterBooks('Intersectional', this)">Intersectional</button>
+  </div>
+
+  <div class="books-grid" id="books-grid"></div>
+
+  <!-- COMMUNITY SUGGESTIONS -->
+  <div class="section-header">
+    <h2>Sister Suggestions</h2>
+    <div class="section-line"></div>
+    <div class="section-count" id="community-count">0 books</div>
+  </div>
+
+  <div class="community-section">
+    <p class="community-intro">Have a book that belongs on this list? Share it with the Sisterhood — your suggestions shape this library for everyone.</p>
+
+    <div id="login-notice" class="login-notice">
+      You need to be logged in to suggest a book. <a onclick="window.location='/app.html'">Log in to the community →</a>
+    </div>
+
+    <div class="suggest-form" id="suggest-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Book Title</label>
+          <input class="form-input" type="text" id="suggest-title" placeholder="Title of the book">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Author</label>
+          <input class="form-input" type="text" id="suggest-author" placeholder="Author's name">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-input" id="suggest-category">
+            <option value="">Select a category...</option>
+            <option value="Feminist Thought">Feminist Thought</option>
+            <option value="Creativity">Creativity</option>
+            <option value="Wellness">Wellness</option>
+            <option value="Women's Health">Women's Health</option>
+            <option value="Intersectional">Intersectional</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Why this book? (optional)</label>
+          <input class="form-input" type="text" id="suggest-note" placeholder="One sentence on why it belongs here...">
+        </div>
+      </div>
+      <button class="submit-btn" id="submit-btn" onclick="submitSuggestion()">Suggest This Book ✦</button>
+    </div>
+
+    <div class="community-books" id="community-books">
+      <div class="empty-state"><span>📚</span>No suggestions yet — be the first to add one ✦</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const _supabase = window.supabase.createClient(
+  'https://cqiymqekdtewnorojlus.supabase.co',
+  'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
+);
+
+let currentUser = null;
+let currentFilter = 'all';
+let curatedLikes = {};
+
+const BOOKS = [
+  {id:'b1', title:"Sister Outsider", author:"Audre Lorde", category:"Feminist Thought"},
+  {id:'b2', title:"Ain't I a Woman", author:"bell hooks", category:"Feminist Thought"},
+  {id:'b3', title:"Feminist Theory: From Margin to Center", author:"bell hooks", category:"Feminist Thought"},
+  {id:'b4', title:"Black Feminist Thought", author:"Patricia Hill Collins", category:"Feminist Thought"},
+  {id:'b5', title:"Silencing the Past", author:"Michel-Rolph Trouillot", category:"Feminist Thought"},
+  {id:'b6', title:"Eloquent Rage", author:"Brittney Cooper", category:"Feminist Thought"},
+  {id:'b7', title:"We Real Cool: Black Men and Masculinity", author:"bell hooks", category:"Feminist Thought"},
+  {id:'b8', title:"In Search of Our Mothers' Gardens", author:"Alice Walker", category:"Creativity"},
+  {id:'b9', title:"The Artist's Way", author:"Julia Cameron", category:"Creativity"},
+  {id:'b10', title:"Zora Neale Hurston: A Life in Letters", author:"Carla Kaplan (ed.)", category:"Creativity"},
+  {id:'b11', title:"The Bluest Eye", author:"Toni Morrison", category:"Creativity"},
+  {id:'b12', title:"Beloved", author:"Toni Morrison", category:"Creativity"},
+  {id:'b13', title:"Rest Is Resistance", author:"Tricia Hersey", category:"Wellness"},
+  {id:'b14', title:"Pleasure Activism", author:"adrienne maree brown", category:"Wellness"},
+  {id:'b15', title:"The Truth About Trauma", author:"Dr. Lisa Collins, PhD", category:"Wellness"},
+  {id:'b16', title:"Love and Light: A Guide to Peace and Oneness", author:"Dr. Lisa Collins, PhD", category:"Wellness"},
+  {id:'b17', title:"There Is Nothing Wrong With You", author:"Cheri Huber", category:"Wellness"},
+  {id:'b18', title:"All About Love", author:"bell hooks", category:"Wellness"},
+  {id:'b19', title:"The Immortal Life of Henrietta Lacks", author:"Rebecca Skloot", category:"Women's Health"},
+  {id:'b20', title:"A Burst of Light", author:"Audre Lorde", category:"Women's Health"},
+  {id:'b21', title:"The Cancer Journals", author:"Audre Lorde", category:"Women's Health"},
+  {id:'b22', title:"Decolonizing the Body", author:"Kelsey Blackwell", category:"Women's Health"},
+  {id:'b23', title:"Just Medicine", author:"Dayna Bowen Matthew", category:"Women's Health"},
+  {id:'b24', title:"The New Jim Crow", author:"Michelle Alexander", category:"Intersectional"},
+  {id:'b25', title:"The Celestine Prophecy", author:"James Redfield", category:"Intersectional"},
+];
+
+const CAT_CLASS = {
+  'Feminist Thought': 'feminist',
+  'Creativity': 'creativity',
+  'Wellness': 'wellness',
+  "Women's Health": 'health',
+  'Intersectional': 'intersectional'
+};
+
+async function init() {
+  const {data:{session}} = await _supabase.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+  } else {
+    document.getElementById('login-notice').style.display = 'block';
+    document.getElementById('suggest-form').style.opacity = '0.5';
+    document.getElementById('suggest-form').style.pointerEvents = 'none';
+    document.getElementById('login-notice').style.display = 'block';
+  }
+  await loadCuratedLikes();
+  renderBooks();
+  await loadCommunityBooks();
+}
+
+async function loadCuratedLikes() {
+  const {data} = await _supabase.from('book_likes').select('book_id, count').select('book_id');
+  // Get all likes grouped
+  const {data: allLikes} = await _supabase.from('book_likes').select('book_id');
+  if (allLikes) {
+    allLikes.forEach(l => {
+      curatedLikes[l.book_id] = (curatedLikes[l.book_id] || 0) + 1;
+    });
+  }
+  // Get current user's likes
+  if (currentUser) {
+    const {data: myLikes} = await _supabase.from('book_likes').select('book_id').eq('user_id', currentUser.id);
+    if (myLikes) {
+      window._myBookLikes = new Set(myLikes.map(l => l.book_id));
+    }
+  } else {
+    window._myBookLikes = new Set();
+  }
+}
+
+function renderBooks() {
+  const grid = document.getElementById('books-grid');
+  const filtered = currentFilter === 'all' ? BOOKS : BOOKS.filter(b => b.category === currentFilter);
+  document.getElementById('curated-count').textContent = filtered.length + ' book' + (filtered.length !== 1 ? 's' : '');
+  grid.innerHTML = '';
+  filtered.forEach((book, i) => {
+    const likes = curatedLikes[book.id] || 0;
+    const isLiked = window._myBookLikes?.has(book.id);
+    const card = document.createElement('div');
+    card.className = 'book-card';
+    card.style.animationDelay = (i * 0.04) + 's';
+    card.innerHTML =
+      '<div class="book-cat">' + book.category + '</div>' +
+      '<div class="book-title">' + book.title + '</div>' +
+      '<div class="book-author">' + book.author + '</div>' +
+      '<div class="book-footer">' +
+        '<button class="like-btn' + (isLiked ? ' liked' : '') + '" id="like-' + book.id + '" onclick="toggleBookLike(\'' + book.id + '\', this)">' +
+          '<svg class="heart" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>' +
+          '<span>' + likes + '</span>' +
+        '</button>' +
+        '<span class="cat-badge ' + (CAT_CLASS[book.category] || '') + '">' + book.category + '</span>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+}
+
+function filterBooks(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderBooks();
+}
+
+async function toggleBookLike(bookId, btn) {
+  if (!currentUser) { showToast('Log in to like books ✦'); return; }
+  const isLiked = btn.classList.contains('liked');
+  const span = btn.querySelector('span');
+  btn.classList.toggle('liked');
+  const heart = btn.querySelector('.heart');
+
+  if (!isLiked) {
+    await _supabase.from('book_likes').insert({book_id: bookId, user_id: currentUser.id});
+    window._myBookLikes.add(bookId);
+    curatedLikes[bookId] = (curatedLikes[bookId] || 0) + 1;
+  } else {
+    await _supabase.from('book_likes').delete().eq('book_id', bookId).eq('user_id', currentUser.id);
+    window._myBookLikes.delete(bookId);
+    curatedLikes[bookId] = Math.max((curatedLikes[bookId] || 1) - 1, 0);
+  }
+  span.textContent = curatedLikes[bookId] || 0;
+}
+
+async function loadCommunityBooks() {
+  const {data: suggestions} = await _supabase
+    .from('book_suggestions')
+    .select('*, book_suggestion_likes(count)')
+    .order('created_at', {ascending: false});
+
+  const container = document.getElementById('community-books');
+  document.getElementById('community-count').textContent = (suggestions?.length || 0) + ' book' + (suggestions?.length !== 1 ? 's' : '');
+
+  if (!suggestions || suggestions.length === 0) {
+    container.innerHTML = '<div class="empty-state"><span>📚</span>No suggestions yet — be the first to add one ✦</div>';
+    return;
+  }
+
+  // Get user's suggestion likes
+  let myLikes = new Set();
+  if (currentUser) {
+    const {data: ml} = await _supabase.from('book_suggestion_likes').select('suggestion_id').eq('user_id', currentUser.id);
+    if (ml) ml.forEach(l => myLikes.add(l.suggestion_id));
+  }
+
+  container.innerHTML = '';
+  suggestions.forEach(s => {
+    const likeCount = s.book_suggestion_likes?.[0]?.count || 0;
+    const isLiked = myLikes.has(s.id);
+    const div = document.createElement('div');
+    div.className = 'community-book';
+    div.innerHTML =
+      '<div class="community-book-info">' +
+        '<div class="community-book-title">' + s.title + '</div>' +
+        '<div class="community-book-author">' + s.author + '</div>' +
+        (s.note ? '<div class="community-book-by">"' + s.note + '"</div>' : '') +
+        '<div class="community-book-by">Suggested by a sister</div>' +
+      '</div>' +
+      '<button class="like-btn' + (isLiked ? ' liked' : '') + '" id="slike-' + s.id + '" onclick="toggleSuggestionLike(\'' + s.id + '\', this)">' +
+        '<svg class="heart" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>' +
+        '<span>' + likeCount + '</span>' +
+      '</button>';
+    container.appendChild(div);
+  });
+}
+
+async function toggleSuggestionLike(id, btn) {
+  if (!currentUser) { showToast('Log in to like books ✦'); return; }
+  const isLiked = btn.classList.contains('liked');
+  const span = btn.querySelector('span');
+  btn.classList.toggle('liked');
+  const count = parseInt(span.textContent) || 0;
+  if (!isLiked) {
+    await _supabase.from('book_suggestion_likes').insert({suggestion_id: id, user_id: currentUser.id});
+    span.textContent = count + 1;
+  } else {
+    await _supabase.from('book_suggestion_likes').delete().eq('suggestion_id', id).eq('user_id', currentUser.id);
+    span.textContent = Math.max(count - 1, 0);
+  }
+}
+
+async function submitSuggestion() {
+  if (!currentUser) { showToast('Please log in to suggest a book ✦'); return; }
+  const title = document.getElementById('suggest-title').value.trim();
+  const author = document.getElementById('suggest-author').value.trim();
+  const category = document.getElementById('suggest-category').value;
+  const note = document.getElementById('suggest-note').value.trim();
+  if (!title || !author) { showToast('Please add a title and author ✦'); return; }
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  const {error} = await _supabase.from('book_suggestions').insert({
+    title, author, category, note, user_id: currentUser.id
+  });
+  btn.disabled = false; btn.textContent = 'Suggest This Book ✦';
+  if (error) { showToast('Could not submit — try again ✦'); return; }
+  document.getElementById('suggest-title').value = '';
+  document.getElementById('suggest-author').value = '';
+  document.getElementById('suggest-category').value = '';
+  document.getElementById('suggest-note').value = '';
+  showToast('Book suggested — thank you, sis! ✦');
+  await loadCommunityBooks();
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+init();
+</script>
+</body>
+</html>
