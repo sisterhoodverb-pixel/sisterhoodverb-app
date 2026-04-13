@@ -489,6 +489,18 @@ nav{padding:14px 20px}.nav-links{display:none}
     <div class="circle-card" onclick="openCircle('Speak Poet!')"><div class="circle-banner" style="background:linear-gradient(135deg,#1C1410,#3d2b1f)"><span class="circle-icon">🎤</span></div><div class="circle-body"><div class="circle-name">Speak Poet!</div><div class="circle-desc">For slam poets, performers, and spoken word artists looking for space to share and connect.</div><div class="circle-meta"><button class="join-btn" data-circle="Speak Poet!" onclick="event.stopPropagation();toggleJoin(this,'Speak Poet!')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('Healing As We Hustle')"><div class="circle-banner" style="background:linear-gradient(135deg,#2d1f3d,#5c3d7a)"><span class="circle-icon">💼</span></div><div class="circle-body"><div class="circle-name">Healing As We Hustle</div><div class="circle-desc">Space for entrepreneurs to connect, network, and get support as we go big or go home.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="Healing As We Hustle" onclick="event.stopPropagation();toggleJoin(this,'Healing As We Hustle')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('The Travel Girlies')"><div class="circle-banner" style="background:linear-gradient(135deg,#1a3a4a,#2d6a8a)"><span class="circle-icon">✈️</span></div><div class="circle-body"><div class="circle-name">The Travel Girlies</div><div class="circle-desc">Trip tips, resources, warnings, and storytelling. Booked and busy or still in the group chat — you're welcome.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="The Travel Girlies" onclick="event.stopPropagation();toggleJoin(this,'The Travel Girlies')">Join</button></div></div></div>
+    <div class="circle-card" style="border:1.5px solid rgba(212,168,83,0.4);position:relative;" onclick="openCircle('NAACP Black Women's Health Equity Day')">
+  <div style="position:absolute;top:10px;right:10px;background:linear-gradient(135deg,var(--gold),#b8860b);color:white;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:10px;z-index:1;">Public ✦</div>
+  <div class="circle-banner" style="background:linear-gradient(135deg,#1C1410,#b8860b)"><span class="circle-icon">🌺</span></div>
+  <div class="circle-body">
+    <div class="circle-name">NAACP Black Women's Health Equity Day</div>
+    <div class="circle-desc">A public space for health equity resources and conversation — open to all. April 25, 2026.</div>
+    <div class="circle-meta">
+      <span class="circle-members">Open to all</span>
+      <button class="join-btn" style="background:var(--gold);color:white;border-color:var(--gold);" onclick="event.stopPropagation();openCircle('NAACP Black Women's Health Equity Day')">View ✦</button>
+    </div>
+  </div>
+</div>
     <div class="circle-card" style="border:1.5px dashed rgba(196,98,45,0.3);background:var(--cream)"><div class="circle-banner" style="background:transparent;height:70px"><span class="circle-icon">✦</span></div><div class="circle-body"><div class="circle-name" style="color:var(--terra)">Start a Circle</div><div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the team.</div><div class="circle-meta"><span class="circle-members">Members only</span><button class="join-btn" onclick="openProposalModal()">Propose</button></div></div></div>
   </div>
 </div>
@@ -2160,7 +2172,7 @@ async function changePassword() {
     await _supabase.from('profiles').update({name, bio, location}).eq('id', currentUser.id);
     window._currentUserName = name;
     showToast('Profile saved ✦');
-    onbNext(3);
+    onbNext(4);
   }
 
   async function onbFinish() {
@@ -2327,55 +2339,10 @@ async function changePassword() {
   </div>
 </div>
 
-<!-- Step 2: Complete Profile -->
+<!-- Step 2: Community Agreements -->
 <div id="onb-step-2" class="onb-step" style="display:none;">
-  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
-    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 1 of 3</div>
-    <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Tell us about yourself</h2>
-    <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Your sisters want to know you ✦</p>
-  </div>
-  <div style="padding:28px 40px;">
-    <div style="margin-bottom:16px;">
-      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Display Name</label>
-      <input id="onb-name" class="form-input" type="text" placeholder="What shall we call you?">
-    </div>
-    <div style="margin-bottom:16px;">
-      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Bio</label>
-      <textarea id="onb-bio" class="form-input" rows="3" style="resize:none;" placeholder="Tell your sisters a little about yourself..."></textarea>
-    </div>
-    <div style="margin-bottom:24px;">
-      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Location</label>
-      <input id="onb-location" class="form-input" type="text" placeholder="Where are you based?">
-    </div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="onbNext(3)" style="flex:1;" class="onb-btn-secondary">Skip for now</button>
-      <button onclick="onbSaveProfile()" style="flex:2;" class="onb-btn-primary">Save & Continue ✦</button>
-    </div>
-  </div>
-</div>
-
-<!-- Step 3: Join Circles -->
-<div id="onb-step-3" class="onb-step" style="display:none;">
-  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
-    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 2 of 3</div>
-    <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Find your Circle</h2>
-    <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Join the spaces that speak to you ✦</p>
-  </div>
-  <div style="padding:24px 40px;max-height:340px;overflow-y:auto;">
-    <div id="onb-circles-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
-      <!-- Circles populated by JS -->
-    </div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="onbNext(4)" style="flex:1;" class="onb-btn-secondary">Skip for now</button>
-      <button onclick="onbNext(4)" style="flex:2;" class="onb-btn-primary">Continue ✦</button>
-    </div>
-  </div>
-</div>
-
-<!-- Step 4: Community Agreements -->
-<div id="onb-step-4" class="onb-step" style="display:none;">
   <div style="background:var(--deep);padding:32px 40px 24px;">
-    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Step 3 of 3</div>
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Step 1 of 3</div>
     <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--cream);margin-bottom:6px;">Our Community Agreements</h2>
     <p style="color:rgba(245,239,230,0.6);font-size:0.85rem;">What makes this space sacred ✦</p>
   </div>
@@ -2402,7 +2369,52 @@ async function changePassword() {
         <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>What's Said Here Stays Here.</strong> Protect this space.</div>
       </div>
     </div>
-    <button onclick="onbNext(5)" class="onb-btn-primary">I Agree — Take Me In ✦</button>
+    <button onclick="onbNext(3)" class="onb-btn-primary">I Agree — Take Me In ✦</button>
+  </div>
+</div>
+
+<!-- Step 3: Complete Profile -->
+<div id="onb-step-3" class="onb-step" style="display:none;">
+  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 2 of 3</div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Tell us about yourself</h2>
+    <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Your sisters want to know you ✦</p>
+  </div>
+  <div style="padding:28px 40px;">
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Display Name</label>
+      <input id="onb-name" class="form-input" type="text" placeholder="What shall we call you?">
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Bio</label>
+      <textarea id="onb-bio" class="form-input" rows="3" style="resize:none;" placeholder="Tell your sisters a little about yourself..."></textarea>
+    </div>
+    <div style="margin-bottom:24px;">
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Location</label>
+      <input id="onb-location" class="form-input" type="text" placeholder="Where are you based?">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="onbNext(4)" style="flex:1;" class="onb-btn-secondary">Skip for now</button>
+      <button onclick="onbSaveProfile()" style="flex:2;" class="onb-btn-primary">Save & Continue ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 4: Join Circles -->
+<div id="onb-step-4" class="onb-step" style="display:none;">
+  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 3 of 3</div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Find your Circle</h2>
+    <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Join the spaces that speak to you ✦</p>
+  </div>
+  <div style="padding:24px 40px;max-height:340px;overflow-y:auto;">
+    <div id="onb-circles-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+      <!-- Circles populated by JS -->
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="onbNext(5)" style="flex:1;" class="onb-btn-secondary">Skip for now</button>
+      <button onclick="onbNext(5)" style="flex:2;" class="onb-btn-primary">Continue ✦</button>
+    </div>
   </div>
 </div>
 
