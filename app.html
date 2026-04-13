@@ -416,13 +416,6 @@ nav{padding:14px 20px}.nav-links{display:none}
     </div>
     <button class="membership-cta" onclick="openModal()">Claim Your Spot ✦</button>
   </div>
-  <div class="membership-banner" id="trial-banner" style="display:none;background:linear-gradient(135deg,#2d5a3d,var(--sage));">
-    <div class="membership-text">
-      <strong>✦ Welcome from Black Women's Health Equity Day!</strong>
-      <span>You have 60 days of full access — explore every Circle, resource, and space.</span>
-    </div>
-    <button class="membership-cta" onclick="openModal()">Join Free ✦</button>
-  </div>
   <div class="membership-banner" id="regular-banner" style="display:none;">
     <div class="membership-text"><strong>Upgrade to Full Member</strong><span>Unlock all Circles, workshop recordings, and 1:1 mentorship access</span></div>
     <button class="membership-cta" onclick="openModal()">Explore Plans</button>
@@ -489,7 +482,7 @@ nav{padding:14px 20px}.nav-links{display:none}
     <div class="circle-card" onclick="openCircle('Speak Poet!')"><div class="circle-banner" style="background:linear-gradient(135deg,#1C1410,#3d2b1f)"><span class="circle-icon">🎤</span></div><div class="circle-body"><div class="circle-name">Speak Poet!</div><div class="circle-desc">For slam poets, performers, and spoken word artists looking for space to share and connect.</div><div class="circle-meta"><button class="join-btn" data-circle="Speak Poet!" onclick="event.stopPropagation();toggleJoin(this,'Speak Poet!')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('Healing As We Hustle')"><div class="circle-banner" style="background:linear-gradient(135deg,#2d1f3d,#5c3d7a)"><span class="circle-icon">💼</span></div><div class="circle-body"><div class="circle-name">Healing As We Hustle</div><div class="circle-desc">Space for entrepreneurs to connect, network, and get support as we go big or go home.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="Healing As We Hustle" onclick="event.stopPropagation();toggleJoin(this,'Healing As We Hustle')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('The Travel Girlies')"><div class="circle-banner" style="background:linear-gradient(135deg,#1a3a4a,#2d6a8a)"><span class="circle-icon">✈️</span></div><div class="circle-body"><div class="circle-name">The Travel Girlies</div><div class="circle-desc">Trip tips, resources, warnings, and storytelling. Booked and busy or still in the group chat — you're welcome.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="The Travel Girlies" onclick="event.stopPropagation();toggleJoin(this,'The Travel Girlies')">Join</button></div></div></div>
-    <div class="circle-card" style="border:1.5px solid rgba(212,168,83,0.4);position:relative;" onclick="openCircle(&quot;NAACP Black Women\'s Health Equity Day&quot;)">
+   <div class="circle-card" style="border:1.5px solid rgba(212,168,83,0.4);position:relative;" onclick="openCircle('NAACP Black Women\'s Health Equity Day')">
   <div style="position:absolute;top:10px;right:10px;background:linear-gradient(135deg,var(--gold),#b8860b);color:white;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:10px;z-index:1;">Public ✦</div>
   <div class="circle-banner" style="background:linear-gradient(135deg,#1C1410,#b8860b)"><span class="circle-icon">🌺</span></div>
   <div class="circle-body">
@@ -497,7 +490,7 @@ nav{padding:14px 20px}.nav-links{display:none}
     <div class="circle-desc">A public space for health equity resources and conversation — open to all. April 25, 2026.</div>
     <div class="circle-meta">
       <span class="circle-members">Open to all</span>
-      <button class="join-btn" style="background:var(--gold);color:white;border-color:var(--gold);" onclick="event.stopPropagation();openCircle(&quot;NAACP Black Women\'s Health Equity Day&quot;)">View ✦</button>
+      <button class="join-btn" style="background:var(--gold);color:white;border-color:var(--gold);" onclick="event.stopPropagation();openCircle('NAACP Black Women\'s Health Equity Day')">View ✦</button>
     </div>
   </div>
 </div>
@@ -509,7 +502,7 @@ nav{padding:14px 20px}.nav-links{display:none}
 
 <div class="view" id="view-circle-detail">
   <div class="circle-detail-header" id="circle-detail-header">
-    <button class="circle-detail-back" onclick="showViewWithProfile('circles',null)">← Back to Circles</button>
+    <button class="circle-detail-back" id="circle-back-btn" onclick="circleGoBack()">← Back to Circles</button>
     <span class="circle-detail-icon" id="circle-detail-icon">🌺</span>
     <h1 class="circle-detail-name" id="circle-detail-name">Circle Name</h1>
     <p class="circle-detail-desc" id="circle-detail-desc">Circle description</p>
@@ -818,6 +811,7 @@ nav{padding:14px 20px}.nav-links{display:none}
   <button class="mobile-nav-btn" onclick="showView('events',this)" id="mob-events"><span>📅</span>Events</button>
   <button class="mobile-nav-btn" onclick="showView('resources',this)" id="mob-resources"><span>📚</span>Library</button>
   <button class="mobile-nav-btn" onclick="showViewWithProfile('profile',this)" id="mob-profile"><span>👤</span>Profile</button>
+  <button class="mobile-nav-btn" id="mob-notif" onclick="toggleNotifDropdown()" style="position:relative;"><span>🔔</span>Alerts<span id="mob-notif-badge" style="display:none;position:absolute;top:4px;right:8px;background:#e74c3c;color:white;border-radius:50%;width:16px;height:16px;font-size:0.55rem;font-weight:700;align-items:center;justify-content:center;border:2px solid white;"></span></button>
 </div>
 
 <script>
@@ -840,7 +834,8 @@ const circleInfo = {
   'Burnout to Bloom':{icon:'🔥',desc:'For educators, organizers, activists, and artists trying to exist in the world and keep your cup full.',bg:'linear-gradient(135deg,#1C1410,#8B4513)'},
   'Speak Poet!':{icon:'🎤',desc:'For slam poets, performers, and spoken word artists looking for space to share your work and connect.',bg:'linear-gradient(135deg,#1C1410,#2d1f3d)'},
   'Healing As We Hustle':{icon:'💼',desc:'Space for entrepreneurs to connect, network, and get support.',bg:'linear-gradient(135deg,#1C1410,#3d2b5c)'},
-  'The Travel Girlies':{icon:'✈️',desc:'Trip tips, resources, warnings, and storytelling.',bg:'linear-gradient(135deg,#1C1410,#1a3a4a)'}
+  'The Travel Girlies':{icon:'✈️',desc:'Trip tips, resources, warnings, and storytelling.',bg:'linear-gradient(135deg,#1C1410,#1a3a4a)'},
+  "NAACP Black Women's Health Equity Day":{icon:'🌺',desc:"A community space for Black Women's Health Equity Day — hosted by NAACP Santa Barbara. Read posts and resources freely. Create a free Sisterhood(verb) account to join the conversation.",bg:'linear-gradient(135deg,#1C1410,#b8860b)',isPublic:true}
 };
 
 // ── AUTH ──
@@ -868,6 +863,12 @@ async function initAuth() {
         const anyOpen = document.querySelector('.modal-overlay.open');
         // Show login on PWA whether first time or returning — session is always fresh on install
         if (isPWA && !anyOpen) openAuthModal('login');
+        // Auto-open circle for guests
+        if (window._pendingCircleOpen) {
+          const cn = window._pendingCircleOpen;
+          window._pendingCircleOpen = null;
+          setTimeout(() => openCircle(cn), 300);
+        }
       }
     }, 5000);
   }
@@ -952,6 +953,13 @@ async function onLogin() {
     }
   }
 
+  // Hide upgrade banner — only show for free tier
+  const regularBanner = document.getElementById('regular-banner');
+  if (regularBanner) {
+    const tier = profile?.membership_tier || 'free';
+    regularBanner.style.display = (tier === 'free') ? 'flex' : 'none';
+  }
+
   loadFeed();
   loadAnnouncement();
   loadJoinedCircles();
@@ -961,6 +969,13 @@ async function onLogin() {
   checkAndShowOnboarding();
   if (notifInterval) clearInterval(notifInterval);
   notifInterval = setInterval(loadNotifications, 60000);
+
+  // Auto-open circle from URL param
+  if (window._pendingCircleOpen) {
+    const cn = window._pendingCircleOpen;
+    window._pendingCircleOpen = null;
+    setTimeout(() => openCircle(cn), 800);
+  }
 }
 
 function onLogout() {
@@ -991,27 +1006,20 @@ async function signUp(email, password, name) {
     return;
   }
   if (data.user) {
-    // Check if founding or trial member link was used
+    // Check if founding member link was used
     const isFoundingLink = window._foundingMode === true;
-    const isTrialLink = window._trialMode === true;
     let tier = 'free';
-    let trialExpiresAt = null;
     if (isFoundingLink) {
+      // Check count hasn't exceeded 50
       const {data: countData} = await _supabase.rpc('founding_member_count');
-      if ((countData || 0) < 50) { tier = 'founding'; }
-    } else if (isTrialLink) {
-      tier = 'event_trial';
-      const exp = new Date();
-      exp.setDate(exp.getDate() + 60);
-      trialExpiresAt = exp.toISOString();
+      if ((countData || 0) < 50) {
+        tier = 'founding';
+      }
     }
-    await _supabase.from('profiles').insert({id:data.user.id, name, handle:'@'+email.split('@')[0], membership_tier: tier, trial_expires_at: trialExpiresAt});
+    await _supabase.from('profiles').insert({id:data.user.id, name, handle:'@'+email.split('@')[0], membership_tier: tier});
     if (tier === 'founding') {
       showToast('Welcome, Founding Sister! ✦');
       localStorage.removeItem('sv_founding_mode');
-    } else if (tier === 'event_trial') {
-      showToast('Welcome! You have 60 days of full access ✦');
-      localStorage.removeItem('sv_trial_mode');
     } else {
       showToast('Welcome to the Sisterhood ✦');
     }
@@ -1303,6 +1311,18 @@ async function toggleLike(btn, postId) {
 
   // Sync posts table
   await _supabase.from('posts').update({likes: trueCount}).eq('id', postId);
+
+  // Like notification
+  if (!isLiked) {
+    const {data:post} = await _supabase.from('posts').select('user_id,content').eq('id', postId).single();
+    if (post && post.user_id !== currentUser.id) {
+      const liker = window._currentUserName || 'Someone';
+      const preview = (post.content || '').replace(/\[gif:.*?\]/, '').trim().slice(0, 40);
+      const message = liker + ' loved your post' + (preview ? ': "' + preview + (preview.length >= 40 ? '...' : '') + '"' : '') + ' 🫸';
+      await _supabase.from('notifications').insert({user_id: post.user_id, message, post_id: postId, read: false});
+    }
+  }
+
   btn.disabled = false;
 }
 
@@ -1359,22 +1379,116 @@ async function refreshProfileStats() {
 async function openCircle(name) {
   currentCircle = name;
   const info = circleInfo[name] || {icon:'✦', desc:'', bg:'var(--deep)'};
+  const isPublicCircle = !!info.isPublic;
+
   document.getElementById('circle-detail-icon').textContent = info.icon;
   document.getElementById('circle-detail-name').textContent = name;
   document.getElementById('circle-detail-desc').textContent = info.desc;
   document.getElementById('circle-detail-header').style.background = info.bg;
-  if (currentUser) {
-    const {data:m} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id).eq('circle_name', name).single();
-    circleIsJoined = !!m;
-    const joinBtn = document.getElementById('circle-detail-join-btn');
-    joinBtn.textContent = circleIsJoined ? 'Joined ✦' : 'Join Circle';
-    joinBtn.className = circleIsJoined ? 'circle-join-btn joined' : 'circle-join-btn';
-    document.getElementById('circle-composer').style.display = circleIsJoined ? 'block' : 'none';
+
+  const joinBtn = document.getElementById('circle-detail-join-btn');
+  const existingPrompt = document.getElementById('public-join-prompt');
+  if (existingPrompt) existingPrompt.remove();
+
+  if (isPublicCircle) {
+    joinBtn.style.display = currentUser ? 'inline-block' : 'none';
+    circleIsJoined = false;
+    if (currentUser) {
+      const {data:m} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id).eq('circle_name', name).single();
+      circleIsJoined = !!m;
+      joinBtn.textContent = circleIsJoined ? 'Joined ✦' : 'Join Circle';
+      joinBtn.className = circleIsJoined ? 'circle-join-btn joined' : 'circle-join-btn';
+    }
+    document.getElementById('circle-composer').style.display = (currentUser && circleIsJoined) ? 'block' : 'none';
+    if (!currentUser) {
+      const prompt = document.createElement('div');
+      prompt.id = 'public-join-prompt';
+      prompt.innerHTML = '<div style="background:linear-gradient(135deg,var(--deep),#3d2b1f);border-radius:6px;padding:32px;margin-bottom:28px;text-align:center;"><div style="font-size:2rem;margin-bottom:12px;">🌺</div><div style="font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Welcome, Sister</div><h3 style="font-family:\'Playfair Display\',serif;font-size:1.3rem;color:var(--cream);margin-bottom:12px;line-height:1.4;">Sisterhood(verb) is a private community for women who are ready to refuel, connect, and show up — together.</h3><p style="color:rgba(245,239,230,0.65);font-size:0.85rem;line-height:1.8;max-width:380px;margin:0 auto 20px;">You can read this circle freely. To join the conversation and access all our spaces, create a free account — it takes less than a minute.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;"><button onclick="openModal()" style="background:var(--terra);color:white;border:none;padding:12px 28px;font-family:\'DM Sans\',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;">Join Free ✦</button><button onclick="openAuthModal(\'login\')" style="background:none;border:1.5px solid rgba(245,239,230,0.3);color:var(--cream);padding:12px 28px;font-family:\'DM Sans\',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;border-radius:2px;">Log In</button></div></div>';
+      const feed = document.getElementById('circle-feed-posts');
+      feed.parentNode.insertBefore(prompt, feed);
+    }
+  } else {
+    if (currentUser) {
+      const {data:m} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id).eq('circle_name', name).single();
+      circleIsJoined = !!m;
+      joinBtn.textContent = circleIsJoined ? 'Joined ✦' : 'Join Circle';
+      joinBtn.className = circleIsJoined ? 'circle-join-btn joined' : 'circle-join-btn';
+      joinBtn.style.display = 'inline-block';
+      document.getElementById('circle-composer').style.display = circleIsJoined ? 'block' : 'none';
+    } else {
+      joinBtn.style.display = 'none';
+      document.getElementById('circle-composer').style.display = 'none';
+    }
   }
+
   const {count} = await _supabase.from('circle_members').select('*',{count:'exact'}).eq('circle_name', name);
   document.getElementById('circle-detail-count').textContent = (count || 0) + ' sisters';
+  loadCircleResources(name);
   loadCircleFeed(name);
   showView('circle-detail', null);
+}
+
+async function loadCircleResources(circleName) {
+  const existing = document.getElementById('circle-resources-section');
+  if (existing) existing.remove();
+
+  const {data:resources} = await _supabase
+    .from('circle_resources')
+    .select('*')
+    .eq('circle_name', circleName)
+    .order('created_at', {ascending: true});
+
+  if (!resources || resources.length === 0) return;
+
+  const section = document.createElement('div');
+  section.id = 'circle-resources-section';
+  section.innerHTML = `
+    <div style="margin-bottom:28px;">
+      <div class="section-label" style="margin-bottom:16px;">Resources & Links</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        ${resources.map(r => `
+          <a href="${r.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">
+            <span style="font-size:1.4rem;flex-shrink:0;">${r.type === 'pdf' ? '📄' : r.type === 'video' ? '🎥' : '🔗'}</span>
+            <div style="flex:1;">
+              <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">${r.title}</div>
+              ${r.description ? `<div style="font-size:0.82rem;color:rgba(28,20,16,0.6);line-height:1.6;">${r.description}</div>` : ''}
+            </div>
+            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">${r.type === 'pdf' ? 'Download' : 'Visit →'}</span>
+          </a>`).join('')}
+      </div>
+    </div>`;
+
+  const feed = document.getElementById('circle-feed-posts');
+  if (feed) feed.parentNode.insertBefore(section, feed);
+}
+
+async function loadCircleResources(circleName) {
+  const existing = document.getElementById('circle-resources-section');
+  if (existing) existing.remove();
+  const {data:resources} = await _supabase
+    .from('circle_resources')
+    .select('*')
+    .eq('circle_name', circleName)
+    .order('created_at', {ascending: true});
+  if (!resources || resources.length === 0) return;
+  const section = document.createElement('div');
+  section.id = 'circle-resources-section';
+  section.innerHTML = '<div style="margin-bottom:28px;">' +
+    '<div class="section-label" style="margin-bottom:16px;">Resources & Links</div>' +
+    '<div style="display:flex;flex-direction:column;gap:10px;">' +
+    resources.map(r =>
+      '<a href="' + r.url + '" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">' +
+        '<span style="font-size:1.4rem;flex-shrink:0;">' + (r.type === 'pdf' ? '📄' : r.type === 'video' ? '🎥' : '🔗') + '</span>' +
+        '<div style="flex:1;">' +
+          '<div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">' + r.title + '</div>' +
+          (r.description ? '<div style="font-size:0.82rem;color:rgba(28,20,16,0.6);line-height:1.6;">' + r.description + '</div>' : '') +
+        '</div>' +
+        '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">' + (r.type === 'pdf' ? 'Download' : 'Visit →') + '</span>' +
+      '</a>'
+    ).join('') +
+    '</div></div>';
+  const feed = document.getElementById('circle-feed-posts');
+  if (feed) feed.parentNode.insertBefore(section, feed);
 }
 
 async function loadCircleFeed(circleName) {
@@ -1808,8 +1922,8 @@ function setAuthMode(mode) {
   const nameGroup = document.getElementById('auth-name-group');
   const switchBtn = document.getElementById('auth-switch');
   if (mode === 'signup') {
-    title.textContent = window._foundingMode ? 'Claim Your Founding Sister Spot ✦' : window._trialMode ? 'Join with 60 Days Full Access ✦' : 'Join the Sisterhood';
-    submitBtn.textContent = window._foundingMode ? 'Join Free for Life ✦' : window._trialMode ? 'Start My Free Trial ✦' : 'Create Account';
+    title.textContent = window._foundingMode ? 'Claim Your Founding Sister Spot ✦' : 'Join the Sisterhood';
+    submitBtn.textContent = window._foundingMode ? 'Join Free for Life ✦' : 'Create Account';
     nameGroup.style.display = 'block';
     switchBtn.innerHTML = 'Already a member? <a href="#" onclick="setAuthMode(\'login\')">Log in</a>';
     submitBtn.onclick = () => { signUp(document.getElementById('auth-email').value, document.getElementById('auth-password').value, document.getElementById('auth-name').value); };
@@ -1819,6 +1933,14 @@ function setAuthMode(mode) {
     submitBtn.textContent = 'Log In'; nameGroup.style.display = 'none';
     switchBtn.innerHTML = 'New here? <a href="#" onclick="setAuthMode(\'signup\')">Join the Sisterhood</a> &nbsp;·&nbsp; <a href="#" onclick="forgotPassword()">Forgot password?</a>';
     submitBtn.onclick = () => { signIn(document.getElementById('auth-email').value, document.getElementById('auth-password').value); };
+  }
+}
+
+function circleGoBack() {
+  if (!currentUser) {
+    showView('home', null);
+  } else {
+    showViewWithProfile('circles', null);
   }
 }
 
@@ -1835,23 +1957,19 @@ window.addEventListener('load', function() {
   } else if (localStorage.getItem('sv_founding_mode') === 'yes') {
     window._foundingMode = true;
   }
-  // Check for trial link
-  if (params.get('trial') === 'yes') {
-    window._trialMode = true;
-    localStorage.setItem('sv_trial_mode', 'yes');
-  } else if (localStorage.getItem('sv_trial_mode') === 'yes') {
-    window._trialMode = true;
-  }
-  // Show correct banner immediately (before login)
+  // Show correct banner
   if (window._foundingMode) {
     const foundingBanner = document.getElementById('founding-banner');
     const regularBanner = document.getElementById('regular-banner');
     if (foundingBanner) foundingBanner.style.display = 'flex';
     if (regularBanner) regularBanner.style.display = 'none';
-  } else if (window._trialMode) {
-    const trialBanner = document.getElementById('trial-banner');
-    if (trialBanner) trialBanner.style.display = 'flex';
   }
+  // Check for direct circle link ?circle=naacp
+  const circleParam = params.get('circle');
+  if (circleParam === 'naacp') {
+    window._pendingCircleOpen = "NAACP Black Women's Health Equity Day";
+  }
+
   initAuth();
 });
   // ── DELETE POST ──
@@ -1948,6 +2066,8 @@ async function changePassword() {
     const wrap = document.getElementById('notif-wrap');
 
     if (wrap) wrap.style.display = 'block';
+    const mobBadge = document.getElementById('mob-notif-badge');
+    if (mobBadge) { mobBadge.style.display = unread > 0 ? 'flex' : 'none'; if (unread > 0) mobBadge.textContent = unread > 9 ? '9+' : unread; }
     if (badge) {
       if (unread > 0) {
         badge.style.display = 'flex';
@@ -2160,7 +2280,7 @@ async function changePassword() {
   function onbNext(step) {
     document.querySelectorAll('.onb-step').forEach(s => s.style.display = 'none');
     document.getElementById('onb-step-' + step).style.display = 'block';
-    document.getElementById('onboarding-progress').style.width = Math.min(step * 25, 100) + '%';
+    document.getElementById('onboarding-progress').style.width = (step * 25) + '%';
   }
 
   async function onbSaveProfile() {
@@ -2172,7 +2292,7 @@ async function changePassword() {
     await _supabase.from('profiles').update({name, bio, location}).eq('id', currentUser.id);
     window._currentUserName = name;
     showToast('Profile saved ✦');
-    onbNext(4);
+    onbNext(3);
   }
 
   async function onbFinish() {
@@ -2339,10 +2459,55 @@ async function changePassword() {
   </div>
 </div>
 
-<!-- Step 2: Community Agreements -->
+<!-- Step 2: Complete Profile -->
 <div id="onb-step-2" class="onb-step" style="display:none;">
+  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 1 of 3</div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Tell us about yourself</h2>
+    <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Your sisters want to know you ✦</p>
+  </div>
+  <div style="padding:28px 40px;">
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Display Name</label>
+      <input id="onb-name" class="form-input" type="text" placeholder="What shall we call you?">
+    </div>
+    <div style="margin-bottom:16px;">
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Bio</label>
+      <textarea id="onb-bio" class="form-input" rows="3" style="resize:none;" placeholder="Tell your sisters a little about yourself..."></textarea>
+    </div>
+    <div style="margin-bottom:24px;">
+      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Location</label>
+      <input id="onb-location" class="form-input" type="text" placeholder="Where are you based?">
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="onbNext(3)" style="flex:1;" class="onb-btn-secondary">Skip for now</button>
+      <button onclick="onbSaveProfile()" style="flex:2;" class="onb-btn-primary">Save & Continue ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3: Join Circles -->
+<div id="onb-step-3" class="onb-step" style="display:none;">
+  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 2 of 3</div>
+    <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Find your Circle</h2>
+    <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Join the spaces that speak to you ✦</p>
+  </div>
+  <div style="padding:24px 40px;max-height:340px;overflow-y:auto;">
+    <div id="onb-circles-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+      <!-- Circles populated by JS -->
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button onclick="onbNext(4)" style="flex:1;" class="onb-btn-secondary">Skip for now</button>
+      <button onclick="onbNext(4)" style="flex:2;" class="onb-btn-primary">Continue ✦</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 4: Community Agreements -->
+<div id="onb-step-4" class="onb-step" style="display:none;">
   <div style="background:var(--deep);padding:32px 40px 24px;">
-    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Step 1 of 3</div>
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Step 3 of 3</div>
     <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--cream);margin-bottom:6px;">Our Community Agreements</h2>
     <p style="color:rgba(245,239,230,0.6);font-size:0.85rem;">What makes this space sacred ✦</p>
   </div>
@@ -2369,94 +2534,13 @@ async function changePassword() {
         <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>What's Said Here Stays Here.</strong> Protect this space.</div>
       </div>
     </div>
-    <button onclick="onbNext(3)" class="onb-btn-primary">I Agree — Take Me In ✦</button>
-  </div>
-</div>
-
-<!-- Step 3: Complete Profile -->
-<div id="onb-step-3" class="onb-step" style="display:none;">
-  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
-    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 2 of 3</div>
-    <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Tell us about yourself</h2>
-    <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Your sisters want to know you ✦</p>
-  </div>
-  <div style="padding:28px 40px;">
-    <div style="margin-bottom:16px;">
-      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Display Name</label>
-      <input id="onb-name" class="form-input" type="text" placeholder="What shall we call you?">
-    </div>
-    <div style="margin-bottom:16px;">
-      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Bio</label>
-      <textarea id="onb-bio" class="form-input" rows="3" style="resize:none;" placeholder="Tell your sisters a little about yourself..."></textarea>
-    </div>
-    <div style="margin-bottom:24px;">
-      <label style="display:block;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500;">Location</label>
-      <input id="onb-location" class="form-input" type="text" placeholder="Where are you based?">
-    </div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="onbNext(4)" style="flex:1;" class="onb-btn-secondary">Skip for now</button>
-      <button onclick="onbSaveProfile()" style="flex:2;" class="onb-btn-primary">Save & Continue ✦</button>
-    </div>
-  </div>
-</div>
-
-<!-- Step 4: Join Circles -->
-<div id="onb-step-4" class="onb-step" style="display:none;">
-  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
-    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 3 of 3</div>
-    <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Find your Circle</h2>
-    <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Join the spaces that speak to you ✦</p>
-  </div>
-  <div style="padding:24px 40px;max-height:340px;overflow-y:auto;">
-    <div id="onb-circles-list" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
-      <!-- Circles populated by JS -->
-    </div>
-    <div style="display:flex;gap:10px;">
-      <button onclick="onbNext(5)" style="flex:1;" class="onb-btn-secondary">Skip for now</button>
-      <button onclick="onbNext(5)" style="flex:2;" class="onb-btn-primary">Continue ✦</button>
-    </div>
-  </div>
-</div>
-
-<!-- Step 5: Support -->
-<div id="onb-step-5" class="onb-step" style="display:none;">
-  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(196,98,45,0.1);">
-    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">One more thing</div>
-    <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Support the Sisterhood</h2>
-    <p style="color:rgba(28,20,16,0.55);font-size:0.85rem;">Completely optional — but deeply appreciated ✦</p>
-  </div>
-  <div style="padding:28px 40px;">
-    <p style="font-size:0.88rem;color:rgba(28,20,16,0.7);line-height:1.8;margin-bottom:24px;">Some sisters choose to support Sisterhood(verb) with a subscription. It keeps this space independent, ad-free, and growing. Your free membership is always honored — but if you want to invest from the start, here's how.</p>
-    <a href="https://buy.stripe.com/8x26oG5S3bP4g1ffKsbEA01" target="_blank" style="display:block;text-decoration:none;background:var(--deep);border-radius:4px;padding:20px 24px;margin-bottom:12px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:10px;right:12px;background:var(--gold);color:var(--deep);font-size:0.58rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:10px;">Best Value</div>
-      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--cream);font-weight:700;margin-bottom:4px;">Inner Circle — Annual</div>
-      <div style="font-size:0.82rem;color:var(--gold);margin-bottom:6px;">$79 / year <span style="color:rgba(245,239,230,0.4);font-size:0.75rem;">· saves $29 vs monthly</span></div>
-      <div style="font-size:0.78rem;color:rgba(245,239,230,0.55);line-height:1.6;">Full access · all Circles · resources · recordings ✦</div>
-    </a>
-    <a href="https://buy.stripe.com/4gM7sK80b4mC4ix69SbEA00" target="_blank" style="display:block;text-decoration:none;border:1.5px solid rgba(196,98,45,0.2);border-radius:4px;padding:20px 24px;margin-bottom:20px;">
-      <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--deep);font-weight:700;margin-bottom:4px;">Sister — Monthly</div>
-      <div style="font-size:0.82rem;color:var(--terra);margin-bottom:6px;">$9 / month</div>
-      <div style="font-size:0.78rem;color:rgba(28,20,16,0.5);line-height:1.6;">Full access · all Circles · resources · recordings ✦</div>
-    </a>
-    <button onclick="onbFinish()" style="width:100%;padding:14px;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:rgba(28,20,16,0.4);cursor:pointer;text-decoration:underline;">Continue with free membership →</button>
+    <button onclick="onbFinish()" class="onb-btn-primary">I Agree — Take Me In ✦</button>
   </div>
 </div>
 ```
 
   </div>
 </div>
-
-<!-- ONBOARDING STEP 5: PRICING -->
-<script>
-function onbShowPricing() {
-  // Hide all steps, show step 5
-  document.querySelectorAll('.onb-step').forEach(s => s.style.display = 'none');
-  const step5 = document.getElementById('onb-step-5');
-  if (step5) step5.style.display = 'block';
-  const prog = document.getElementById('onboarding-progress');
-  if (prog) prog.style.width = '100%';
-}
-</script>
 
 <!-- CIRCLE PROPOSAL MODAL -->
 
@@ -2525,7 +2609,7 @@ function onbShowPricing() {
         </div>
       </div>
     </div>
-    <p style="font-size:0.78rem;color:rgba(28,20,16,0.4);margin-bottom:20px;line-height:1.7;">Don't see it? Check your spam or junk folder. The email comes from <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="1a757478757b687e73747d5a687f697f747e347e7f6c">[email&#160;protected]</a></strong></p>
+    <p style="font-size:0.78rem;color:rgba(28,20,16,0.4);margin-bottom:20px;line-height:1.7;">Don't see it? Check your spam or junk folder. The email comes from <strong><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="711e1f131e100315181f1631031402141f155f151407">[email&#160;protected]</a></strong></p>
     <button class="modal-agree-btn" onclick="closeConfirmationScreen()" style="margin-bottom:12px;">I'll go check my email ✦</button>
     <div class="modal-cancel"><button onclick="closeConfirmationScreen();openAuthModal('login');">Already confirmed? Log in</button></div>
   </div>
