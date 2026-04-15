@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motherhood Speaks — Session Recaps · Sisterhood(verb)</title>
+<meta name="description" content="A 6-week virtual writing workshop and soft place to land for mommies who need to pause, write, release, and be seen in community with other mothers.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --terra: #C4622D;
+  --deep: #1C1410;
+  --cream: #F5EFE6;
+  --gold: #D4A853;
+  --warm: #FBF7F2;
+  --sage: #7A8C6E;
+  --muted: rgba(28,20,16,0.55);
+  --plum: #6B3F6B;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--warm);
+  color: var(--deep);
+  overflow-x: hidden;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  padding: 16px 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(251,247,242,0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(196,98,45,0.1);
+}
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--terra);
+  text-decoration: none;
+}
+.nav-logo em { font-style: italic; font-weight: 400; }
+.nav-back {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+}
+.nav-back:hover { color: var(--terra); }
+.nav-cta {
+  background: var(--terra);
+  color: white;
+  padding: 8px 20px;
+  border-radius: 2px;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  transition: background 0.2s;
+}
+.nav-cta:hover { background: #a8501f; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 60vh;
+  background: var(--deep);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 40px 80px;
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 30% 50%, rgba(107,63,107,0.2) 0%, transparent 60%),
+              radial-gradient(ellipse at 70% 20%, rgba(196,98,45,0.12) 0%, transparent 50%);
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0; right: 0;
+  height: 60px;
+  background: var(--warm);
+  clip-path: ellipse(55% 100% at 50% 100%);
+}
+.hero-eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+  position: relative;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.2s forwards;
+}
+.hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  color: var(--cream);
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  position: relative;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.4s forwards;
+}
+.hero-title em { font-style: italic; font-weight: 400; color: #c9a0c9; }
+.hero-sub {
+  font-size: 0.95rem;
+  color: rgba(245,239,230,0.6);
+  line-height: 1.8;
+  max-width: 520px;
+  margin: 0 auto;
+  position: relative;
+  opacity: 0;
+  animation: fadeUp 0.8s ease 0.6s forwards;
+}
+
+/* ── INTRO BAND ── */
+.intro-band {
+  background: white;
+  padding: 60px 40px;
+  text-align: center;
+  border-bottom: 1px solid rgba(196,98,45,0.08);
+}
+.intro-band p {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+  font-style: italic;
+  color: var(--deep);
+  max-width: 640px;
+  margin: 0 auto;
+  line-height: 1.7;
+}
+.intro-band strong {
+  color: var(--terra);
+  font-style: normal;
+}
+
+/* ── RECAPS SECTION ── */
+.recaps-section {
+  padding: 80px 40px;
+  max-width: 1040px;
+  margin: 0 auto;
+}
+
+.recaps-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--terra);
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.recaps-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 60px;
+  color: var(--deep);
+}
+
+/* ── SESSION CARD ── */
+.session-card {
+  background: white;
+  border-radius: 6px;
+  border: 1px solid rgba(196,98,45,0.1);
+  margin-bottom: 32px;
+  overflow: hidden;
+  box-shadow: 0 2px 20px rgba(28,20,16,0.04);
+  transition: box-shadow 0.3s;
+}
+.session-card:hover {
+  box-shadow: 0 8px 40px rgba(28,20,16,0.08);
+}
+
+.session-header {
+  padding: 32px 40px 24px;
+  border-bottom: 1px solid rgba(196,98,45,0.08);
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+.session-number {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.8rem;
+  font-weight: 700;
+  color: rgba(196,98,45,0.15);
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: -4px;
+}
+.session-meta { flex: 1; }
+.session-tag {
+  display: inline-block;
+  background: rgba(196,98,45,0.08);
+  color: var(--terra);
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+}
+.session-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+  font-weight: 700;
+  color: var(--deep);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.session-subtitle {
+  font-size: 0.88rem;
+  color: var(--muted);
+  font-style: italic;
+  line-height: 1.5;
+}
+
+.session-body {
+  padding: 32px 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+
+.session-body.single-col {
+  grid-template-columns: 1fr;
+}
+
+.topic-block { }
+.topic-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--terra);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.topic-label::before {
+  content: '✦';
+  font-size: 0.6rem;
+}
+
+.topic-items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.topic-items li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.88rem;
+  color: rgba(28,20,16,0.75);
+  line-height: 1.6;
+}
+.topic-items li::before {
+  content: '•';
+  color: var(--terra);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.topic-items .sub-items {
+  list-style: none;
+  margin-top: 8px;
+  padding-left: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.topic-items .sub-items li::before {
+  content: '○';
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+/* ── REFLECTION PROMPT ── */
+.reflection-strip {
+  background: linear-gradient(135deg, rgba(107,63,107,0.06), rgba(196,98,45,0.06));
+  border-top: 1px solid rgba(107,63,107,0.1);
+  padding: 24px 40px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.reflection-icon { font-size: 1.4rem; flex-shrink: 0; }
+.reflection-label {
+  font-size: 0.68rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--plum);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.reflection-text {
+  font-family: 'Playfair Display', serif;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--deep);
+  line-height: 1.5;
+}
+
+/* ── JOIN CTA ── */
+.join-section {
+  background: var(--deep);
+  padding: 80px 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.join-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(107,63,107,0.25) 0%, transparent 60%);
+}
+.join-eyebrow {
+  font-size: 0.68rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+  position: relative;
+}
+.join-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  color: var(--cream);
+  font-weight: 700;
+  margin-bottom: 16px;
+  line-height: 1.2;
+  position: relative;
+}
+.join-sub {
+  font-size: 0.92rem;
+  color: rgba(245,239,230,0.6);
+  line-height: 1.8;
+  max-width: 440px;
+  margin: 0 auto 36px;
+  position: relative;
+}
+.btn-primary {
+  background: var(--terra);
+  color: white;
+  padding: 16px 36px;
+  border-radius: 2px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.2s, transform 0.2s;
+  display: inline-block;
+  position: relative;
+}
+.btn-primary:hover { background: #a8501f; transform: translateY(-1px); }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--deep);
+  border-top: 1px solid rgba(245,239,230,0.08);
+  padding: 40px 48px;
+  text-align: center;
+}
+.footer-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  color: var(--cream);
+  margin-bottom: 10px;
+}
+.footer-logo em { font-style: italic; font-weight: 400; }
+.footer-copy {
+  font-size: 0.72rem;
+  color: rgba(245,239,230,0.2);
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+  nav { padding: 14px 20px; }
+  .hero { padding: 100px 24px 70px; }
+  .intro-band { padding: 48px 24px; }
+  .recaps-section { padding: 60px 20px; }
+  .session-header { padding: 24px 24px 20px; flex-direction: column; gap: 8px; }
+  .session-number { font-size: 2rem; }
+  .session-body { padding: 24px; grid-template-columns: 1fr; gap: 24px; }
+  .reflection-strip { padding: 20px 24px; flex-direction: column; align-items: flex-start; gap: 10px; }
+  .join-section { padding: 60px 24px; }
+  footer { padding: 32px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/" class="nav-logo">Sisterhood<em>(verb)</em></a>
+  <a href="https://community.sisterhoodverb.com/app.html" class="nav-back">← Back to Community</a>
+  <a href="https://community.sisterhoodverb.com/app.html?signup=true" class="nav-cta">Join the Community ✦</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow">Sisterhood(verb) · Circle Resources</p>
+  <h1 class="hero-title">Motherhood <em>Speaks</em></h1>
+  <p class="hero-sub">A 6-week virtual writing workshop and soft place to land for mommies who need to pause, write, release, and be seen in community with other mothers.</p>
+</section>
+
+<!-- INTRO -->
+<div class="intro-band">
+  <p>Each session, we gather to <strong>write through it</strong> — the beautiful, the hard, the funny, and the holy mess of motherhood. These recaps hold the thread of what we explored together.</p>
+</div>
+
+<!-- RECAPS -->
+<section class="recaps-section">
+  <p class="recaps-label">Session Recaps</p>
+  <h2 class="recaps-title">What We Explored Together</h2>
+
+  <!-- SESSION 1 -->
+  <div class="session-card">
+    <div class="session-header">
+      <div class="session-number">01</div>
+      <div class="session-meta">
+        <span class="session-tag">Grace & Self-Compassion</span>
+        <h3 class="session-title">"You Should Give Yourself Grace!"</h3>
+        <p class="session-subtitle">Yeah, that's nice — but what does it actually mean?</p>
+      </div>
+    </div>
+    <div class="session-body">
+      <div class="topic-block">
+        <div class="topic-label">Grace and where to find it</div>
+        <ul class="topic-items">
+          <li>What does grace mean to you?</li>
+          <li>When was the last time you gave yourself grace?</li>
+          <li>What access point can you create for yourself so you can access that feeling?</li>
+        </ul>
+      </div>
+      <div class="topic-block">
+        <div class="topic-label">Writing prompts we explored</div>
+        <ul class="topic-items">
+          <li>Write about a moment when you needed grace and didn't give it to yourself</li>
+          <li>Describe what grace feels like in your body when you actually receive it</li>
+          <li>Write a letter to yourself from the mother you are becoming</li>
+        </ul>
+      </div>
+    </div>
+    <div class="reflection-strip">
+      <div class="reflection-icon">✍🏾</div>
+      <div>
+        <div class="reflection-label">Take it with you</div>
+        <div class="reflection-text">Where in your daily life can you create one small access point to grace this week?</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESSION 2 -->
+  <div class="session-card">
+    <div class="session-header">
+      <div class="session-number">02</div>
+      <div class="session-meta">
+        <span class="session-tag">Joy & Humor</span>
+        <h3 class="session-title">Humor in Pregnancy and Postpartum</h3>
+        <p class="session-subtitle">Sometimes you just have to laugh...</p>
+      </div>
+    </div>
+    <div class="session-body">
+      <div class="topic-block">
+        <div class="topic-label">Finding the funny in the hard</div>
+        <ul class="topic-items">
+          <li>As much as we may feel overwhelmed and sad, we also get to acknowledge the humor that inevitably happens when caring for littles</li>
+          <li>What's a funny story you'll tell your kids when they're older about this season?</li>
+          <li>
+            Text yourself the following to save for a rainy day:
+            <ul class="sub-items">
+              <li>A funny movie</li>
+              <li>Your favorite snack</li>
+              <li>A funny video from social media</li>
+            </ul>
+          </li>
+        </ul>
+      </div>
+      <div class="topic-block">
+        <div class="topic-label">Writing prompts we explored</div>
+        <ul class="topic-items">
+          <li>Write the funniest thing that has happened to you as a mother that you couldn't laugh about in the moment</li>
+          <li>Write about a time your child made you laugh when you desperately needed it</li>
+          <li>What would your future self laugh about from this season of life?</li>
+        </ul>
+      </div>
+    </div>
+    <div class="reflection-strip">
+      <div class="reflection-icon">🌺</div>
+      <div>
+        <div class="reflection-label">Take it with you</div>
+        <div class="reflection-text">Save one thing this week that makes you laugh — a video, a memory, a voice note to yourself. That's your rainy day kit.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SESSION 3 placeholder -->
+  <div class="session-card">
+    <div class="session-header">
+      <div class="session-number">03</div>
+      <div class="session-meta">
+        <span class="session-tag">Coming Soon</span>
+        <h3 class="session-title">More Sessions Coming</h3>
+        <p class="session-subtitle">Join the Motherhood Speaks circle to access future recaps as they're added.</p>
+      </div>
+    </div>
+    <div class="session-body single-col" style="text-align:center;padding:40px;">
+      <div>
+        <p style="font-size:0.92rem;color:var(--muted);line-height:1.8;margin-bottom:24px;">Session recaps are added after each gathering. Join the community to attend live and be part of the conversation in real time.</p>
+        <a href="https://community.sisterhoodverb.com/app.html?circle=motherhood" style="display:inline-block;background:var(--terra);color:white;padding:12px 28px;border-radius:2px;text-decoration:none;font-size:0.82rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;">Join Motherhood Speaks ✦</a>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- JOIN CTA -->
+<section class="join-section">
+  <p class="join-eyebrow">Next Session</p>
+  <h2 class="join-title">Ready to write through it with us?</h2>
+  <p class="join-sub">Join the Sisterhood(verb) community and RSVP for the next Motherhood Speaks session.</p>
+  <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;position:relative;">
+    <a href="https://community.sisterhoodverb.com/app.html?circle=motherhood" class="btn-primary">Join the Circle ✦</a>
+    <a href="https://community.sisterhoodverb.com/app.html?signup=true" style="display:inline-block;color:rgba(245,239,230,0.6);text-decoration:none;font-size:0.82rem;letter-spacing:0.06em;border-bottom:1px solid rgba(245,239,230,0.25);padding-bottom:2px;align-self:center;transition:color 0.2s;">New here? Create a free account →</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">Sisterhood<em>(verb)</em></div>
+  <p class="footer-copy">© 2026 Sisterhood(verb) · Tayllor Oyewole-Davis · All rights reserved</p>
+</footer>
+
+</body>
+</html>
