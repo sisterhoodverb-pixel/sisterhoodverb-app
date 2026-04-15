@@ -1964,6 +1964,10 @@ window.addEventListener('load', function() {
     if (foundingBanner) foundingBanner.style.display = 'flex';
     if (regularBanner) regularBanner.style.display = 'none';
   }
+  // Auto-open signup if ?signup=true
+if (params.get('signup') === 'true') {
+  setTimeout(() => openAuthModal('signup'), 800);
+}
   // Check for direct circle link ?circle=naacp
   const circleParam = params.get('circle');
   if (circleParam === 'naacp') {
