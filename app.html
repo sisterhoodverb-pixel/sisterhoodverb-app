@@ -1981,9 +1981,12 @@ if (params.get('signup') === 'true') {
 }
   // Check for direct circle link ?circle=naacp
   const circleParam = params.get('circle');
-  if (circleParam === 'naacp') {
-    window._pendingCircleOpen = "NAACP Black Women's Health Equity Day";
-  }
+if (circleParam === 'naacp') {
+  window._pendingCircleOpen = "NAACP Black Women's Health Equity Day";
+}
+if (circleParam === 'motherhood') {
+  window._pendingCircleOpen = "Motherhood Speaks";
+}
 
   initAuth();
 });
