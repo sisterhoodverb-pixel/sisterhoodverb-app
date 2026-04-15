@@ -69,6 +69,15 @@ nav {
 
 .nav-links a:hover { color: var(--terra); }
 
+.nav-login {
+  color: var(--terra) !important;
+  font-weight: 600 !important;
+  border-bottom: 1px solid rgba(196,98,45,0.3);
+  padding-bottom: 1px;
+}
+
+.nav-login:hover { border-color: var(--terra) !important; }
+
 .nav-cta {
   background: var(--terra);
   color: white !important;
@@ -192,6 +201,20 @@ nav {
 }
 
 .btn-ghost:hover { color: var(--cream); border-color: var(--cream); }
+
+/* NEW: Login button in hero - more visible */
+.btn-login {
+  color: var(--gold);
+  text-decoration: none;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid rgba(212,168,83,0.4);
+  padding-bottom: 2px;
+  transition: color 0.2s, border-color 0.2s;
+  font-weight: 500;
+}
+
+.btn-login:hover { color: #e8c46a; border-color: var(--gold); }
 
 .founding-badge {
   position: relative;
@@ -556,6 +579,7 @@ footer {
   <div class="nav-links">
     <a href="#why">Our Why</a>
     <a href="#circles">Circles</a>
+    <a href="https://community.sisterhoodverb.com/app.html" class="nav-login">Log In</a>
     <a href="https://community.sisterhoodverb.com/app.html?founding=yes" class="nav-cta">Join the Community ✦</a>
   </div>
 </nav>
@@ -567,7 +591,7 @@ footer {
   <p class="hero-sub">Sisterhood(verb) is a private community for women who are ready to refuel, connect, and show up authentically — together.</p>
   <div class="hero-actions">
     <a href="https://community.sisterhoodverb.com/app.html?founding=yes" class="btn-primary">Claim Your Founding Spot ✦</a>
-    <a href="https://community.sisterhoodverb.com/app.html" class="btn-ghost">Already a member? Log in</a>
+    <a href="https://community.sisterhoodverb.com/app.html" class="btn-login">Already a member? Log in →</a>
   </div>
   <div class="founding-badge">
     <span>✦ First 50 sisters join free for life — no credit card needed</span>
@@ -689,7 +713,8 @@ footer {
   <div class="footer-logo">Sisterhood<em>(verb)</em></div>
   <p class="footer-tagline">A space to be seen, speak freely, and practice sisterhood.</p>
   <div class="footer-links">
-    <a href="https://community.sisterhoodverb.com/app.html?founding=yes">Enter the Community</a>
+    <a href="https://community.sisterhoodverb.com/app.html">Log In</a>
+    <a href="https://community.sisterhoodverb.com/app.html?founding=yes">Join the Community</a>
     <a href="https://community.sisterhoodverb.com/app.html?founding=yes">Founding Membership</a>
     <a href="https://www.sisterhoodverb.com">Main Site</a>
   </div>
