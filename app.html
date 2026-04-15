@@ -1383,7 +1383,21 @@ async function openCircle(name) {
 
   document.getElementById('circle-detail-icon').textContent = info.icon;
   document.getElementById('circle-detail-name').textContent = name;
-  document.getElementById('circle-detail-desc').textContent = info.desc;
+document.getElementById('circle-detail-desc').textContent = info.desc;
+
+// Add Session Recaps button for Motherhood Speaks
+const existingRecapBtn = document.getElementById('circle-recap-btn');
+if (existingRecapBtn) existingRecapBtn.remove();
+if (name === 'Motherhood Speaks') {
+  const recapBtn = document.createElement('a');
+  recapBtn.id = 'circle-recap-btn';
+  recapBtn.href = '/motherhood-speaks-recap.html';
+  recapBtn.textContent = '📖 View Session Recaps';
+  recapBtn.style.cssText = 'display:inline-block;margin-top:12px;background:rgba(196,98,45,0.1);color:var(--terra);border:1px solid rgba(196,98,45,0.25);padding:8px 18px;border-radius:2px;font-size:0.8rem;font-weight:600;letter-spacing:0.06em;text-decoration:none;transition:background 0.2s;';
+  recapBtn.onmouseover = () => recapBtn.style.background = 'rgba(196,98,45,0.18)';
+  recapBtn.onmouseout = () => recapBtn.style.background = 'rgba(196,98,45,0.1)';
+  document.getElementById('circle-detail-desc').after(recapBtn);
+}
   document.getElementById('circle-detail-header').style.background = info.bg;
 
   const joinBtn = document.getElementById('circle-detail-join-btn');
