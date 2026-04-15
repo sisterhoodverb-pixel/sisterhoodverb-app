@@ -1951,12 +1951,9 @@ function filterRes(btn) { document.querySelectorAll('.filter-chip').forEach(c =>
 window.addEventListener('load', function() {
   // Check for founding member link
   const params = new URLSearchParams(window.location.search);
-  if (params.get('founding') === 'yes') {
-    window._foundingMode = true;
-    localStorage.setItem('sv_founding_mode', 'yes');
-  } else if (localStorage.getItem('sv_founding_mode') === 'yes') {
-    window._foundingMode = true;
-  }
+ if (params.get('founding') === 'yes') {
+      window._foundingMode = true;
+    }
   // Show correct banner
   if (window._foundingMode) {
     const foundingBanner = document.getElementById('founding-banner');
