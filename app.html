@@ -838,9 +838,15 @@ async function initAuth() {
 
   // First try to get existing session
   const {data:{session}} = await _supabase.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    await onLogin();
+if (session) {
+  currentUser = session.user;
+  // Hide banners for signed-in members
+  const foundingBanner = document.getElementById('founding-banner');
+  const regularBanner = document.getElementById('regular-banner');
+  if (foundingBanner) foundingBanner.style.display = 'none';
+  if (regularBanner) regularBanner.style.display = 'none';
+  await onLogin();
+}
   } else {
     // No session yet - wait to see if onAuthStateChange restores it
     const loader = document.getElementById('pwa-loading');
