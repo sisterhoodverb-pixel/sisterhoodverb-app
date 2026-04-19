@@ -1139,16 +1139,25 @@ async function loadFeed() {
   }
   const feed = document.getElementById('feed-posts');
   feed.innerHTML = '';
+    // Get accurate like counts from post_likes table
+  const postIds = posts.map(p => p.id);
+  const {data:allLikes} = await _supabase.from('post_likes').select('post_id').in('post_id', postIds);
+  const likeCountMap = {};
+  if (allLikes) allLikes.forEach(l => {
+    likeCountMap[l.post_id] = (likeCountMap[l.post_id] || 0) + 1;
+  });
+
   posts.forEach((post, i) => {
+    post._truelikeCount = likeCountMap[post.id] || 0;
     const card = buildPostCard(post, profileMap, false);
     card.style.animationDelay = (i * 0.05) + 's';
-    // Mark liked posts
     if (likedPostIds.has(post.id)) {
       const likeBtn = card.querySelector('.like-btn');
       if (likeBtn) likeBtn.classList.add('liked');
     }
     feed.appendChild(card);
   });
+
 }
 
 async function savePost(content, tag) {
