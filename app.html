@@ -1301,17 +1301,19 @@ async function toggleLike(btn, postId) {
     await _supabase.from('post_likes').delete().eq('post_id', postId).eq('user_id', currentUser.id);
   }
 
-  // Small delay to ensure insert/delete is committed before counting
-  await new Promise(r => setTimeout(r, 300));
+  // Increase delay to ensure insert/delete is committed
+await new Promise(r => setTimeout(r, 600));
 
-  // Always get the true count from post_likes table
-  const {data:likes} = await _supabase.from('post_likes').select('id').eq('post_id', postId);
-  const trueCount = likes ? likes.length : parseInt(span.textContent) || 0;
-  span.textContent = trueCount;
+// Get true count from post_likes table
+const {data:likes, error} = await _supabase.from('post_likes').select('id').eq('post_id', postId);
+const trueCount = (!error && likes) ? likes.length : parseInt(span.textContent) || 0;
+span.textContent = trueCount;
 
-  // Sync posts table
-  await _supabase.from('posts').update({likes: trueCount}).eq('id', postId);
+// Sync posts table with true count
+await _supabase.from('posts').update({likes: trueCount}).eq('id', postId);
 
+// Re-enable button
+btn.disabled = false;
   // Like notification
   if (!isLiked) {
     const {data:post} = await _supabase.from('posts').select('user_id,content').eq('id', postId).single();
