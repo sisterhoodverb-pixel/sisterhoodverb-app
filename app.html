@@ -2137,9 +2137,22 @@ async function changePassword() {
     await _supabase.from('notifications').update({read: true}).eq('id', notifId);
     document.getElementById('notif-dropdown').style.display = 'none';
     loadNotifications();
-    // Scroll to home feed
+    // Navigate to home feed
     showView('home', document.querySelector('.nav-links a'));
+    // Scroll to the specific post
+    if (postId) {
+      setTimeout(() => {
+        const postEl = document.getElementById('like-btn-' + postId)?.closest('.feed-card');
+        if (postEl) {
+          postEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          postEl.style.transition = 'box-shadow 0.3s';
+          postEl.style.boxShadow = '0 0 0 2px var(--terra)';
+          setTimeout(() => postEl.style.boxShadow = '', 2000);
+        }
+      }, 600);
+    }
   }
+
 
   async function markAllRead() {
     if (!currentUser) return;
