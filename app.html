@@ -1111,7 +1111,8 @@ function buildPostCard(post, profileMap, isCircle) {
     '</div>' +
     '<div class="' + bodyClass + '" style="' + (post.circle === 'Speak Poet!' ? 'font-family:Playfair Display,Georgia,serif;font-style:italic;font-size:1rem;line-height:1.9;' : '') + '">' + textContent + gifHtml + '</div>' +
     '<div class="card-footer">' +
-      '<button class="react-btn like-btn" id="like-btn-' + post.id + '" onclick="toggleLike(this,\'' + post.id + '\')">🫂 <span>' + (post.likes || 0) + '</span></button>' +
+      '<button class="react-btn like-btn" id="like-btn-' + post.id + '" onclick="toggleLike(this,\'' + post.id + '\')">🫂 <span>' + (post._truelikeCount !== undefined ? post._truelikeCount : (post.likes || 0))
+ + '</span></button>' +
       '<button class="react-btn" onclick="toggleReplies(\'' + post.id + '\',this)">💬 <span>Reply</span></button>' +
       '<button class="react-btn" onclick="showToast(\'Saved ✦\')">🔖 Save</button>' +
       (currentUser && post.user_id === currentUser.id ? '<button class="react-btn delete-btn" onclick="deletePost(\'' + post.id + '\',this)">🗑 Delete</button>' : '<button class="react-btn report-btn" onclick="reportPost(\'' + post.id + '\',this)">🚩 Report</button>') +
