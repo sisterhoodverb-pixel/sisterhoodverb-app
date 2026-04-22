@@ -2095,7 +2095,26 @@ if (circleParam === 'motherhood') {
 }
 
   initAuth();
+
+// When user returns to the app after being away, check session is still valid
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') {
+    const {data:{session}} = await _supabase.auth.getSession();
+    if (!session && currentUser) {
+      // Session expired while app was in background
+      currentUser = null;
+      const feed = document.getElementById('feed-posts');
+      if (feed) feed.innerHTML = '';
+      showToast('Your session expired — please log back in ♦');
+      setTimeout(() => openAuthModal('login'), 1000);
+    } else if (session && currentUser && document.getElementById('feed-posts')?.children.length === 0) {
+      // Session is valid but feed is empty — reload it
+      await loadFeed();
+    }
+  }
 });
+});
+
   // ── DELETE POST ──
   async function deletePost(postId, btn) {
     if (!currentUser) return;
