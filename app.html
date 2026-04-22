@@ -871,18 +871,22 @@ if (session) {
   }
 
   // Listen for auth changes (handles PWA token refresh)
-  _supabase.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
-      if (session && (!currentUser || currentUser.id !== session.user.id)) {
-        currentUser = session.user;
-        // Close any open login modal since we're now authenticated
-        const authModal = document.getElementById('auth-modal');
-        if (authModal && authModal.classList.contains('open')) {
-          authModal.classList.remove('open');
+  _supabase.auth.onAuthStateChange(async (event, if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
+      if (session) {
+        if (!currentUser || currentUser.id !== session.user.id) {
+          currentUser = session.user;
+          const authModal = document.getElementById('auth-modal');
+          if (authModal && authModal.classList.contains('open')) {
+            authModal.classList.remove('open');
+          }
+          await onLogin();
+        } else if (currentUser && document.getElementById('feed-posts')?.children.length === 0) {
+          // User is logged in but feed is empty — reload silently
+          await loadFeed();
         }
-        await onLogin();
       }
-    } else if (event === 'SIGNED_OUT') {
+    }
+ else if (event === 'SIGNED_OUT') {
       currentUser = null;
       onLogout();
       const feed = document.getElementById('feed-posts');
