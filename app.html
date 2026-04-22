@@ -2099,23 +2099,6 @@ if (circleParam === 'motherhood') {
 }
 
   initAuth();
-
-// When user returns to app after being away, silently check session
-document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState !== 'visible') return;
-  if (!currentUser) return;
-  try {
-    const {data:{session}, error} = await _supabase.auth.getSession();
-    if (error || !session) {
-      currentUser = null;
-      showToast('Your session expired — please log back in ♦');
-      setTimeout(() => openAuthModal('login'), 1000);
-    } else if (document.getElementById('feed-posts')?.children.length === 0) {
-      await loadFeed();
-    }
-  } catch(e) {
-    console.log('Session check error:', e);
-  }
 });
 
 
