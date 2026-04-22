@@ -1491,31 +1491,125 @@ async function loadCircleResources(circleName) {
 async function loadCircleResources(circleName) {
   const existing = document.getElementById('circle-resources-section');
   if (existing) existing.remove();
+
+  const isNAACP = circleName === "NAACP Black Women's Health Equity Day";
+
   const {data:resources} = await _supabase
     .from('circle_resources')
     .select('*')
     .eq('circle_name', circleName)
     .order('created_at', {ascending: true});
-  if (!resources || resources.length === 0) return;
+
+  if (!isNAACP && (!resources || resources.length === 0)) return;
+
   const section = document.createElement('div');
   section.id = 'circle-resources-section';
-  section.innerHTML = '<div style="margin-bottom:28px;">' +
-    '<div class="section-label" style="margin-bottom:16px;">Resources & Links</div>' +
-    '<div style="display:flex;flex-direction:column;gap:10px;">' +
-    resources.map(r =>
-      '<a href="' + r.url + '" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">' +
-        '<span style="font-size:1.4rem;flex-shrink:0;">' + (r.type === 'pdf' ? '📄' : r.type === 'video' ? '🎥' : '🔗') + '</span>' +
-        '<div style="flex:1;">' +
-          '<div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">' + r.title + '</div>' +
-          (r.description ? '<div style="font-size:0.82rem;color:rgba(28,20,16,0.6);line-height:1.6;">' + r.description + '</div>' : '') +
-        '</div>' +
-        '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">' + (r.type === 'pdf' ? 'Download' : 'Visit →') + '</span>' +
-      '</a>'
-    ).join('') +
-    '</div></div>';
-  const feed = document.getElementById('circle-feed-posts');
-  if (feed) feed.parentNode.insertBefore(section, feed);
+
+  if (isNAACP) {
+    // Build two-tab layout for NAACP circle
+    section.innerHTML = `
+      <div style="display:flex;border-bottom:2px solid rgba(196,98,45,0.15);margin-bottom:24px;gap:0;">
+        <button id="tab-resources" onclick="switchCircleTab('resources')"
+          style="flex:1;padding:14px;background:var(--terra);color:white;border:none;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;border-radius:4px 0 0 0;">
+          📋 Resources
+        </button>
+        <button id="tab-posts" onclick="switchCircleTab('posts')"
+          style="flex:1;padding:14px;background:white;color:var(--muted);border:none;border-left:1px solid rgba(196,98,45,0.15);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;border-radius:0 4px 0 0;">
+          💬 Conversation
+        </button>
+      </div>
+
+      <div id="circle-tab-resources">
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+          ${(resources || []).map(r =>
+            `<a href="${r.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">
+              <span style="font-size:1.4rem;flex-shrink:0;">${r.type === 'pdf' ? '📄' : r.type === 'video' ? '🎥' : '🔗'}</span>
+              <div style="flex:1;">
+                <div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">${r.title}</div>
+                ${r.description ? `<div style="font-size:0.82rem;color:rgba(28,20,16,0.6);line-height:1.6;">${r.description}</div>` : ''}
+              </div>
+              <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">${r.type === 'pdf' ? 'Download' : 'Visit →'}</span>
+            </a>`
+          ).join('')}
+
+          <!-- Sisterhood(verb) public resource links -->
+          <a href="/reading-list.html" target="_blank" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">
+            <span style="font-size:1.4rem;flex-shrink:0;">📚</span>
+            <div style="flex:1;">
+              <div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">Community Care Reading List</div>
+              <div style="font-size:0.82rem;color:rgba(28,20,16,0.6);line-height:1.6;">25 curated books on collective healing, Black feminist thought, and care work.</div>
+            </div>
+            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">Visit →</span>
+          </a>
+
+          <a href="/motherhood-speaks-recap.html" target="_blank" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">
+            <span style="font-size:1.4rem;flex-shrink:0;">📋</span>
+            <div style="flex:1;">
+              <div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">Motherhood Speaks — Session Recaps</div>
+              <div style="font-size:0.82rem;color:rgba(28,20,16,0.6);line-height:1.6;">Written recaps from our 6-session motherhood writing workshop series.</div>
+            </div>
+            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">Visit →</span>
+          </a>
+        </div>
+      </div>
+
+      <div id="circle-tab-posts" style="display:none;">
+      </div>
+    `;
+
+    const feed = document.getElementById('circle-feed-posts');
+    if (feed) {
+      feed.parentNode.insertBefore(section, feed);
+      // Move feed into posts tab
+      const postsTab = document.getElementById('circle-tab-posts');
+      if (postsTab) postsTab.appendChild(feed);
+    }
+
+  } else {
+    // Original layout for other circles
+    section.innerHTML = '<div style="margin-bottom:28px;">' +
+      '<div class="section-label" style="margin-bottom:16px;">Resources & Links</div>' +
+      '<div style="display:flex;flex-direction:column;gap:10px;">' +
+      (resources || []).map(r =>
+        '<a href="' + r.url + '" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">' +
+          '<span style="font-size:1.4rem;flex-shrink:0;">' + (r.type === 'pdf' ? '📄' : r.type === 'video' ? '🎥' : '🔗') + '</span>' +
+          '<div style="flex:1;">' +
+            '<div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">' + r.title + '</div>' +
+            (r.description ? '<div style="font-size:0.82rem;color:rgba(28,20,16,0.6);line-height:1.6;">' + r.description + '</div>' : '') +
+          '</div>' +
+          '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">' + (r.type === 'pdf' ? 'Download' : 'Visit →') + '</span>' +
+        '</a>'
+      ).join('') +
+      '</div></div>';
+    const feed = document.getElementById('circle-feed-posts');
+    if (feed) feed.parentNode.insertBefore(section, feed);
+  }
 }
+
+function switchCircleTab(tab) {
+  const resourcesTab = document.getElementById('circle-tab-resources');
+  const postsTab = document.getElementById('circle-tab-posts');
+  const resourcesBtn = document.getElementById('tab-resources');
+  const postsBtn = document.getElementById('tab-posts');
+  if (!resourcesTab || !postsTab) return;
+
+  if (tab === 'resources') {
+    resourcesTab.style.display = 'block';
+    postsTab.style.display = 'none';
+    resourcesBtn.style.background = 'var(--terra)';
+    resourcesBtn.style.color = 'white';
+    postsBtn.style.background = 'white';
+    postsBtn.style.color = 'var(--muted)';
+  } else {
+    resourcesTab.style.display = 'none';
+    postsTab.style.display = 'block';
+    postsBtn.style.background = 'var(--terra)';
+    postsBtn.style.color = 'white';
+    resourcesBtn.style.background = 'white';
+    resourcesBtn.style.color = 'var(--muted)';
+  }
+}
+
 
 async function loadCircleFeed(circleName) {
   const feed = document.getElementById('circle-feed-posts');
