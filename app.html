@@ -2189,7 +2189,49 @@ if (circleParam === 'motherhood') {
     document.getElementById('report-reason').value = '';
     showToast('Report submitted — thank you ✦');
   }
+async function submitReport() {
+    const postId = document.getElementById('report-post-id').value;
+    const reason = document.getElementById('report-reason').value;
+    if (!reason) { showToast('Please select a reason'); return; }
+    const {error} = await _supabase.from('post_reports').insert({
+      post_id: postId, reported_by: currentUser.id, reason: reason
+    });
+    if (error) { showToast('Could not submit report: ' + error.message); return; }
+    document.getElementById('report-modal').classList.remove('open');
+    document.getElementById('report-reason').value = '';
+    showToast('Report submitted — thank you ✦');
+  }
 
+  function blockUser(userId, postId) {
+    if (!currentUser) { openAuthModal('login'); return; }
+    document.getElementById('block-user-id').value = userId;
+    document.getElementById('block-post-id').value = postId;
+    document.getElementById('block-modal').classList.add('open');
+  }
+
+  async function submitBlock() {
+    const userId = document.getElementById('block-user-id').value;
+    const postId = document.getElementById('block-post-id').value;
+    if (!userId) return;
+    await _supabase.from('blocked_users').insert({
+      blocker_id: currentUser.id,
+      blocked_id: userId
+    });
+    await _supabase.from('post_reports').insert({
+      post_id: postId,
+      reported_by: currentUser.id,
+      reason: 'blocked_user'
+    });
+    document.querySelectorAll('.feed-card').forEach(card => {
+      if (card.innerHTML.includes(userId)) {
+        card.style.transition = 'opacity 0.3s';
+        card.style.opacity = '0';
+        setTimeout(() => card.remove(), 300);
+      }
+    });
+    document.getElementById('block-modal').classList.remove('open');
+    showToast('User blocked — their posts have been removed ✦');
+  }
 
   async function forgotPassword() {
     const email = document.getElementById('auth-email').value.trim();
