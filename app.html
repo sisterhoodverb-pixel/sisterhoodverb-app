@@ -1167,7 +1167,8 @@ function buildPostCard(post, profileMap, isCircle) {
  + '</span></button>' +
       '<button class="react-btn" onclick="toggleReplies(\'' + post.id + '\',this)">💬 <span>Reply</span></button>' +
       '<button class="react-btn" onclick="showToast(\'Saved ✦\')">🔖 Save</button>' +
-      (currentUser && post.user_id === currentUser.id ? '<button class="react-btn delete-btn" onclick="deletePost(\'' + post.id + '\',this)">🗑 Delete</button>' : '<button class="react-btn report-btn" onclick="reportPost(\'' + post.id + '\',this)">🚩 Report</button>') +
+      (currentUser && post.user_id === currentUser.id ? '<button class="react-btn delete-btn" onclick="deletePost(\'' + post.id + '\',this)">🗑 Delete</button>' : ''<button class="react-btn report-btn" onclick="reportPost(\'' + post.id + '\',this)">🚩 Report</button>' +
+(post.user_id !== currentUser?.id ? '<button class="react-btn" onclick="blockUser(\'' + post.user_id + '\',\'' + post.id + '\')">🚫 Block</button>' : '')) +
     '</div>' +
     '<div class="replies-section" id="replies-' + post.id + '"></div>';
 
@@ -2345,6 +2346,18 @@ async function changePassword() {
   </div>
 </div>
 
+  <!-- BLOCK USER MODAL -->
+<div class="modal-overlay" id="block-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-title">Block User</div>
+    <div class="modal-sub">Blocked users won't be able to see your posts and you won't see theirs ✦</div>
+    <input type="hidden" id="block-user-id">
+    <input type="hidden" id="block-post-id">
+    <p style="font-size:0.9rem;color:var(--muted);line-height:1.7;margin-bottom:20px;">Are you sure you want to block this user? Their posts will be removed from your feed immediately.</p>
+    <button class="modal-agree-btn" onclick="submitBlock()" style="background:#cc3333;">Block User</button>
+    <div class="modal-cancel"><button onclick="document.getElementById('block-modal').classList.remove('open')">Cancel</button></div>
+  </div>
+</div>
 <!-- AVATAR CROP MODAL -->
 
 <div class="modal-overlay" id="crop-modal" onclick="if(event.target===this)closeCropModal()">
