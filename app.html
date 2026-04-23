@@ -1074,7 +1074,52 @@ async function signIn(email, password) {
     await onLogin();
   }
 }
+function confirmDeleteAccount() {
+  const confirmed = confirm("Are you sure you want to delete your account? This is permanent and cannot be undone. All your posts, profile data, and circle memberships will be removed.");
+  if (confirmed) deleteAccount();
+}
 
+async function deleteAccount() {
+  if (!currentUser) return;
+  try {
+    showToast('Deleting your account... ♦');
+
+    // Delete user's posts
+    await _supabase.from('posts').delete().eq('user_id', currentUser.id);
+
+    // Delete user's likes
+    await _supabase.from('post_likes').delete().eq('user_id', currentUser.id);
+
+    // Delete user's circle memberships
+    await _supabase.from('circle_members').delete().eq('user_id', currentUser.id);
+
+    // Delete user's notifications
+    await _supabase.from('notifications').delete().eq('user_id', currentUser.id);
+
+    // Delete user's profile
+    await _supabase.from('profiles').delete().eq('id', currentUser.id);
+
+    // Sign out and delete auth user via edge function
+    await fetch('https://cqiymqekdtewnorojlus.supabase.co/functions/v1/delete-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: currentUser.id })
+    });
+
+    // Sign out locally
+    await _supabase.auth.signOut();
+    currentUser = null;
+
+    showToast('Your account has been deleted. Take care, sis. 🌿');
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 2000);
+
+  } catch(e) {
+    console.error('Delete account error:', e);
+    showToast('Error deleting account. Please contact support. ♦');
+  }
+}
 async function signOut() {
   await _supabase.auth.signOut();
   showToast('See you soon, sis 🌿');
