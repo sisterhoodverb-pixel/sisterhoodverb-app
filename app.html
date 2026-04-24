@@ -438,13 +438,18 @@ nav{padding:14px 20px}.nav-links{display:none}
       </div>
       <div class="composer-actions">
         <div class="composer-tools">
-          <button class="tool-btn" onclick="showToast('Photo posts coming soon — stay tuned sis ♦')">🖼 Photo</button>
+          <button class="tool-btn" onclick="document.getElementById('photo-upload-input').click()">🖼 Photo</button>
           <button class="tool-btn" onclick="showToast('Voice notes coming soon — we’re cooking ♦')">🎙 Voice</button>
           <button class="tool-btn" onclick="insertPrompt()">✨ Prompt</button>
           <button class="tool-btn" id="gif-btn" onclick="toggleGifPicker()">GIF 🎬</button>
           <button class="tool-btn" id="question-btn" onclick="toggleQuestionMode()">❓ Question</button>
         </div>
         <button class="post-btn" id="home-post-btn" onclick="postToFeed()">Share</button>
+<input type="file" id="photo-upload-input" accept="image/*" style="display:none" onchange="handlePhotoSelect(this)">
+<div id="photo-preview" style="display:none;position:relative;margin:8px 0;">
+  <img id="photo-preview-img" src="" alt="Photo preview" style="max-width:100%;max-height:200px;border-radius:6px;object-fit:cover;">
+  <button onclick="removePhoto()" style="position:absolute;top:6px;right:6px;background:rgba(28,20,16,0.7);color:white;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:0.9rem;">✕</button>
+</div>
       </div>
     </div>
     <div class="quote-card">
