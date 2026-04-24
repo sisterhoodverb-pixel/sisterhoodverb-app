@@ -1193,7 +1193,9 @@ if (detectedUrl && !gifMatch) {
       '</div>' +
       (isCircle ? '' : tagHtml) +
     '</div>' +
-    '<div class="' + bodyClass + '" style="' + (post.circle === 'Speak Poet!' ? 'font-family:Playfair Display,Georgia,serif;font-style:italic;font-size:1rem;line-height:1.9;' : '') + '">' + textContent + gifHtml + linkPreviewHtml + '</div>' +
+   '<div class="' + bodyClass + '" style="' + (post.circle === 'Speak Poet!' ? 'font-family:Playfair Display,Georgia,serif;font-style:italic;font-size:1rem;line-height:1.9;' : '') + '">' + textContent + 
+(post.image_url ? '<img src="' + post.image_url + '" style="max-width:100%;border-radius:6px;margin-top:10px;max-height:400px;object-fit:cover;display:block;" alt="Post image">' : '') +
+gifHtml + linkPreviewHtml + '</div>' +
     '<div class="card-footer">' +
       '<button class="react-btn like-btn" id="like-btn-' + post.id + '" onclick="toggleLike(this,\'' + post.id + '\')">🫂 <span>' + (post._truelikeCount !== undefined ? post._truelikeCount : (post.likes || 0))
  + '</span></button>' +
