@@ -1246,11 +1246,12 @@ async function loadFeed() {
 
 }
 
-async function savePost(content, tag) {
+async function savePost(content, tag, imageUrl = null) {
   if (!currentUser) { showToast('Please log in to post ♦'); openAuthModal('login'); return; }
   showToast('Sharing... ✦');
   const {error} = await _supabase.from('posts').insert({
-    user_id: currentUser.id, content, tag: tag || 'Community', likes: 0
+    user_id: currentUser.id, content, tag: tag || 'Community', likes: 0,
+    image_url: imageUrl || null
   });
   if (error) { showToast('Could not post: ' + error.message); return; }
   showToast(tag === 'Question' ? 'Question posted ✦' : 'Shared with your sisters ✦');
