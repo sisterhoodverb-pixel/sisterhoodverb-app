@@ -1167,7 +1167,7 @@ function buildPostCard(post, profileMap, isCircle) {
  + '</span></button>' +
       '<button class="react-btn" onclick="toggleReplies(\'' + post.id + '\',this)">💬 <span>Reply</span></button>' +
       '<button class="react-btn" onclick="showToast(\'Saved ✦\')">🔖 Save</button>' +
-      (currentUser && post.user_id === currentUser.id ? '<button class="react-btn delete-btn" onclick="deletePost(\'' + post.id + '\',this)">🗑 Delete</button>' : ''<button class="react-btn report-btn" onclick="reportPost(\'' + post.id + '\',this)">🚩 Report</button>' +
+     (currentUser && post.user_id === currentUser.id ? '<button class="react-btn delete-btn" onclick="deletePost(\'' + post.id + '\',this)">🗑 Delete</button>' : '<button class="react-btn report-btn" onclick="reportPost(\'' + post.id + '\',this)">🚩 Report</button>' +
 (post.user_id !== currentUser?.id ? '<button class="react-btn" onclick="blockUser(\'' + post.user_id + '\',\'' + post.id + '\')">🚫 Block</button>' : '')) +
     '</div>' +
     '<div class="replies-section" id="replies-' + post.id + '"></div>';
