@@ -1127,6 +1127,18 @@ async function signOut() {
 }
 
 // ── FEED ──
+function linkifyText(text) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  return text.replace(urlRegex, function(url) {
+    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:var(--terra);text-decoration:underline;word-break:break-all;">' + url + '</a>';
+  });
+}
+
+function extractUrl(text) {
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const match = text.match(urlRegex);
+  return match ? match[0] : null;
+}
 function buildPostCard(post, profileMap, isCircle) {
   const profile = profileMap[post.user_id];
   const name = profile ? profile.name : (post.user_id === currentUser?.id ? (window._currentUserName || 'You') : 'Sister');
@@ -1135,12 +1147,27 @@ function buildPostCard(post, profileMap, isCircle) {
   const isQuestion = post.tag === 'Question';
 
   let textContent = post.content || '';
-  let gifHtml = '';
-  const gifMatch = textContent.match(/\[gif:(.*?)\]/);
-  if (gifMatch) {
-    gifHtml = '<img src="' + gifMatch[1] + '" style="max-width:100%;border-radius:4px;margin-top:10px;max-height:200px;object-fit:cover" alt="GIF">';
-    textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
-  }
+let gifHtml = '';
+let linkPreviewHtml = '';
+const gifMatch = textContent.match(/\[gif:(.*?)\]/);
+if (gifMatch) {
+  gifHtml = '<img src="' + gifMatch[1] + '" style="max-width:100%;border-radius:4px;margin-top:10px;max-height:200px;object-fit:cover" alt="GIF">';
+  textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
+}
+const detectedUrl = extractUrl(textContent);
+textContent = linkifyText(textContent);
+if (detectedUrl && !gifMatch) {
+  linkPreviewHtml = '<a href="' + detectedUrl + '" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:12px;border:1px solid rgba(196,98,45,0.15);border-radius:6px;overflow:hidden;text-decoration:none;background:var(--warm);">' +
+    '<div style="padding:14px 16px;display:flex;align-items:center;gap:12px;">' +
+      '<div style="font-size:1.2rem;flex-shrink:0;">🔗</div>' +
+      '<div style="flex:1;min-width:0;">' +
+        '<div style="font-size:0.82rem;color:var(--terra);font-weight:600;letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + detectedUrl.replace(/^https?:\/\//, '').split('/')[0] + '</div>' +
+        '<div style="font-size:0.78rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + detectedUrl + '</div>' +
+      '</div>' +
+      '<div style="font-size:0.75rem;color:var(--terra);flex-shrink:0;">Visit →</div>' +
+    '</div>' +
+  '</a>';
+}
 
   let avatarStyle = profile && profile.avatar_url
     ? 'background-image:url(' + profile.avatar_url + ');background-size:cover;background-position:center'
@@ -1161,7 +1188,7 @@ function buildPostCard(post, profileMap, isCircle) {
       '</div>' +
       (isCircle ? '' : tagHtml) +
     '</div>' +
-    '<div class="' + bodyClass + '" style="' + (post.circle === 'Speak Poet!' ? 'font-family:Playfair Display,Georgia,serif;font-style:italic;font-size:1rem;line-height:1.9;' : '') + '">' + textContent + gifHtml + '</div>' +
+    '<div class="' + bodyClass + '" style="' + (post.circle === 'Speak Poet!' ? 'font-family:Playfair Display,Georgia,serif;font-style:italic;font-size:1rem;line-height:1.9;' : '') + '">' + textContent + gifHtml + linkPreviewHtml + '</div>' +
     '<div class="card-footer">' +
       '<button class="react-btn like-btn" id="like-btn-' + post.id + '" onclick="toggleLike(this,\'' + post.id + '\')">🫂 <span>' + (post._truelikeCount !== undefined ? post._truelikeCount : (post.likes || 0))
  + '</span></button>' +
