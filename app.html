@@ -2138,6 +2138,10 @@ window.addEventListener('load', function() {
 if (params.get('signup') === 'true') {
   setTimeout(() => openAuthModal('signup'), 800);
 }
+  // Auto-open login if ?login=true
+if (params.get('login') === 'true') {
+  setTimeout(() => openAuthModal('login'), 800);
+}
   // Check for direct circle link ?circle=naacp
   const circleParam = params.get('circle');
 if (circleParam === 'naacp') {
