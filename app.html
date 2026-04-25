@@ -1000,7 +1000,13 @@ async function signUp(email, password, name) {
   submitBtn.disabled = true;
   submitBtn.textContent = 'Creating your account...';
 
-  const {data, error} = await _supabase.auth.signUp({email, password});
+  const {data, error} = await _supabase.auth.signUp({
+  email, 
+  password,
+  options: {
+    redirectTo: 'https://community.sisterhoodverb.com/app.html?login=true'
+  }
+});
 
   if (error) {
     submitBtn.disabled = false;
