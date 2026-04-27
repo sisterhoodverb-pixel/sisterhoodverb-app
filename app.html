@@ -820,6 +820,11 @@ nav{padding:14px 20px}.nav-links{display:none}
 </div>
 
 <script>
+  // iOS App detection
+  function isIOSApp() {
+    return window.navigator.standalone === true || 
+           window.matchMedia('(display-mode: standalone)').matches;
+  }
 const _supabase = window.supabase.createClient(
   'https://cqiymqekdtewnorojlus.supabase.co',
   'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
