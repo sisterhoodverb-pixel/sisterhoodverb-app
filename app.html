@@ -1458,7 +1458,7 @@ async function joinCircleDB(circleName, btn) {
     const isUnlimited = ['founder','founding','paid'].includes(tier);
     if (!isUnlimited) {
       const {data:existing} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
-      if (existing && existing.length >= 2) { showToast('Free members can join 2 Circles — upgrade for unlimited ♦'); return; }
+      if (existing && existing.length >= 2) { if (!isIOSApp()) showToast('Free members can join 2 Circles — upgrade for unlimited ♦'); return; }
     }
     const {error} = await _supabase.from('circle_members').insert({user_id: currentUser.id, circle_name: circleName});
     if (error && error.code !== '23505') { showToast('Could not join: ' + error.message); return; }
@@ -2558,7 +2558,7 @@ async function changePassword() {
       if (!isUnlimited) {
         const {data:existing} = await _supabase.from('circle_members').select('id').eq('user_id', currentUser.id);
         if (existing && existing.length >= 2) {
-          showToast('Free members can join 2 Circles — upgrade for unlimited ♦');
+          if (!isIOSApp()) showToast('Free members can join 2 Circles — upgrade for unlimited ♦');
           return;
         }
       }
