@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms of Use · Sisterhood(verb)</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap');
+
+    :root {
+      --bg: #1C1410;
+      --bg-card: #221A13;
+      --rust: #C4622D;
+      --rust-light: #D4723D;
+      --cream: #F5EFE6;
+      --cream-dim: rgba(245,239,230,0.75);
+      --cream-faint: rgba(245,239,230,0.35);
+      --cream-ghost: rgba(245,239,230,0.1);
+      --border: rgba(245,239,230,0.08);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--cream-dim);
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 1.05rem;
+      line-height: 1.85;
+      min-height: 100vh;
+    }
+
+    /* Top bar */
+    .topbar {
+      padding: 24px 40px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: var(--cream);
+      text-decoration: none;
+      letter-spacing: 0.01em;
+    }
+
+    .logo em {
+      font-weight: 300;
+      color: var(--rust);
+    }
+
+    .back-link {
+      font-size: 0.8rem;
+      color: var(--cream-faint);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--rust-light); }
+
+    /* Hero */
+    .hero {
+      padding: 64px 40px 48px;
+      max-width: 760px;
+      margin: 0 auto;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .hero-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 300;
+      color: var(--cream);
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--rust);
+    }
+
+    .hero-meta {
+      font-size: 0.82rem;
+      color: var(--cream-faint);
+      letter-spacing: 0.04em;
+    }
+
+    /* Main content */
+    .content {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 56px 40px 80px;
+    }
+
+    /* Section */
+    .section {
+      margin-bottom: 52px;
+      padding-bottom: 52px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .section-number {
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--rust);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .section h2 {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 1.5rem;
+      font-weight: 400;
+      color: var(--cream);
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+
+    .section p {
+      margin-bottom: 16px;
+      color: var(--cream-dim);
+    }
+
+    .section p:last-child { margin-bottom: 0; }
+
+    .section ul {
+      list-style: none;
+      margin: 16px 0;
+      padding: 0;
+    }
+
+    .section ul li {
+      padding: 8px 0 8px 20px;
+      position: relative;
+      color: var(--cream-dim);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section ul li:last-child { border-bottom: none; }
+
+    .section ul li::before {
+      content: '✦';
+      position: absolute;
+      left: 0;
+      color: var(--rust);
+      font-size: 0.6rem;
+      top: 12px;
+    }
+
+    /* Highlight box */
+    .highlight {
+      background: var(--bg-card);
+      border-left: 2px solid var(--rust);
+      padding: 20px 24px;
+      margin: 24px 0;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .highlight p {
+      margin: 0;
+      font-style: italic;
+      color: var(--cream);
+      font-size: 1rem;
+    }
+
+    /* Contact */
+    .contact-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 28px 32px;
+      border-radius: 2px;
+      margin-top: 24px;
+    }
+
+    .contact-block p {
+      margin-bottom: 8px;
+    }
+
+    .contact-block a {
+      color: var(--rust-light);
+      text-decoration: none;
+    }
+    .contact-block a:hover {
+      text-decoration: underline;
+    }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 32px 40px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--cream-faint);
+      letter-spacing: 0.04em;
+    }
+
+    footer a {
+      color: var(--rust);
+      text-decoration: none;
+    }
+
+    @media (max-width: 600px) {
+      .topbar { padding: 20px 24px; }
+      .hero { padding: 48px 24px 36px; }
+      .content { padding: 40px 24px 60px; }
+      footer { padding: 28px 24px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <a class="logo" href="https://community.sisterhoodverb.com">Sisterhood<em>(verb)</em></a>
+    <a class="back-link" href="https://community.sisterhoodverb.com/app.html">← Back to app</a>
+  </div>
+
+  <div class="hero">
+    <p class="hero-label">Legal · Community Standards</p>
+    <h1>Terms of <em>Use</em></h1>
+    <p class="hero-meta">Effective date: April 26, 2026 &nbsp;·&nbsp; Last updated: April 26, 2026</p>
+  </div>
+
+  <div class="content">
+
+    <div class="section">
+      <span class="section-number">01</span>
+      <h2>Welcome to Sisterhood(verb)</h2>
+      <p>Sisterhood(verb) is a private community platform for women who are ready to practice sisterhood — not just talk about it. By creating an account or accessing the app, you agree to these Terms of Use in full.</p>
+      <p>If you do not agree to these terms, please do not use the platform.</p>
+      <div class="highlight">
+        <p>"This is a space built on trust, care, and mutual respect. We take that seriously — and so must every member."</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <span class="section-number">02</span>
+      <h2>Eligibility</h2>
+      <p>You must be at least 18 years old to use Sisterhood(verb). By agreeing to these terms, you confirm that you meet this requirement and that all information you provide is accurate.</p>
+    </div>
+
+    <div class="section">
+      <span class="section-number">03</span>
+      <h2>User-Generated Content</h2>
+      <p>Members may post text, images, and links within the community. You are solely responsible for the content you share. By posting, you confirm that your content:</p>
+      <ul>
+        <li>Does not violate any applicable law or third-party rights</li>
+        <li>Is not harmful, abusive, harassing, threatening, or discriminatory</li>
+        <li>Does not contain sexually explicit, violent, or otherwise objectionable material</li>
+        <li>Does not include spam, advertisements, or unauthorized promotions</li>
+        <li>Does not infringe on the intellectual property of others</li>
+      </ul>
+      <p>By posting content, you grant Sisterhood(verb) a non-exclusive, royalty-free license to display that content within the platform.</p>
+    </div>
+
+    <div class="section">
+      <span class="section-number">04</span>
+      <h2>Zero Tolerance Policy</h2>
+      <div class="highlight">
+        <p>There is absolutely no tolerance for objectionable content or abusive behavior on this platform.</p>
+      </div>
+      <p>This includes but is not limited to: harassment, hate speech, threats, discrimination based on race, gender, religion, sexuality or any other characteristic, sexual content, doxxing, or any behavior that makes another member feel unsafe.</p>
+      <p>Violations will result in immediate content removal and permanent account termination without notice.</p>
+    </div>
+
+    <div class="section">
+      <span class="section-number">05</span>
+      <h2>Reporting & Moderation</h2>
+      <p>Every member has the ability to report content or users that violate these terms directly within the app. We take all reports seriously.</p>
+      <ul>
+        <li>Reports will be reviewed within 24 hours of submission</li>
+        <li>Objectionable content will be removed promptly upon verification</li>
+        <li>Users who post violating content will be removed from the community</li>
+        <li>Members may also block any user at any time — blocked users are immediately removed from your feed</li>
+      </ul>
+      <p>To report content, tap the menu on any post or profile and select "Report." To block a user, visit their profile and select "Block."</p>
+    </div>
+
+    <div class="section">
+      <span class="section-number">06</span>
+      <h2>Account Termination</h2>
+      <p>Sisterhood(verb) reserves the right to suspend or permanently terminate any account that violates these Terms of Use, at our sole discretion, without prior notice.</p>
+      <p>You may also delete your own account at any time through your profile settings.</p>
+    </div>
+
+    <div class="section">
+      <span class="section-number">07</span>
+      <h2>Privacy</h2>
+      <p>Sisterhood(verb) is a private, members-only community. Your personal information is not sold to third parties. We collect only what is necessary to operate the platform, including your email address, profile information, and content you choose to share within the community.</p>
+      <p>By using the platform, you consent to this data collection as necessary for the app to function.</p>
+    </div>
+
+    <div class="section">
+      <span class="section-number">08</span>
+      <h2>Disclaimer of Warranties</h2>
+      <p>Sisterhood(verb) is provided "as is" without warranties of any kind, express or implied. We do not guarantee that the platform will be error-free, uninterrupted, or free of harmful components.</p>
+    </div>
+
+    <div class="section">
+      <span class="section-number">09</span>
+      <h2>Changes to These Terms</h2>
+      <p>We may update these Terms of Use from time to time. Continued use of the platform after changes are posted constitutes your acceptance of the revised terms. We will make reasonable efforts to notify members of significant changes.</p>
+    </div>
+
+    <div class="section">
+      <span class="section-number">10</span>
+      <h2>Contact Us</h2>
+      <p>If you have questions about these terms, need to report a concern, or want to reach our moderation team:</p>
+      <div class="contact-block">
+        <p><strong style="color:var(--cream);">Sisterhood(verb)</strong></p>
+        <p>Santa Barbara, California</p>
+        <p>Email: <a href="mailto:sisterhoodverb@gmail.com">sisterhoodverb@gmail.com</a></p>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <p>© 2026 Sisterhood(verb) · <a href="https://community.sisterhoodverb.com">community.sisterhoodverb.com</a></p>
+    <p style="margin-top:8px;">With love, Tayllor · Founder</p>
+  </footer>
+
+</body>
+</html>
