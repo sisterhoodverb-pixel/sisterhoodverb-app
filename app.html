@@ -967,11 +967,11 @@ async function onLogin() {
     }
   }
 
-  // Hide upgrade banner — only show for free tier
+// Hide upgrade banner — only show for free tier (not on iOS app)
   const regularBanner = document.getElementById('regular-banner');
   if (regularBanner) {
     const tier = profile?.membership_tier || 'free';
-    regularBanner.style.display = (tier === 'free') ? 'flex' : 'none';
+    regularBanner.style.display = (tier === 'free' && !isIOSApp()) ? 'flex' : 'none';
   }
 
   loadFeed();
