@@ -2586,6 +2586,14 @@ async function changePassword() {
     showToast('Profile saved ✦');
     onbNext(3);
   }
+function onbFinish() {
+  const checkbox = document.getElementById('onb-terms-checkbox');
+  if (!checkbox.checked) {
+    document.getElementById('onb-terms-error').style.display = 'block';
+    return;
+  }
+  document.getElementById('onb-terms-error').style.display = 'none';
+  // ... rest of your existing onbFinish code
 
   async function onbFinish() {
     // Mark onboarding complete
