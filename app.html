@@ -2496,7 +2496,7 @@ async function changePassword() {
     if (seen) return;
     // Check if profile is empty (new user)
     const {data:profile} = await _supabase.from('profiles').select('name, bio').eq('id', currentUser.id).single();
-    const isNew = !profile?.bio || !profile?.name || profile.name === profile?.handle || profile.name.includes('@');
+    const isNew = !profile?.bio || !profile?.name || profile.name === profile?.handle || profile.name.includes('@') || !localStorage.getItem('onb_done_' + currentUser.id);
     if (isNew) {
       // Pre-fill name if we have it
       if (profile?.name) document.getElementById('onb-name').value = profile.name;
