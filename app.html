@@ -2516,11 +2516,12 @@ async function changePassword() {
         // Add note about circle limit in step 3
         const circleNote = document.createElement('p');
         circleNote.style.cssText = 'font-size:0.78rem;color:var(--terra);margin-bottom:16px;padding:10px 14px;background:rgba(196,98,45,0.06);border-radius:3px;border-left:2px solid var(--terra);';
-       if (isIOSApp()) return;
-        circleNote.textContent = 'Free members can join up to 2 Circles. Upgrade anytime for unlimited access ♦';
-        const circlesList = document.getElementById('onb-circles-list');
-        if (circlesList) circlesList.parentNode.insertBefore(circleNote, circlesList);
-      }
+       if (!isIOSApp()) {
+          circleNote.textContent = 'Free members can join up to 2 Circles. Upgrade anytime for unlimited access ♦';
+          const circlesList = document.getElementById('onb-circles-list');
+          if (circlesList) circlesList.parentNode.insertBefore(circleNote, circlesList);
+        }
+        
       // Populate circles
       populateOnbCircles();
       setTimeout(() => {
