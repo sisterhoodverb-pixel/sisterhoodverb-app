@@ -2198,10 +2198,15 @@ if (!params.get('signup') && !params.get('login') && !params.get('founding') && 
   setTimeout(async () => {
     const {data:{session}} = await _supabase.auth.getSession();
     if (!session) {
-      openModal();
+      const pendingConfirmation = localStorage.getItem('sv_pending_confirmation');
+      if (pendingConfirmation) {
+        openAuthModal('login');
+      } else {
+        openModal();
+      }
     }
   }, 1000);
-}  
+}
   // Auto-open login if ?login=true
 if (params.get('login') === 'true') {
   setTimeout(() => openAuthModal('login'), 800);
@@ -2718,6 +2723,7 @@ async function onbFinish() {
     const el = document.getElementById('confirm-email-display');
     if (el) el.textContent = email;
     document.getElementById('confirmation-modal').classList.add('open');
+    localStorage.setItem('sv_pending_confirmation', '1');
   }
 
   function closeConfirmationScreen() {
