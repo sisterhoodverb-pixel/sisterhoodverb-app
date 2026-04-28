@@ -2491,43 +2491,30 @@ async function changePassword() {
 
   async function checkAndShowOnboarding() {
     if (!currentUser) return;
-    // Check if user has completed onboarding
     const seen = localStorage.getItem('onb_done_' + currentUser.id);
     if (seen) return;
-    // Check if profile is empty (new user)
-    const {data:profile} = await _supabase.from('profiles').select('name, bio').eq('id', currentUser.id).single();
-    const isNew = !profile?.bio || !profile?.name || profile.name === profile?.handle || profile.name.includes('@') || !localStorage.getItem('onb_done_' + currentUser.id);
-    if (isNew) {
-      // Pre-fill name if we have it
-      if (profile?.name) document.getElementById('onb-name').value = profile.name;
-      // Customize welcome based on tier
-      const tier = profile?.membership_tier || 'free';
-      const isFounder = tier === 'founder';
-      const isFounding = tier === 'founding';
-      const isFree = tier === 'free';
-      if (isFounder) {
-        document.querySelector('#onb-step-1 h2').textContent = 'Welcome home, Founder ♦';
-        document.querySelector('#onb-step-1 p').textContent = 'You are the heartbeat of this community. Thank you for building this with us.';
-      } else if (isFounding) {
-        document.querySelector('#onb-step-1 h2').textContent = 'Welcome, Founding Sister ♦';
-        document.querySelector('#onb-step-1 p').textContent = 'You are one of the first women to walk through these doors. That means something. Welcome home.';
-      }
-      if (isFree) {
-        // Add note about circle limit in step 3
-        const circleNote = document.createElement('p');
-        circleNote.style.cssText = 'font-size:0.78rem;color:var(--terra);margin-bottom:16px;padding:10px 14px;background:rgba(196,98,45,0.06);border-radius:3px;border-left:2px solid var(--terra);';
-       if (!isIOSApp()) {
-          circleNote.textContent = 'Free members can join up to 2 Circles. Upgrade anytime for unlimited access ♦';
-          const circlesList = document.getElementById('onb-circles-list');
-          if (circlesList) circlesList.parentNode.insertBefore(circleNote, circlesList);
-        }
-        
-      // Populate circles
-      populateOnbCircles();
-      setTimeout(() => {
-        document.getElementById('onboarding-modal').classList.add('open');
-      }, 1000);
+    const {data:profile} = await _supabase.from('profiles').select('name, bio, membership_tier, handle').eq('id', currentUser.id).single();
+    // Always show onboarding if not completed
+    if (profile?.name) document.getElementById('onb-name').value = profile.name;
+    const tier = profile?.membership_tier || 'free';
+    if (tier === 'founder') {
+      document.querySelector('#onb-step-1 h2').textContent = 'Welcome home, Founder ♦';
+      document.querySelector('#onb-step-1 p').textContent = 'You are the heartbeat of this community. Thank you for building this with us.';
+    } else if (tier === 'founding') {
+      document.querySelector('#onb-step-1 h2').textContent = 'Welcome, Founding Sister ♦';
+      document.querySelector('#onb-step-1 p').textContent = 'You are one of the first women to walk through these doors. That means something. Welcome home.';
     }
+    if (tier === 'free' && !isIOSApp()) {
+      const circleNote = document.createElement('p');
+      circleNote.style.cssText = 'font-size:0.78rem;color:var(--terra);margin-bottom:16px;padding:10px 14px;background:rgba(196,98,45,0.06);border-radius:3px;border-left:2px solid var(--terra);';
+      circleNote.textContent = 'Free members can join up to 2 Circles. Upgrade anytime for unlimited access ♦';
+      const circlesList = document.getElementById('onb-circles-list');
+      if (circlesList) circlesList.parentNode.insertBefore(circleNote, circlesList);
+    }
+    populateOnbCircles();
+    setTimeout(() => {
+      document.getElementById('onboarding-modal').classList.add('open');
+    }, 1000);
   }
 
   function populateOnbCircles() {
