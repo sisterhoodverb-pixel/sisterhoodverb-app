@@ -2192,6 +2192,15 @@ window.addEventListener('load', function() {
 if (params.get('signup') === 'true') {
   setTimeout(() => openModal(), 800);
 }
+// If no params and no session, show agreements modal for new visitors
+if (!params.get('signup') && !params.get('login') && !params.get('founding') && !params.get('circle')) {
+  setTimeout(async () => {
+    const {data:{session}} = await _supabase.auth.getSession();
+    if (!session) {
+      openModal();
+    }
+  }, 1000);
+}  
   // Auto-open login if ?login=true
 if (params.get('login') === 'true') {
   setTimeout(() => openAuthModal('login'), 800);
