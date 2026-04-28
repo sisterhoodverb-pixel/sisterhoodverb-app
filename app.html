@@ -2192,8 +2192,6 @@ window.addEventListener('load', function() {
 if (params.get('signup') === 'true') {
   setTimeout(() => openModal(), 800);
 }
-
-}
   // Auto-open login if ?login=true
 if (params.get('login') === 'true') {
   setTimeout(() => openAuthModal('login'), 800);
@@ -2590,27 +2588,21 @@ async function changePassword() {
     showToast('Profile saved ✦');
     onbNext(3);
   }
-function onbFinish() {
+async function onbFinish() {
   const checkbox = document.getElementById('onb-terms-checkbox');
   if (!checkbox.checked) {
     document.getElementById('onb-terms-error').style.display = 'block';
     return;
   }
   document.getElementById('onb-terms-error').style.display = 'none';
-  // ... rest of your existing onbFinish code
-
-  async function onbFinish() {
-    // Mark onboarding complete
-    localStorage.setItem('onb_done_' + currentUser.id, '1');
-    document.getElementById('onboarding-modal').classList.remove('open');
-    // Refresh everything
-    loadFeed();
-    loadJoinedCircles();
-    loadProfile();
-    refreshProfileStats();
-    showToast('Welcome to the Sisterhood ✦');
-  }
-
+  localStorage.setItem('onb_done_' + currentUser.id, '1');
+  document.getElementById('onboarding-modal').classList.remove('open');
+  loadFeed();
+  loadJoinedCircles();
+  loadProfile();
+  refreshProfileStats();
+  showToast('Welcome to the Sisterhood ✦');
+}
 
   // ── CIRCLE PROPOSAL ──
   function openProposalModal() {
