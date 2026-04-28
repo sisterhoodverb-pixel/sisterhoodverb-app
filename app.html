@@ -2132,7 +2132,8 @@ function showViewWithProfile(name, el) {
 function openModal() { document.getElementById('agreements-modal').classList.add('open'); }
 function closeModal() { document.getElementById('agreements-modal').classList.remove('open'); }
 function handleAgree() { closeModal(); setTimeout(() => openAuthModal('signup'), 200); }
-function toggleAgreeBtn() { document.getElementById('agree-btn').disabled = !document.getElementById('agree-check').checked; }
+function toggleAgreeBtn() { document.getElementById('agree-btn').disabled = !(document.getElementById('agree-check').checked && document.getElementById('terms-check').checked); }
+
 function openAuthModal(mode) { closeModal(); document.getElementById('auth-modal').classList.add('open'); setAuthMode(mode || 'signup'); }
 function closeAuthModal() { document.getElementById('auth-modal').classList.remove('open'); }
 function setAuthMode(mode) {
