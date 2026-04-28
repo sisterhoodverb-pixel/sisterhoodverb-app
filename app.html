@@ -1018,9 +1018,9 @@ async function signUp(email, password, name) {
     submitBtn.textContent = originalText;
     if (error.message.includes('security') || error.message.includes('25')) {
       showToast('Please wait 30 seconds and try again ♦');
-    } else if (error.message.includes('already registered') || error.message.includes('already been registered')) {
-      showToast('This email is already registered — try logging in ♦');
-    } else {
+    } else if (error.message.includes('already registered') || error.message.includes('already been registered') || error.message.includes('User already registered') || error.message.includes('email address is already')) {
+  showToast('This email is already registered — try logging in ♦');
+} else {
       showToast('Error: ' + error.message);
     }
     return;
