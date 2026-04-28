@@ -1092,6 +1092,7 @@ async function signIn(email, password) {
   }
   if (data.session) {
     currentUser = data.user;
+    localStorage.removeItem('sv_pending_confirmation');
     showToast('Welcome back, sis ♦');
     closeAuthModal();
     await onLogin();
