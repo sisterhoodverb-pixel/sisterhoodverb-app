@@ -2189,7 +2189,9 @@ window.addEventListener('load', function() {
   }
   // Auto-open signup if ?signup=true
 if (params.get('signup') === 'true') {
-  setTimeout(() => openAuthModal('signup'), 800);
+  setTimeout(() => openModal(), 800);
+}
+
 }
   // Auto-open login if ?login=true
 if (params.get('login') === 'true') {
