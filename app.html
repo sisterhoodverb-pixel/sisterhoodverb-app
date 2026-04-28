@@ -2179,6 +2179,7 @@ window.addEventListener('load', function() {
   const params = new URLSearchParams(window.location.search);
  if (params.get('founding') === 'yes') {
       window._foundingMode = true;
+      setTimeout(() => openModal(), 800);
     }
   // Show correct banner
   if (window._foundingMode) {
