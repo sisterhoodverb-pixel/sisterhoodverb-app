@@ -903,6 +903,7 @@ if (session) {
     if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') {
       if (session && (!currentUser || currentUser.id !== session.user.id)) {
         currentUser = session.user;
+        localStorage.removeItem('sv_pending_confirmation');
         const authModal = document.getElementById('auth-modal');
         if (authModal && authModal.classList.contains('open')) {
           authModal.classList.remove('open');
