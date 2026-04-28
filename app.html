@@ -1026,6 +1026,12 @@ async function signUp(email, password, name) {
     return;
   }
   if (data.user) {
+    if (data.user && data.user.identities && data.user.identities.length === 0) {
+  submitBtn.disabled = false;
+  submitBtn.textContent = originalText;
+  showToast('This email is already registered — try logging in ♦');
+  return;
+}
     // Check if founding member link was used
     const isFoundingLink = window._foundingMode === true;
     let tier = 'free';
