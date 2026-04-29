@@ -689,20 +689,22 @@ nav{padding:14px 20px}.nav-links{display:none}
     </div>
   </div>
 
-  <div class="resource-card" style="cursor:default;">
-    <div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);">
+  <div class="resource-card" onclick="checkResourceAccess()" style="cursor:pointer;">
+    <div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);position:relative;">
       🎙<span class="resource-type" style="color:var(--gold);">Audio</span>
+      <div id="audio-lock" style="position:absolute;inset:0;background:rgba(28,20,16,0.6);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🔒</div>
     </div>
     <div class="resource-body">
       <div class="resource-title">River Meditation</div>
       <div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div>
-      <audio controls style="width:100%;margin:12px 0;border-radius:4px;accent-color:var(--terra);">
-        <source src="https://cqiymqekdtewnorojlus.supabase.co/storage/v1/object/public/Audio/River%20Meditation%20Final.m4a" type="audio/mp4">
-        Your browser does not support the audio element.
-      </audio>
+      <div id="audio-player" style="display:none;">
+        <audio controls style="width:100%;margin:12px 0;border-radius:4px;accent-color:var(--terra);">
+          <source src="https://cqiymqekdtewnorojlus.supabase.co/storage/v1/object/public/Audio/River%20Meditation%20Final.m4a" type="audio/mp4">
+        </audio>
+      </div>
       <div class="resource-footer">
         <span class="resource-author">by Tayllor Oyewole-Davis</span>
-        <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(122,140,110,0.15);color:var(--sage);font-weight:600;">Available Now ✦</span>
+        <span id="audio-badge" style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(196,98,45,0.15);color:var(--terra);font-weight:600;">Members Only ✦</span>
       </div>
     </div>
   </div>
