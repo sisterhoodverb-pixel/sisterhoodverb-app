@@ -1004,7 +1004,7 @@ async function onLogin() {
 
 function onLogout() {
   document.getElementById('logout-btn').style.display = 'none';
-  const joinBtn = document.querySelector('.nav-cta');
+  const joinBtn = document.getElementById('nav-join-btn');
   if (joinBtn) { joinBtn.textContent = 'Join'; joinBtn.onclick = () => openModal(); }
 }
 
