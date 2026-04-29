@@ -382,7 +382,7 @@ nav{padding:14px 20px}.nav-links{display:none}
     <a href="#" onclick="showView('events',this)">Events</a>
     <a href="#" onclick="showView('resources',this)">Resources</a>
     <a href="#" onclick="showViewWithProfile('profile',this)">Profile</a>
-    <a href="#" class="nav-cta" onclick="openModal();return false;">Join</a>
+    <a href="#" class="nav-cta" id="nav-join-btn" onclick="openModal();return false;">Join</a>
     <div class="notif-wrap" id="notif-wrap" style="display:none;position:relative;">
       <button class="notif-bell" id="notif-bell" onclick="toggleNotifDropdown()">
         🔔
@@ -926,9 +926,8 @@ async function onLogin() {
   // Mark as returning visitor
   localStorage.setItem('sv_has_visited', '1');
   document.getElementById('logout-btn').style.display = 'block';
-  const joinBtn = document.querySelector('.nav-cta');
+  const joinBtn = document.getElementById('nav-join-btn');
   if (joinBtn) { joinBtn.textContent = 'My Account'; joinBtn.onclick = () => showViewWithProfile('profile', joinBtn); }
-
   // Retry profile load up to 3 times (handles PWA session restore delay)
   let profile = null;
   for (let attempt = 0; attempt < 3; attempt++) {
