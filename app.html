@@ -2632,8 +2632,12 @@ async function onbFinish() {
   // ── CIRCLE PROPOSAL ──
   function openProposalModal() {
     if (!currentUser) { openAuthModal('login'); return; }
+    const tier = window._currentUserProfile?.membership_tier || 'free';
+    const isPaid = ['founder','founding','paid'].includes(tier);
+    if (!isPaid) { window.location.href = '/upgrade.html'; return; }
     document.getElementById('proposal-modal').classList.add('open');
   }
+
 
   function closeProposalModal() {
     document.getElementById('proposal-modal').classList.remove('open');
