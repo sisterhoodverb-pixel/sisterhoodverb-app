@@ -2527,7 +2527,12 @@ async function changePassword() {
     const seen = localStorage.getItem('onb_done_' + currentUser.id);
     if (seen) return;
     const {data:profile} = await _supabase.from('profiles').select('name, bio, membership_tier, handle').eq('id', currentUser.id).single();
-    // Always show onboarding if not completed
+    // Skip onboarding if profile is already complete
+    const isComplete = profile?.bio && profile?.name && !profile.name.includes('@');
+    if (isComplete) {
+      localStorage.setItem('onb_done_' + currentUser.id, '1');
+      return;
+    }
     if (profile?.name) document.getElementById('onb-name').value = profile.name;
     const tier = profile?.membership_tier || 'free';
     if (tier === 'founder') {
