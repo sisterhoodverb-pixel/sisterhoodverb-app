@@ -2201,6 +2201,7 @@ if (params.get('signup') === 'true') {
 // If no params and no session, show agreements modal for new visitors
 if (!params.get('signup') && !params.get('login') && !params.get('founding') && !params.get('circle')) {
   setTimeout(async () => {
+    if (currentUser) return;
     const {data:{session}} = await _supabase.auth.getSession();
     if (!session) {
       const pendingConfirmation = localStorage.getItem('sv_pending_confirmation');
@@ -2210,7 +2211,7 @@ if (!params.get('signup') && !params.get('login') && !params.get('founding') && 
         openModal();
       }
     }
-  }, 1000);
+  }, 6000);
 }
   // Auto-open login if ?login=true
 if (params.get('login') === 'true') {
