@@ -1,0 +1,25 @@
+{
+  "appId": "com.sisterhoodverb.community",
+  "appName": "Sisterhood(verb)",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "hostname": "community.sisterhoodverb.com"
+  },
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "launchAutoHide": true,
+      "backgroundColor": "#FBF7F2",
+      "spinnerColor": "#C4622D",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "overlaysWebView": true
+    }
+  }
+}

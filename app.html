@@ -28,14 +28,13 @@
 <meta property="og:image" content="/icons/icon-512x512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://cdn.memberstack.com/scripts/webcomponents/memberstack.js" data-memberstack-app="pk_715b7f282440a2747b11" defer></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style
+<style>
 :root{--terra:#C4622D;--deep:#1C1410;--cream:#F5EFE6;--gold:#D4A853;--sage:#7A8C6E;--blush:#E8C4A0;--warm-white:#FBF7F2}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Sans',sans-serif;background:var(--warm-white);color:var(--deep);min-height:100vh;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4}
-nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:18px 40px;background:rgba(251,247,242,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(196,98,45,0.12);z-index:100}
+nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top)) 40px 18px;background:rgba(251,247,242,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(196,98,45,0.12);z-index:100}
 .nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--terra);letter-spacing:0.02em}
 .nav-logo span{font-style:italic;font-weight:400}
 .nav-links{display:flex;gap:32px;align-items:center}
@@ -286,7 +285,7 @@ input[type=“file”]{display:none}
 .mp-post-time{font-size:0.72rem;color:rgba(28,20,16,0.4)}
 .mp-loading{padding:40px;text-align:center;color:rgba(28,20,16,0.4);font-size:0.88rem}
 @media(max-width:768px){
-nav{padding:14px 20px}.nav-links{display:none}
+nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:none}
 .home-hero,.feed-section,.circles-grid,.events-main,.events-sidebar,.resources-layout,.profile-info,.profile-avatar-wrap{padding-left:20px;padding-right:20px}
 .events-layout{grid-template-columns:1fr}.events-sidebar{display:none}
 .hero-accent{display:none}.mobile-nav{display:flex}.view{padding-bottom:70px}
