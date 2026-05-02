@@ -32,7 +32,8 @@
 <style>
 :root{--terra:#C4622D;--deep:#1C1410;--cream:#F5EFE6;--gold:#D4A853;--sage:#7A8C6E;--blush:#E8C4A0;--warm-white:#FBF7F2}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'DM Sans',sans-serif;background:var(--warm-white);color:var(--deep);min-height:100vh;overflow-x:hidden}
+html{overflow-x:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--warm-white);color:var(--deep);min-height:100vh}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4}
 nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top)) 40px 18px;background:rgba(251,247,242,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(196,98,45,0.12);z-index:100}
 .nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--terra);letter-spacing:0.02em}
@@ -69,9 +70,9 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .onb-circle-item.joined{border-color:var(--terra);background:rgba(196,98,45,0.05)}
 .onb-circle-join{background:none;border:1.5px solid var(--terra);color:var(--terra);padding:5px 14px;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap}
 .onb-circle-join.joined{background:var(--terra);color:white}
-.view{display:none;padding-top:72px;min-height:100vh}
+.view{display:none;padding-top:72px;padding-bottom:calc(70px + env(safe-area-inset-bottom));min-height:100vh}
 .view.active{display:block}
-#view-home{padding-top:0}
+#view-home{padding-top:0;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
 .home-hero{background:var(--deep);padding:152px 40px 80px;position:relative;overflow:hidden}
 .home-hero::after{content:’’;position:absolute;bottom:-2px;left:0;right:0;height:40px;background:var(--warm-white);clip-path:ellipse(55% 100% at 50% 100%)}
 .hero-greeting{font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
@@ -239,8 +240,8 @@ input[type=“file”]{display:none}
 .form-input:focus{border-color:var(--terra)}
 .save-btn{background:var(--terra);color:white;border:none;padding:12px 32px;font-family:‘DM Sans’,sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
 .save-btn:hover{background:#a8501f}
-.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(251,247,242,0.97);backdrop-filter:blur(16px);border-top:1px solid rgba(196,98,45,0.15);padding:8px 8px calc(8px + env(safe-area-inset-bottom));justify-content:space-around;z-index:100}
-.mobile-nav-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;font-family:‘DM Sans’,sans-serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(28,20,16,0.4);transition:all 0.2s;padding:6px 10px;border-radius:8px;min-width:54px}
+.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:rgba(251,247,242,0.97);backdrop-filter:blur(16px);border-top:1px solid rgba(196,98,45,0.15);padding:8px 8px calc(8px + env(safe-area-inset-bottom));justify-content:space-around;align-items:center;min-height:56px;z-index:100}
+.mobile-nav-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:’DM Sans’,sans-serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(28,20,16,0.4);transition:all 0.2s;padding:6px 10px;border-radius:8px;min-width:54px;min-height:44px}
 .mobile-nav-btn.active{color:var(--terra);background:rgba(196,98,45,0.08)}
 .mobile-nav-btn span:first-child{font-size:1.4rem}
 .modal-overlay{position:fixed;inset:0;background:rgba(28,20,16,0.85);z-index:500;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
@@ -284,11 +285,12 @@ input[type=“file”]{display:none}
 .mp-post-text{font-size:0.86rem;color:rgba(28,20,16,0.75);line-height:1.6;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .mp-post-time{font-size:0.72rem;color:rgba(28,20,16,0.4)}
 .mp-loading{padding:40px;text-align:center;color:rgba(28,20,16,0.4);font-size:0.88rem}
+@media(min-width:769px){#cap-nav{display:none}}
 @media(max-width:768px){
 nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:none}
 .home-hero,.feed-section,.circles-grid,.events-main,.events-sidebar,.resources-layout,.profile-info,.profile-avatar-wrap{padding-left:20px;padding-right:20px}
 .events-layout{grid-template-columns:1fr}.events-sidebar{display:none}
-.hero-accent{display:none}.mobile-nav{display:flex}.view{padding-bottom:70px}
+.hero-accent{display:none}.view{padding-bottom:70px}
 .feed-section{padding:28px 20px}
 .notif-wrap{display:block!important}
 }
@@ -739,7 +741,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
   <div class="resource-card" onclick="checkResourceAccess()" style="cursor:pointer;">
     <div class="resource-thumb" style="background:linear-gradient(135deg,#eee8f5,#d9c8f0);position:relative;">
       🗺<span class="resource-type" style="color:#6B3FA0;">Guide</span>
-      <div style="position:absolute;inset:0;background:rgba(28,20,16,0.4);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🔒</div>
+      <div id="guide-lock" style="position:absolute;inset:0;background:rgba(28,20,16,0.4);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🔒</div>
     </div>
 
 
@@ -749,6 +751,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 ```
 
   </div>
+</div>
 </div>
 
 <!-- PROFILE -->
@@ -812,15 +815,13 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
   </div>
 </div>
 
-<!-- MOBILE NAV -->
-
-<div class="mobile-nav">
-  <button class="mobile-nav-btn active" onclick="showView('home',this)" id="mob-home"><span>🏠</span>Home</button>
-  <button class="mobile-nav-btn" onclick="showViewWithProfile('circles',this)" id="mob-circles"><span>⭕</span>Circles</button>
-  <button class="mobile-nav-btn" onclick="showView('events',this)" id="mob-events"><span>📅</span>Events</button>
-  <button class="mobile-nav-btn" onclick="showView('resources',this)" id="mob-resources"><span>📚</span>Library</button>
-  <button class="mobile-nav-btn" onclick="showViewWithProfile('profile',this)" id="mob-profile"><span>👤</span>Profile</button>
-  <button class="mobile-nav-btn" id="mob-notif" onclick="toggleNotifDropdown()" style="position:relative;"><span>🔔</span>Alerts<span id="mob-notif-badge" style="display:none;position:absolute;top:4px;right:8px;background:#e74c3c;color:white;border-radius:50%;width:16px;height:16px;font-size:0.55rem;font-weight:700;align-items:center;justify-content:center;border:2px solid white;"></span></button>
+<!-- MOBILE NAV: direct child of body, outside all .view divs -->
+<div id="cap-nav" style="position:fixed;bottom:0;left:0;width:100%;min-height:60px;background:white;display:flex;justify-content:space-around;align-items:center;z-index:10001;border-top:1px solid #eee;padding-bottom:env(safe-area-inset-bottom);">
+  <button id="mob-home" onclick="showView('home',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:#C4622D;cursor:pointer;padding:6px 10px;">🏠<span>Home</span></button>
+  <button id="mob-circles" onclick="showViewWithProfile('circles',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(28,20,16,0.4);cursor:pointer;padding:6px 10px;">⭕<span>Circles</span></button>
+  <button id="mob-events" onclick="showView('events',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(28,20,16,0.4);cursor:pointer;padding:6px 10px;">📅<span>Events</span></button>
+  <button id="mob-resources" onclick="showView('resources',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(28,20,16,0.4);cursor:pointer;padding:6px 10px;">📚<span>Library</span></button>
+  <button id="mob-profile" onclick="showViewWithProfile('profile',this);loadProfile();loadProfilePhotos();" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(28,20,16,0.4);cursor:pointer;padding:6px 10px;">👤<span>Profile</span></button>
 </div>
 
 <script>
@@ -978,6 +979,7 @@ async function onLogin() {
     regularBanner.style.display = (tier === 'free' && !isIOSApp()) ? 'flex' : 'none';
   }
 
+  applyResourceAccess();
   loadFeed();
   loadAnnouncement();
   loadJoinedCircles();
@@ -2121,23 +2123,70 @@ function showView(name, el) {
   views.forEach(v => document.getElementById('view-' + v).classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   document.querySelectorAll('.nav-links a:not(.nav-cta)').forEach(a => a.classList.remove('active'));
-  document.querySelectorAll('.mobile-nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('mob-' + name)?.classList.add('active');
-  if (el && !el.classList.contains('mobile-nav-btn') && !el.classList.contains('nav-cta')) el.classList.add('active');
+  // Update cap-nav active button color
+  ['home','circles','events','resources','profile'].forEach(v => {
+    const btn = document.getElementById('mob-' + v);
+    if (btn) btn.style.color = (v === name) ? 'var(--terra)' : '#333';
+  });
+  if (el && !el.classList.contains('nav-cta')) el.classList.add('active');
   window.scrollTo(0,0);
   return false;
 }
 
 function showViewWithProfile(name, el) {
   showView(name, el);
-  if (name === 'profile') { 
+  if (name === 'profile') {
     if (currentUser) {
-      loadProfile(); 
+      loadProfile();
       loadProfilePhotos();
       refreshProfileStats();
+    } else {
+      // Auth restores asynchronously in Capacitor — poll until session is ready
+      const deadline = Date.now() + 5000;
+      const poll = setInterval(() => {
+        if (currentUser) {
+          clearInterval(poll);
+          loadProfile();
+          loadProfilePhotos();
+          refreshProfileStats();
+        } else if (Date.now() > deadline) {
+          clearInterval(poll);
+        }
+      }, 200);
     }
   }
   if (name === 'circles') loadJoinedCircles();
+}
+
+function checkResourceAccess() {
+  const tier = window._currentUserProfile?.membership_tier || 'free';
+  const isPaid = ['founder', 'founding', 'paid'].includes(tier);
+  if (!currentUser) { openAuthModal('signup'); return; }
+  if (!isPaid) { showToast('This resource is for paid members. Upgrade to unlock.'); return; }
+  // Unlock: hide locks, show player
+  const audioLock = document.getElementById('audio-lock');
+  const guideLock = document.getElementById('guide-lock');
+  const audioPlayer = document.getElementById('audio-player');
+  const audioBadge = document.getElementById('audio-badge');
+  if (audioLock) audioLock.style.display = 'none';
+  if (guideLock) guideLock.style.display = 'none';
+  if (audioPlayer) audioPlayer.style.display = 'block';
+  if (audioBadge) { audioBadge.textContent = 'Members ✦'; audioBadge.style.background = 'rgba(122,140,110,0.15)'; audioBadge.style.color = 'var(--sage)'; }
+}
+
+function applyResourceAccess() {
+  const tier = window._currentUserProfile?.membership_tier || 'free';
+  const isPaid = ['founder', 'founding', 'paid'].includes(tier);
+  const audioLock = document.getElementById('audio-lock');
+  const guideLock = document.getElementById('guide-lock');
+  const audioPlayer = document.getElementById('audio-player');
+  const audioBadge = document.getElementById('audio-badge');
+  if (isPaid) {
+    if (audioLock) audioLock.style.display = 'none';
+    if (guideLock) guideLock.style.display = 'none';
+    if (audioPlayer) audioPlayer.style.display = 'block';
+    if (audioBadge) { audioBadge.textContent = 'Members ✦'; audioBadge.style.background = 'rgba(122,140,110,0.15)'; audioBadge.style.color = 'var(--sage)'; }
+  }
 }
 
 function openModal() { document.getElementById('agreements-modal').classList.add('open'); }
@@ -2224,6 +2273,23 @@ if (circleParam === 'naacp') {
 if (circleParam === 'motherhood') {
   window._pendingCircleOpen = "Motherhood Speaks";
 }
+
+  // In Capacitor or narrow viewport: hide desktop nav, ensure cap-nav is visible
+  function applyNavMode() {
+    const isCap = !!(window.Capacitor || (window.navigator && window.navigator.standalone));
+    const isNarrow = window.innerWidth < 769;
+    const desktopNav = document.querySelector('nav');
+    const capNav = document.getElementById('cap-nav');
+    if (isCap || isNarrow) {
+      if (desktopNav) desktopNav.style.display = 'none';
+      if (capNav) capNav.style.display = 'flex';
+    } else {
+      if (desktopNav) desktopNav.style.display = '';
+      if (capNav) capNav.style.display = 'none';
+    }
+  }
+  applyNavMode();
+  window.addEventListener('resize', applyNavMode);
 
   initAuth();
 });
@@ -2960,4 +3026,5 @@ async function onbFinish() {
     <a href="/terms-of-service.html" style="color:rgba(245,239,230,0.45);font-size:0.72rem;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--cream)'" onmouseout="this.style.color='rgba(245,239,230,0.45)'">Terms of Service</a>
     <a href="https://www.sisterhoodverb.com" style="color:rgba(245,239,230,0.45);font-size:0.72rem;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--cream)'" onmouseout="this.style.color='rgba(245,239,230,0.45)'">Main Site</a>
   </div>
-  <div style="font-size:0.68rem;color:rgb
+  <div style="font-size:0.68rem;color:rgba(245,239,230,0.35);">© 2025 Sisterhood(verb). All rights reserved.</div>
+</div>
