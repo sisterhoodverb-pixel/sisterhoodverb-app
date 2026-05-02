@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no, maximum-scale=1.0">
 <title>Sisterhood(verb) — Community</title>
 
 <!-- PWA -->
@@ -45,12 +45,13 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .nav-cta{background:var(--terra);color:white!important;padding:8px 20px;border-radius:2px;opacity:1!important;font-weight:500!important;transition:background 0.2s!important}
 .nav-cta:hover{background:#a8501f!important}
 
-.notif-bell{background:none;border:none;cursor:pointer;font-size:1.1rem;padding:6px;border-radius:50%;position:relative;transition:background 0.2s}
+.notif-bell{background:none;border:none;cursor:pointer;font-size:1.1rem;padding:6px;border-radius:50%;position:relative;transition:background 0.2s;touch-action:manipulation}
 .notif-bell:hover{background:var(--cream)}
 .logout-btn{background:none;border:1.5px solid rgba(196,98,45,0.3);color:var(--terra);padding:6px 14px;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;display:none;transition:all 0.2s}
 .logout-btn:hover{background:var(--terra);color:white}
 .notif-badge{position:absolute;top:-2px;right:-2px;background:#e74c3c;color:white;border-radius:50%;width:18px;height:18px;font-size:0.6rem;font-weight:700;display:flex!important;align-items:center;justify-content:center;border:2px solid white}
-.notif-dropdown{position:absolute;right:0;top:calc(100% + 10px);width:320px;background:white;border-radius:6px;box-shadow:0 8px 30px rgba(28,20,16,0.15);border:1px solid rgba(196,98,45,0.12);z-index:200;overflow:hidden}
+.notif-dropdown{position:fixed;bottom:calc(68px + env(safe-area-inset-bottom));right:16px;left:16px;width:auto;max-width:340px;margin-left:auto;background:white;border-radius:6px;box-shadow:0 8px 30px rgba(28,20,16,0.15);border:1px solid rgba(196,98,45,0.12);z-index:10002;overflow:hidden}
+@media(min-width:769px){.notif-dropdown{left:auto;right:20px;top:70px;bottom:auto;}}
 .notif-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(196,98,45,0.1);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--deep)}
 .notif-header button{background:none;border:none;cursor:pointer;font-size:0.72rem;color:var(--terra);font-family:‘DM Sans’,sans-serif;font-weight:500}
 .notif-list{max-height:360px;overflow-y:auto}
@@ -389,13 +390,6 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
         🔔
         <span class="notif-badge" id="notif-badge" style="display:none;">0</span>
       </button>
-      <div class="notif-dropdown" id="notif-dropdown" style="display:none;">
-        <div class="notif-header">
-          <span>Notifications</span>
-          <button onclick="markAllRead()">Mark all read</button>
-        </div>
-        <div id="notif-list"><div class="notif-empty">No notifications yet ✦</div></div>
-      </div>
     </div>
     <button class="logout-btn" id="logout-btn" onclick="signOut()">Log Out</button>
   </div>
@@ -676,7 +670,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 
 <div class="resources-grid">
 
-  <div class="resource-card" onclick="window.location='/poetry-prompts.html'" style="cursor:pointer;">
+  <div class="resource-card" data-type="writing-prompts" onclick="openPage('/poetry-prompts.html')" style="cursor:pointer;">
     <div class="resource-thumb" style="background:linear-gradient(135deg,#0F1B3D,#D4A020);">
       ✍🏾<span class="resource-type" style="color:#D4A020;">Poetry</span>
     </div>
@@ -690,7 +684,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     </div>
   </div>
 
-  <div class="resource-card" onclick="checkResourceAccess()" style="cursor:pointer;">
+  <div class="resource-card" data-type="audio" onclick="checkResourceAccess()" style="cursor:pointer;">
     <div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#3d2b1f);position:relative;">
       🎙<span class="resource-type" style="color:var(--gold);">Audio</span>
       <div id="audio-lock" style="position:absolute;inset:0;background:rgba(28,20,16,0.6);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🔒</div>
@@ -710,7 +704,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     </div>
   </div>
 
- <div class="resource-card" onclick="window.location='/motherhood-speaks-recap.html'" style="cursor:pointer;">
+ <div class="resource-card" data-type="workshops" onclick="openPage('/motherhood-speaks-recap.html')" style="cursor:pointer;">
     <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">
       📋<span class="resource-type" style="color:var(--terra);">Recap</span>
     </div>
@@ -724,7 +718,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     </div>
   </div>
 
-  <div class="resource-card" onclick="window.location='/reading-list.html'" style="cursor:pointer;">
+  <div class="resource-card" data-type="reading" onclick="openPage('/reading-list.html')" style="cursor:pointer;">
     <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#f0e0ca);">
       📖<span class="resource-type" style="color:#8B6914;">Reading</span>
     </div>
@@ -738,7 +732,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     </div>
   </div>
 
-  <div class="resource-card" onclick="checkResourceAccess()" style="cursor:pointer;">
+  <div class="resource-card" data-type="guides" onclick="checkResourceAccess()" style="cursor:pointer;">
     <div class="resource-thumb" style="background:linear-gradient(135deg,#eee8f5,#d9c8f0);position:relative;">
       🗺<span class="resource-type" style="color:#6B3FA0;">Guide</span>
       <div id="guide-lock" style="position:absolute;inset:0;background:rgba(28,20,16,0.4);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🔒</div>
@@ -815,6 +809,15 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
   </div>
 </div>
 
+<!-- Notification dropdown: body-level so it's visible even when desktop nav is hidden -->
+<div class="notif-dropdown" id="notif-dropdown" style="display:none;">
+  <div class="notif-header">
+    <span>Notifications</span>
+    <button onclick="markAllRead()">Mark all read</button>
+  </div>
+  <div id="notif-list"><div class="notif-empty">No notifications yet ✦</div></div>
+</div>
+
 <!-- MOBILE NAV: direct child of body, outside all .view divs -->
 <div id="cap-nav" style="position:fixed;bottom:0;left:0;width:100%;min-height:60px;background:white;display:flex;justify-content:space-around;align-items:center;z-index:10001;border-top:1px solid #eee;padding-bottom:env(safe-area-inset-bottom);">
   <button id="mob-home" onclick="showView('home',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:#C4622D;cursor:pointer;padding:6px 10px;">🏠<span>Home</span></button>
@@ -822,13 +825,24 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
   <button id="mob-events" onclick="showView('events',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(28,20,16,0.4);cursor:pointer;padding:6px 10px;">📅<span>Events</span></button>
   <button id="mob-resources" onclick="showView('resources',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(28,20,16,0.4);cursor:pointer;padding:6px 10px;">📚<span>Library</span></button>
   <button id="mob-profile" onclick="showViewWithProfile('profile',this);loadProfile();loadProfilePhotos();" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(28,20,16,0.4);cursor:pointer;padding:6px 10px;">👤<span>Profile</span></button>
+  <button id="mob-notif" onclick="toggleNotifDropdown()" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(28,20,16,0.4);cursor:pointer;padding:6px 10px;position:relative;">🔔<span id="mob-notif-badge" style="display:none;position:absolute;top:2px;right:6px;background:#e74c3c;color:white;border-radius:50%;width:16px;height:16px;font-size:0.55rem;font-weight:700;align-items:center;justify-content:center;border:2px solid white;">0</span><span>Alerts</span></button>
 </div>
 
 <script>
   // iOS App detection
   function isIOSApp() {
-    return window.navigator.standalone === true || 
+    return window.navigator.standalone === true ||
            window.matchMedia('(display-mode: standalone)').matches;
+  }
+
+  // Opens site-relative paths in the system browser when running in Capacitor,
+  // so local-bundle pages that don't exist in the bundle load from Vercel instead.
+  function openPage(path) {
+    if (window.Capacitor) {
+      window.open('https://community.sisterhoodverb.com' + path, '_system');
+    } else {
+      window.location = path;
+    }
   }
 const _supabase = window.supabase.createClient(
   'https://cqiymqekdtewnorojlus.supabase.co',
@@ -837,6 +851,7 @@ const _supabase = window.supabase.createClient(
 const GIPHY_KEY = 'AgkjTleIOrzAZS8xROMk5MBOhC87TO4v';
 let currentUser = null;
 let selectedGifUrl = null;
+let selectedPhotoFile = null;
 let selectedCircleGifUrl = null;
 let isQuestionMode = false;
 let isCircleQuestionMode = false;
@@ -1318,16 +1333,53 @@ function toggleCircleQuestionMode() {
   }
 }
 
+function handlePhotoSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  selectedPhotoFile = file;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = document.getElementById('photo-preview-img');
+    const preview = document.getElementById('photo-preview');
+    if (img) img.src = e.target.result;
+    if (preview) preview.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+
+function removePhoto() {
+  selectedPhotoFile = null;
+  const img = document.getElementById('photo-preview-img');
+  const preview = document.getElementById('photo-preview');
+  const input = document.getElementById('photo-upload-input');
+  if (img) img.src = '';
+  if (preview) preview.style.display = 'none';
+  if (input) input.value = '';
+}
+
+async function uploadPostPhoto(file, content, tag) {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const filePath = currentUser.id + '-post-' + Date.now() + '.' + ext;
+  const {error} = await _supabase.storage.from('post-images').upload(filePath, file, {upsert: false});
+  if (error) { showToast('Photo upload failed — posting without image'); savePost(content, tag); return; }
+  const {data} = _supabase.storage.from('post-images').getPublicUrl(filePath);
+  savePost(content, tag, data.publicUrl);
+}
+
 function postToFeed() {
   const ta = document.getElementById('home-composer-input');
   if (!ta) { showToast('Could not find composer — try refreshing'); return; }
   const text = ta.value.trim();
-  if (!text && !selectedGifUrl) { showToast('Write something first ✦'); return; }
+  if (!text && !selectedGifUrl && !selectedPhotoFile) { showToast('Write something first ✦'); return; }
   if (!currentUser) { showToast('Please log in to post ✦'); openAuthModal('login'); return; }
   const content = text + (selectedGifUrl ? '\n[gif:' + selectedGifUrl + ']' : '');
   const tag = isQuestionMode ? 'Question' : 'Community';
-  savePost(content, tag);
-  ta.value = ''; removeGif();
+  if (selectedPhotoFile) {
+    uploadPostPhoto(selectedPhotoFile, content, tag);
+  } else {
+    savePost(content, tag);
+  }
+  ta.value = ''; removeGif(); removePhoto();
   if (isQuestionMode) toggleQuestionMode();
 }
 
@@ -1515,7 +1567,8 @@ if (existingRecapBtn) existingRecapBtn.remove();
 if (name === 'Motherhood Speaks') {
   const recapBtn = document.createElement('a');
   recapBtn.id = 'circle-recap-btn';
-  recapBtn.href = '/motherhood-speaks-recap.html';
+  recapBtn.href = '#';
+  recapBtn.onclick = (e) => { e.preventDefault(); openPage('/motherhood-speaks-recap.html'); };
   recapBtn.textContent = '📖 View Session Recaps';
   recapBtn.style.cssText = 'display:inline-block;margin-top:12px;background:rgba(196,98,45,0.1);color:var(--terra);border:1px solid rgba(196,98,45,0.25);padding:8px 18px;border-radius:2px;font-size:0.8rem;font-weight:600;letter-spacing:0.06em;text-decoration:none;transition:background 0.2s;';
   recapBtn.onmouseover = () => recapBtn.style.background = 'rgba(196,98,45,0.18)';
@@ -1645,7 +1698,7 @@ async function loadCircleResources(circleName) {
           ).join('')}
 
           <!-- Sisterhood(verb) public resource links -->
-          <a href="/reading-list.html" target="_blank" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">
+          <a href="#" onclick="event.preventDefault();openPage('/reading-list.html')" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">
             <span style="font-size:1.4rem;flex-shrink:0;">📚</span>
             <div style="flex:1;">
               <div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">Community Care Reading List</div>
@@ -1654,7 +1707,7 @@ async function loadCircleResources(circleName) {
             <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">Visit →</span>
           </a>
 
-          <a href="/motherhood-speaks-recap.html" target="_blank" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">
+          <a href="#" onclick="event.preventDefault();openPage('/motherhood-speaks-recap.html')" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(196,98,45,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(28,20,16,0.04);">
             <span style="font-size:1.4rem;flex-shrink:0;">📋</span>
             <div style="flex:1;">
               <div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">Motherhood Speaks — Session Recaps</div>
@@ -2226,7 +2279,14 @@ function circleGoBack() {
 
 function toggleJoin(btn, circleName) { joinCircleDB(circleName, btn); }
 function registerEvent(btn, eventName) { registerEventDB(eventName, btn); }
-function filterRes(btn) { document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active')); btn.classList.add('active'); showToast('Filtering by: ' + btn.textContent); }
+function filterRes(btn) {
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  const filter = btn.textContent.trim().toLowerCase().replace(/\s+/g, '-');
+  document.querySelectorAll('.resource-card').forEach(card => {
+    card.style.display = (filter === 'all' || card.dataset.type === filter) ? '' : 'none';
+  });
+}
 
 window.addEventListener('load', function() {
   // Check for founding member link
@@ -2484,6 +2544,12 @@ async function changePassword() {
           postEl.style.transition = 'box-shadow 0.3s';
           postEl.style.boxShadow = '0 0 0 2px var(--terra)';
           setTimeout(() => postEl.style.boxShadow = '', 2000);
+          // Auto-open replies if not already open
+          const repliesSection = document.getElementById('replies-' + postId);
+          const replyBtn = postEl.querySelector('[onclick^="toggleReplies"]');
+          if (repliesSection && replyBtn && repliesSection.style.display !== 'block') {
+            toggleReplies(postId, replyBtn);
+          }
         }
       }, 600);
     }
@@ -2499,9 +2565,13 @@ async function changePassword() {
 
   // Close dropdown when clicking outside
   document.addEventListener('click', function(e) {
-    const wrap = document.getElementById('notif-wrap');
     const dropdown = document.getElementById('notif-dropdown');
-    if (wrap && dropdown && !wrap.contains(e.target)) {
+    const desktopBell = document.getElementById('notif-bell');
+    const mobBell = document.getElementById('mob-notif');
+    const clickedInsideDropdown = dropdown && dropdown.contains(e.target);
+    const clickedDesktopBell = desktopBell && desktopBell.contains(e.target);
+    const clickedMobBell = mobBell && mobBell.contains(e.target);
+    if (dropdown && !clickedInsideDropdown && !clickedDesktopBell && !clickedMobBell) {
       dropdown.style.display = 'none';
     }
   });
