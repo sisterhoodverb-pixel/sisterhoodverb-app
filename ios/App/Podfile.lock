@@ -1,23 +1,23 @@
 PODS:
-  - Capacitor (6.2.1):
+  - Capacitor (7.6.2):
     - CapacitorCordova
-  - CapacitorApp (6.0.3):
+  - CapacitorApp (7.1.2):
     - Capacitor
-  - CapacitorCordova (6.2.1)
-  - CapacitorHaptics (6.0.3):
+  - CapacitorCordova (7.6.2)
+  - CapacitorHaptics (7.0.5):
     - Capacitor
-  - CapacitorKeyboard (6.0.4):
+  - CapacitorKeyboard (7.0.6):
     - Capacitor
-  - CapacitorSplashScreen (6.0.4):
+  - CapacitorSplashScreen (7.0.5):
     - Capacitor
-  - CapacitorStatusBar (6.0.3):
+  - CapacitorStatusBar (7.0.6):
     - Capacitor
-  - PurchasesHybridCommon (11.1.1):
-    - RevenueCat (= 4.43.2)
-  - RevenueCat (4.43.2)
-  - RevenuecatPurchasesCapacitor (7.7.1):
+  - PurchasesHybridCommon (18.1.0):
+    - RevenueCat (= 5.68.0)
+  - RevenueCat (5.68.0)
+  - RevenuecatPurchasesCapacitor (13.0.1):
     - Capacitor
-    - PurchasesHybridCommon (= 11.1.1)
+    - PurchasesHybridCommon (= 18.1.0)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -53,17 +53,17 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@revenuecat/purchases-capacitor"
 
 SPEC CHECKSUMS:
-  Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
-  CapacitorApp: a19ccb4f5f32d2534be5c6f524d5a9b614a1e8a7
-  CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
-  CapacitorHaptics: 40f83026feeee9cfe36e89e9c98a3baaaf20c450
-  CapacitorKeyboard: e8cd50fd5cbdd023a5947a5c0f5cca6e5aa5a253
-  CapacitorSplashScreen: ef140a8b1ea7244e0c245ce2dd4ce5251e7ab86a
-  CapacitorStatusBar: 149cde8f1328ec3aa6cbdd872a55137ae3f98b16
-  PurchasesHybridCommon: 73f4f2c6e4ec3487b4219bf60e1661100fb85da3
-  RevenueCat: 3d934653b7e8b09af88fd47e9e84cfaf5d0a89ba
-  RevenuecatPurchasesCapacitor: 70ecf4905bbbce9b6d6bd243504a7001b6054ac0
+  Capacitor: 5d4e6523047feb0e4755e5e922ded0372c2dde24
+  CapacitorApp: f01a913211780e0718dae9750442c3e23f96e106
+  CapacitorCordova: 8214697bed435f6e7c5e3ed86d1632a8c42f7d77
+  CapacitorHaptics: 1b145fa83c622e5383a3bac04ea81e2514f0b0f5
+  CapacitorKeyboard: a2e0869edd229490ce36aed2549c0d6b95e27ee8
+  CapacitorSplashScreen: 409eeaaeac603d264f209c0fcb718aa22fe1f7bb
+  CapacitorStatusBar: 416e9e53fd6397e668d4a181cd2131617d949bd6
+  PurchasesHybridCommon: 32902b8fad349cf549f096183926ee33af00e36a
+  RevenueCat: c535d3739d51163f6d9d5dbd01c7b5d93b718ff5
+  RevenuecatPurchasesCapacitor: d2951545ee37dd35adbcc94acc3a9b83a3a2cca8
 
-PODFILE CHECKSUM: c015b5b10539f55804dabb9ba4f329cf0445e405
+PODFILE CHECKSUM: ceeda09c6b028e2125511e4abb97781d7743b471
 
 COCOAPODS: 1.16.2

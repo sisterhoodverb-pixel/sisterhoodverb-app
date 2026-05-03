@@ -420,8 +420,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
       <div style="font-size:0.82rem;color:rgba(245,239,230,0.6);line-height:1.7;">Unlock all Circles, live events, workshop recordings, and the full community experience.</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;flex-shrink:0;">
-      <a href="https://buy.stripe.com/8x26oG5S3bP4g1ffKsbEA01" target="_blank" style="display:block;background:var(--terra);color:white;padding:12px 24px;text-align:center;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:2px;white-space:nowrap;">Join Monthly — $9 ✦</a>
-      <a href="https://buy.stripe.com/4gM7sK80b4mC4ix69SbEA00" target="_blank" style="display:block;background:transparent;color:var(--gold);padding:12px 24px;text-align:center;text-decoration:none;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:2px;border:1px solid rgba(212,168,83,0.4);white-space:nowrap;">Best Value — $79/year ✦</a>
+      <button onclick="showPaywall()" style="display:block;background:var(--terra);color:white;padding:12px 24px;text-align:center;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:2px;white-space:nowrap;border:none;cursor:pointer;">Upgrade Now ✦</button>
     </div>
   </div>
 </div>
@@ -849,6 +848,9 @@ const _supabase = window.supabase.createClient(
   'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
 );
 const GIPHY_KEY = 'AgkjTleIOrzAZS8xROMk5MBOhC87TO4v';
+const RC_API_KEY = 'appl_cgCetigFNVJDpxiLGLWXOejNfym';
+const RC_MONTHLY_ID = 'com.sisterhoodverb.community.monthly';
+const RC_ANNUAL_ID = 'com.sisterhoodverb.community.annual';
 let currentUser = null;
 let selectedGifUrl = null;
 let selectedPhotoFile = null;
@@ -879,11 +881,9 @@ async function initAuth() {
 if (session) {
   currentUser = session.user;
   await onLogin();
-  // Hide banners after login completes
+  // Hide founding banner after login (regular-banner visibility is managed inside onLogin based on tier)
   const foundingBanner = document.getElementById('founding-banner');
-  const regularBanner = document.getElementById('regular-banner');
   if (foundingBanner) foundingBanner.style.display = 'none';
-  if (regularBanner) regularBanner.style.display = 'none';
   } else {
     // No session yet - wait to see if onAuthStateChange restores it
     const loader = document.getElementById('pwa-loading');
@@ -994,6 +994,7 @@ async function onLogin() {
     regularBanner.style.display = (tier === 'free' && !isIOSApp()) ? 'flex' : 'none';
   }
 
+  loginRevenueCat(currentUser.id);
   applyResourceAccess();
   loadFeed();
   loadAnnouncement();
@@ -2211,6 +2212,143 @@ function showViewWithProfile(name, el) {
   if (name === 'circles') loadJoinedCircles();
 }
 
+// ── REVENUECAT ──
+
+function initRevenueCat() {
+  if (!window.Capacitor) return;
+  const Purchases = window.Capacitor.Plugins.Purchases;
+  if (!Purchases) { console.warn('RevenueCat Purchases plugin not found'); return; }
+  Purchases.configure({ apiKey: RC_API_KEY });
+}
+
+async function loginRevenueCat(userId) {
+  if (!window.Capacitor) return;
+  const Purchases = window.Capacitor.Plugins.Purchases;
+  if (!Purchases) return;
+  try { await Purchases.logIn({ appUserID: userId }); } catch(e) { console.warn('RC logIn failed', e); }
+}
+
+async function showPaywall() {
+  if (!window.Capacitor) { window.location.href = '/upgrade.html'; return; }
+  const Purchases = window.Capacitor.Plugins.Purchases;
+  if (!Purchases) { showToast('In-app purchases not available'); return; }
+
+  showToast('Loading subscription options...');
+  let monthly = null, annual = null, monthlyPrice = '$9.99/mo', annualPrice = '$79.99/yr';
+  try {
+    console.log('[RC] calling getOfferings...');
+    const offeringsResult = await Purchases.getOfferings();
+    console.log('[RC] raw getOfferings result:', JSON.stringify(offeringsResult));
+    const { current } = offeringsResult;
+    console.log('[RC] current offering:', JSON.stringify(current));
+    if (current && current.availablePackages) {
+      console.log('[RC] availablePackages count:', current.availablePackages.length);
+      for (const pkg of current.availablePackages) {
+        const pid = pkg.product?.identifier || pkg.offeringIdentifier || '';
+        console.log('[RC] package — type:', pkg.packageType, '| product id:', pid, '| priceString:', pkg.product?.priceString, '| full pkg:', JSON.stringify(pkg));
+        if (pid === RC_MONTHLY_ID || pkg.packageType === 'MONTHLY') { monthly = pkg; monthlyPrice = pkg.product?.priceString || monthlyPrice; }
+        if (pid === RC_ANNUAL_ID  || pkg.packageType === 'ANNUAL')  { annual  = pkg; annualPrice  = pkg.product?.priceString || annualPrice; }
+      }
+    } else {
+      console.warn('[RC] no current offering or empty availablePackages — current:', JSON.stringify(current));
+    }
+    console.log('[RC] resolved monthly pkg:', monthly ? 'found ('+monthlyPrice+')' : 'NULL');
+    console.log('[RC] resolved annual pkg:', annual ? 'found ('+annualPrice+')' : 'NULL');
+  } catch(e) {
+    console.warn('[RC] getOfferings failed — error:', e?.message || e, '| code:', e?.code, '| full:', JSON.stringify(e));
+  }
+
+  // Build and show paywall modal
+  const existing = document.getElementById('rc-paywall-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'rc-paywall-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(28,20,16,0.88);z-index:11000;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);';
+  modal.innerHTML = `
+    <div style="background:var(--warm-white);border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:32px 28px calc(32px + env(safe-area-inset-bottom));box-shadow:0 -8px 40px rgba(28,20,16,0.2);">
+      <div style="text-align:center;margin-bottom:24px;">
+        <div style="font-size:2rem;margin-bottom:10px;">✦</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--deep);margin-bottom:8px;">Become a Full Member</div>
+        <div style="font-size:0.88rem;color:rgba(28,20,16,0.6);line-height:1.6;">Unlock all Circles, live events, workshop recordings, and the full community experience.</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+        <button onclick="rcPurchase('annual')" style="background:var(--terra);color:white;border:none;border-radius:8px;padding:16px 20px;text-align:left;cursor:pointer;position:relative;">
+          <div style="font-weight:700;font-size:1rem;">Annual — ${annualPrice}</div>
+          <div style="font-size:0.78rem;opacity:0.85;margin-top:2px;">Best value · billed once a year</div>
+          <div style="position:absolute;top:10px;right:14px;background:var(--gold);color:var(--deep);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;border-radius:10px;">Best Value</div>
+        </button>
+        <button onclick="rcPurchase('monthly')" style="background:white;color:var(--deep);border:1.5px solid rgba(196,98,45,0.3);border-radius:8px;padding:16px 20px;text-align:left;cursor:pointer;">
+          <div style="font-weight:700;font-size:1rem;">Monthly — ${monthlyPrice}</div>
+          <div style="font-size:0.78rem;color:rgba(28,20,16,0.55);margin-top:2px;">Billed monthly · cancel anytime</div>
+        </button>
+      </div>
+      <button onclick="restorePurchases()" style="display:block;width:100%;background:none;border:none;color:rgba(28,20,16,0.45);font-size:0.78rem;cursor:pointer;padding:8px;text-align:center;margin-bottom:8px;">Restore Purchases</button>
+      <button onclick="document.getElementById('rc-paywall-modal').remove()" style="display:block;width:100%;background:none;border:none;color:rgba(28,20,16,0.4);font-size:0.82rem;cursor:pointer;padding:8px;text-align:center;">Not right now</button>
+      <div style="text-align:center;font-size:0.68rem;color:rgba(28,20,16,0.35);margin-top:12px;line-height:1.6;">Subscriptions auto-renew. Cancel anytime in App Store settings. By subscribing you agree to our Terms of Use.</div>
+    </div>`;
+
+  // Store package refs for rcPurchase
+  modal._monthly = monthly;
+  modal._annual  = annual;
+  document.body.appendChild(modal);
+}
+
+async function rcPurchase(type) {
+  if (!window.Capacitor) return;
+  const Purchases = window.Capacitor.Plugins.Purchases;
+  if (!Purchases) return;
+  const modal = document.getElementById('rc-paywall-modal');
+  const pkg = type === 'annual' ? modal?._annual : modal?._monthly;
+  if (!pkg) { showToast('Product not available — try again'); return; }
+  try {
+    showToast('Opening App Store...');
+    const { customerInfo } = await Purchases.purchasePackage({ aPackage: pkg });
+    const entitlements = customerInfo?.entitlements?.active || {};
+    const hasAccess = Object.keys(entitlements).length > 0;
+    if (hasAccess) {
+      modal?.remove();
+      await _supabase.from('profiles').update({ membership_tier: 'paid' }).eq('id', currentUser.id);
+      window._currentUserProfile = { ...window._currentUserProfile, membership_tier: 'paid' };
+      window._currentUserTier = 'paid';
+      applyResourceAccess();
+      await onLogin();
+      showToast('Welcome to full membership! ✦');
+    }
+  } catch(e) {
+    if (e.code !== 'PURCHASE_CANCELLED') {
+      console.error('RC purchase error', e);
+      showToast('Purchase failed: ' + (e.message || 'please try again'));
+    }
+  }
+}
+
+async function restorePurchases() {
+  if (!window.Capacitor) return;
+  const Purchases = window.Capacitor.Plugins.Purchases;
+  if (!Purchases) return;
+  try {
+    showToast('Restoring purchases...');
+    const { customerInfo } = await Purchases.restorePurchases();
+    const entitlements = customerInfo?.entitlements?.active || {};
+    const hasAccess = Object.keys(entitlements).length > 0;
+    if (hasAccess) {
+      document.getElementById('rc-paywall-modal')?.remove();
+      await _supabase.from('profiles').update({ membership_tier: 'paid' }).eq('id', currentUser.id);
+      window._currentUserProfile = { ...window._currentUserProfile, membership_tier: 'paid' };
+      window._currentUserTier = 'paid';
+      applyResourceAccess();
+      await onLogin();
+      showToast('Subscription restored! ✦');
+    } else {
+      showToast('No active subscription found');
+    }
+  } catch(e) {
+    console.error('RC restore error', e);
+    showToast('Restore failed: ' + (e.message || 'please try again'));
+  }
+}
+
 function checkResourceAccess() {
   const tier = window._currentUserProfile?.membership_tier || 'free';
   const isPaid = ['founder', 'founding', 'paid'].includes(tier);
@@ -2351,6 +2489,7 @@ if (circleParam === 'motherhood') {
   applyNavMode();
   window.addEventListener('resize', applyNavMode);
 
+  initRevenueCat();
   initAuth();
 });
 
@@ -2770,7 +2909,7 @@ async function onbFinish() {
     if (!currentUser) { openAuthModal('login'); return; }
     const tier = window._currentUserProfile?.membership_tier || 'free';
     const isPaid = ['founder','founding','paid'].includes(tier);
-    if (!isPaid) { window.location.href = '/upgrade.html'; return; }
+    if (!isPaid) { showPaywall(); return; }
     document.getElementById('proposal-modal').classList.add('open');
   }
 
