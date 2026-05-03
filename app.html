@@ -73,6 +73,8 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .onb-circle-join.joined{background:var(--terra);color:white}
 .view{display:none;padding-top:72px;padding-bottom:calc(70px + env(safe-area-inset-bottom));min-height:100vh}
 .view.active{display:block}
+.cap-mode .view{padding-top:env(safe-area-inset-top)}
+.cap-mode #view-home{padding-top:0}
 #view-home{padding-top:0;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
 .home-hero{background:var(--deep);padding:152px 40px 80px;position:relative;overflow:hidden}
 .home-hero::after{content:’’;position:absolute;bottom:-2px;left:0;right:0;height:40px;background:var(--warm-white);clip-path:ellipse(55% 100% at 50% 100%)}
@@ -286,7 +288,12 @@ input[type=“file”]{display:none}
 .mp-post-text{font-size:0.86rem;color:rgba(28,20,16,0.75);line-height:1.6;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .mp-post-time{font-size:0.72rem;color:rgba(28,20,16,0.4)}
 .mp-loading{padding:40px;text-align:center;color:rgba(28,20,16,0.4);font-size:0.88rem}
-@media(min-width:769px){#cap-nav{display:none}}
+@media(min-width:769px){
+  #cap-nav{display:none}
+  #view-profile .profile-inner{max-width:720px;margin:0 auto;padding:32px 40px 0}
+  .profile-info{max-width:720px;margin:0 auto;padding-left:40px;padding-right:40px}
+  #view-profile .profile-edit{max-width:720px;margin:0 auto;padding:0 40px 40px}
+}
 @media(max-width:768px){
 nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:none}
 .home-hero,.feed-section,.circles-grid,.events-main,.events-sidebar,.resources-layout,.profile-info,.profile-avatar-wrap{padding-left:20px;padding-right:20px}
@@ -750,7 +757,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 <!-- PROFILE -->
 
 <div class="view" id="view-profile">
-  <div style="max-width:720px;margin:0 auto;padding:32px 40px 0">
+  <div class="profile-inner" style="padding:32px 20px 0">
     <div class="profile-banner" id="profile-banner" onclick="document.getElementById('banner-upload').click()">
       <img id="profile-banner-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0">
       <div class="photo-upload-overlay">📷 Change Banner</div>
@@ -773,7 +780,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
       <div class="stat"><div class="stat-num" id="stat-posts">0</div><div class="stat-label">Posts</div></div>
     </div>
   </div>
-  <div style="max-width:720px;margin:0 auto;padding:0 32px 40px">
+  <div class="profile-edit" style="padding:0 20px 40px">
     <div class="profile-section-title" style="margin-bottom:20px">Edit Profile</div>
     <div class="form-group"><label class="form-label">Display Name</label><input class="form-input" id="profile-name-input" type="text" placeholder="Your name"></div>
     <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" id="profile-bio-input" rows="3" style="resize:vertical" placeholder="Tell your sisters about yourself..."></textarea></div>
@@ -782,29 +789,25 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     <div class="form-group"><label class="form-label">Membership Plan</label><input class="form-input" id="profile-tier-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--terra);font-weight:600"></div>
     <button class="save-btn" onclick="saveProfile()">Save Changes</button>
 
-```
-<div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(196,98,45,0.15);">
-  <div class="profile-section-title" style="margin-bottom:20px;">Change Password</div>
-  <div class="form-group">
-    <label class="form-label">New Password</label>
-    <input class="form-input" type="password" id="new-password-input" placeholder="Enter new password">
-  </div>
-  <div class="form-group">
-    <label class="form-label">Confirm New Password</label>
-    <input class="form-input" type="password" id="confirm-password-input" placeholder="Confirm new password">
-  </div>
-  <button class="save-btn" onclick="changePassword()">Update Password</button>
-</div>
+    <div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(196,98,45,0.15);">
+      <div class="profile-section-title" style="margin-bottom:20px;">Change Password</div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input class="form-input" type="password" id="new-password-input" placeholder="Enter new password">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <input class="form-input" type="password" id="confirm-password-input" placeholder="Confirm new password">
+      </div>
+      <button class="save-btn" onclick="changePassword()">Update Password</button>
+    </div>
 
-<!-- Account Actions -->
-<div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(196,98,45,0.15);">
-  <div class="profile-section-title" style="margin-bottom:20px;">Account</div>
-  <button class="save-btn" onclick="signOut()" style="background:var(--deep);margin-bottom:12px;width:100%;">Log Out</button>
-  <button onclick="confirmDeleteAccount()" style="width:100%;padding:14px;background:none;border:1.5px solid #cc3333;color:#cc3333;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;">Delete My Account</button>
-  <p style="font-size:0.78rem;color:var(--muted);margin-top:10px;line-height:1.6;">Deleting your account is permanent and cannot be undone. All your posts, circles, and profile data will be removed.</p>
-</div>
-```
-
+    <div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(196,98,45,0.15);">
+      <div class="profile-section-title" style="margin-bottom:20px;">Account</div>
+      <button class="save-btn" onclick="signOut()" style="background:var(--deep);margin-bottom:12px;width:100%;">Log Out</button>
+      <button onclick="confirmDeleteAccount()" style="width:100%;padding:14px;background:none;border:1.5px solid #cc3333;color:#cc3333;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;">Delete My Account</button>
+      <p style="font-size:0.78rem;color:var(--muted);margin-top:10px;line-height:1.6;">Deleting your account is permanent and cannot be undone. All your posts, circles, and profile data will be removed.</p>
+    </div>
   </div>
 </div>
 
@@ -2481,9 +2484,11 @@ if (circleParam === 'motherhood') {
     if (isCap || isNarrow) {
       if (desktopNav) desktopNav.style.display = 'none';
       if (capNav) capNav.style.display = 'flex';
+      document.body.classList.add('cap-mode');
     } else {
       if (desktopNav) desktopNav.style.display = '';
       if (capNav) capNav.style.display = 'none';
+      document.body.classList.remove('cap-mode');
     }
   }
   applyNavMode();
