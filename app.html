@@ -236,7 +236,14 @@ input[type=“file”]{display:none}
 .stat-num{font-family:‘Playfair Display’,serif;font-size:1.4rem;font-weight:700;color:var(--terra)}
 .stat-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.45)}
 .profile-tag{padding:5px 14px;border-radius:20px;background:var(--cream);color:var(--deep);font-size:0.78rem;font-weight:500}
-.profile-section-title{font-family:‘Playfair Display’,serif;font-size:1rem;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(196,98,45,0.15)}
+.profile-section-title{font-family:’Playfair Display’,serif;font-size:1rem;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(196,98,45,0.15)}
+.guest-bar{display:none;background:var(--deep);padding:16px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.guest-bar-text{font-size:0.88rem;color:rgba(245,239,230,0.75);line-height:1.5}
+.guest-bar-text strong{display:block;color:var(--cream);font-family:’Playfair Display’,serif;font-size:0.95rem;font-weight:700;margin-bottom:2px}
+.guest-bar-btns{display:flex;gap:10px;flex-shrink:0;flex-wrap:wrap}
+.guest-bar-btns button{padding:10px 20px;font-family:’DM Sans’,sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:2px;cursor:pointer;white-space:nowrap}
+.guest-bar-join{background:var(--terra);color:white;border:none}
+.guest-bar-login{background:transparent;color:var(--gold);border:1px solid rgba(212,168,83,0.45)}
 .form-group{margin-bottom:20px}
 .form-label{display:block;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(28,20,16,0.5);margin-bottom:8px;font-weight:500}
 .form-input{width:100%;padding:12px 16px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:‘DM Sans’,sans-serif;font-size:0.9rem;color:var(--deep);background:white;outline:none;transition:border-color 0.2s}
@@ -431,6 +438,17 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     </div>
   </div>
 </div>
+  <div class="guest-bar" id="guest-bar">
+    <div class="guest-bar-text">
+      <strong>Welcome to Sisterhood(verb) ✦</strong>
+      Join the community or log in to see posts, join Circles, and connect with sisters.
+    </div>
+    <div class="guest-bar-btns">
+      <button class="guest-bar-join" onclick="openModal()">Join the Community</button>
+      <button class="guest-bar-login" onclick="openAuthModal('login')">Log In</button>
+    </div>
+  </div>
+
   <div class="feed-section">
     <div id="announcement-bar" style="display:none;background:linear-gradient(135deg,var(--deep),#3d2b1f);color:var(--cream);padding:18px 24px;border-radius:4px;margin-bottom:20px;">
       <div style="font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">📌 From Tayllor</div>
@@ -895,6 +913,8 @@ if (session) {
       if (!currentUser) {
         if (loader) { loader.style.opacity = '0'; loader.style.transition = 'opacity 0.5s'; setTimeout(() => loader.remove(), 500); }
         if (feed) feed.innerHTML = '';
+        const guestBar = document.getElementById('guest-bar');
+        if (guestBar) guestBar.style.display = 'flex';
         // Only auto-show login on PWA installed app for returning users
         const isPWA = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
         const hasVisited = localStorage.getItem('sv_has_visited');
@@ -990,6 +1010,10 @@ async function onLogin() {
     }
   }
 
+// Hide guest bar now that a user is logged in
+  const guestBar = document.getElementById('guest-bar');
+  if (guestBar) guestBar.style.display = 'none';
+
 // Hide upgrade banner — only show for free tier (not on iOS app)
   const regularBanner = document.getElementById('regular-banner');
   if (regularBanner) {
@@ -1021,6 +1045,8 @@ function onLogout() {
   document.getElementById('logout-btn').style.display = 'none';
   const joinBtn = document.getElementById('nav-join-btn');
   if (joinBtn) { joinBtn.textContent = 'Join'; joinBtn.onclick = () => openModal(); }
+  const guestBar = document.getElementById('guest-bar');
+  if (guestBar) guestBar.style.display = 'flex';
 }
 
 async function signUp(email, password, name) {
