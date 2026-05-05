@@ -664,6 +664,34 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 
 <!-- RESOURCES -->
 
+<div class="view" id="view-resources">
+  <div class="circles-hero">
+    <div class="section-label" style="margin-bottom:12px">Library</div>
+    <h1 class="page-title">Resources & Tools</h1>
+    <p class="page-sub">Writing prompts, guided meditations, workshop recordings, and curated reading — all in one place, built for your practice.</p>
+  </div>
+  <div class="resources-layout">
+
+```
+<!-- Coming soon banner -->
+<div style="background:var(--deep);border-radius:6px;padding:32px 40px;margin-bottom:40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+  <div>
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Coming Spring 2026</div>
+    <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);margin-bottom:8px;">The Library is being built ✦</h3>
+    <p style="font-size:0.85rem;color:rgba(245,239,230,0.6);line-height:1.7;max-width:480px;">Workshop recordings, healing journals, guided meditations, and curated reading lists are on their way. Members get first access to everything.</p>
+  </div>
+  <div style="font-size:3rem;">📚</div>
+</div>
+
+<div class="resources-filter">
+  <button class="filter-chip active" onclick="filterRes(this)">All</button>
+  <button class="filter-chip" onclick="filterRes(this)">Workshops</button>
+  <button class="filter-chip" onclick="filterRes(this)">Writing Prompts</button>
+  <button class="filter-chip" onclick="filterRes(this)">Guides</button>
+  <button class="filter-chip" onclick="filterRes(this)">Audio</button>
+  <button class="filter-chip" onclick="filterRes(this)">Reading</button>
+</div>
+
 <div class="resources-grid">
 
   <div class="resource-card" data-type="writing-prompts" onclick="openPage('/poetry-prompts.html')" style="cursor:pointer;">
@@ -700,7 +728,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     </div>
   </div>
 
-  <div class="resource-card" data-type="workshops" onclick="openPage('/motherhood-speaks-recap.html')" style="cursor:pointer;">
+ <div class="resource-card" data-type="workshops" onclick="openPage('/motherhood-speaks-recap.html')" style="cursor:pointer;">
     <div class="resource-thumb" style="background:linear-gradient(135deg,#F5EFE6,#E8C4A0);">
       📋<span class="resource-type" style="color:var(--terra);">Recap</span>
     </div>
@@ -733,30 +761,14 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
       🗺<span class="resource-type" style="color:#6B3FA0;">Guide</span>
       <div id="guide-lock" style="position:absolute;inset:0;background:rgba(28,20,16,0.4);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🔒</div>
     </div>
-    <div class="resource-body">
-      <div class="resource-title">Community Care Guide</div>
-      <div class="resource-desc">What they don't tell you about building community for yourself and others.</div>
-      <div class="resource-footer">
-        <span class="resource-author">by Tayllor Oyewole-Davis</span>
-        <span id="guide-badge" style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(196,98,45,0.15);color:var(--terra);font-weight:600;">Members Only ✦</span>
-      </div>
-    </div>
-  </div>
 
-  <div class="resource-card" data-type="audio" onclick="openPage('/podcast.html')" style="cursor:pointer;">
-    <div class="resource-thumb" style="background:linear-gradient(135deg,#1C1410,#c4622d);position:relative;">
-      🎙<span class="resource-type" style="color:var(--gold);">Podcast</span>
-    </div>
-    <div class="resource-body">
-      <div class="resource-title">The Sisterhood(verb) Podcast</div>
-      <div class="resource-desc">Honest conversations about womanhood, healing, and building community — recorded by Tayllor. Free members get the first episode.</div>
-      <div class="resource-footer">
-        <span class="resource-author">by Tayllor Oyewole-Davis</span>
-        <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(196,98,45,0.15);color:var(--terra);font-weight:600;">Listen Now ✦</span>
-      </div>
-    </div>
-  </div>
 
+
+</div>
+```
+
+  </div>
+</div>
 </div>
 <!-- PROFILE -->
 
