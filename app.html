@@ -3231,6 +3231,149 @@ function podSeek(e) {
   podcastAudio.currentTime = ((e.clientX - rect.left) / rect.width) * podcastAudio.duration;
 }
 
+// ── PODCAST COMMENTS ──
+async function loadPodcastComments(episodeId) {
+  const container = document.getElementById('pod-comments-' + episodeId);
+  if (!container) return;
+
+  container.innerHTML = '<div style="font-size:0.82rem;color:rgba(28,20,16,0.4);padding:12px 0;">Loading comments...</div>';
+
+  const { data: comments } = await _supabase
+    .from('podcast_comments')
+    .select('*')
+    .eq('episode_id', episodeId)
+    .order('created_at', { ascending: true });
+
+  const userIds = comments ? [...new Set(comments.map(c => c.user_id))] : [];
+  let profileMap = {};
+  if (userIds.length > 0) {
+    const { data: profiles } = await _supabase
+      .from('profiles')
+      .select('id,name,avatar_url')
+      .in('id', userIds);
+    if (profiles) profiles.forEach(p => profileMap[p.id] = p);
+  }
+
+  const tier = window._currentUserProfile?.membership_tier || 'free';
+  const isPaid = PAID_TIERS.includes(tier);
+  const isLoggedIn = !!currentUser;
+
+  container.innerHTML = '';
+
+  // Comments list
+  const listDiv = document.createElement('div');
+  listDiv.style.cssText = 'display:flex;flex-direction:column;gap:12px;margin-bottom:16px;';
+
+  if (!comments || comments.length === 0) {
+    listDiv.innerHTML = '<div style="font-size:0.82rem;color:rgba(28,20,16,0.4);padding:8px 0;font-style:italic;">No comments yet — be the first to share your thoughts ✦</div>';
+  } else {
+    comments.forEach(c => {
+      const profile = profileMap[c.user_id];
+      const name = profile?.name || 'Sister';
+      const initial = name.charAt(0).toUpperCase();
+      const avatarStyle = profile?.avatar_url
+        ? 'background-image:url(' + profile.avatar_url + ');background-size:cover;background-position:center;'
+        : 'background:linear-gradient(135deg,var(--terra),var(--gold));';
+
+      const isOwn = currentUser && c.user_id === currentUser.id;
+
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex;gap:10px;align-items:flex-start;';
+      item.innerHTML = `
+        <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.75rem;font-family:'Playfair Display',serif;${avatarStyle}">
+          ${profile?.avatar_url ? '' : initial}
+        </div>
+        <div style="flex:1;background:var(--cream);border-radius:4px;padding:10px 14px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <div style="font-size:0.8rem;font-weight:600;font-family:'Playfair Display',serif;color:var(--deep);">${name}</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div style="font-size:0.7rem;color:rgba(28,20,16,0.4);">${timeAgo(c.created_at)}</div>
+              ${isOwn ? `<button onclick="deletePodcastComment('${c.id}','${episodeId}')" style="background:none;border:none;cursor:pointer;font-size:0.7rem;color:rgba(196,98,45,0.5);padding:0;">🗑</button>` : ''}
+            </div>
+          </div>
+          <div style="font-size:0.85rem;color:rgba(28,20,16,0.8);line-height:1.6;">${c.content}</div>
+        </div>
+      `;
+      listDiv.appendChild(item);
+    });
+  }
+  container.appendChild(listDiv);
+
+  // Composer — based on tier
+  const composerDiv = document.createElement('div');
+
+  if (!isLoggedIn) {
+    composerDiv.innerHTML = `
+      <div style="text-align:center;padding:16px;background:var(--cream);border-radius:4px;border:1px dashed rgba(196,98,45,0.3);">
+        <div style="font-size:0.85rem;color:rgba(28,20,16,0.6);margin-bottom:10px;">Sign in to join the conversation ✦</div>
+        <button onclick="openAuthModal('login')" style="background:var(--terra);color:white;border:none;padding:8px 20px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;">Log In</button>
+      </div>`;
+  } else if (!isPaid) {
+    composerDiv.innerHTML = `
+      <div style="text-align:center;padding:16px;background:var(--cream);border-radius:4px;border:1px dashed rgba(196,98,45,0.3);">
+        <div style="font-size:0.85rem;color:rgba(28,20,16,0.6);margin-bottom:4px;">Paid members can join the discussion ✦</div>
+        <div style="font-size:0.75rem;color:rgba(28,20,16,0.4);margin-bottom:10px;">Upgrade to comment and connect with your sisters</div>
+        <button onclick="showPaywall()" style="background:var(--terra);color:white;border:none;padding:8px 20px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;">Upgrade to Comment ✦</button>
+      </div>`;
+  } else {
+    const myName = window._currentUserName || 'S';
+    const myInitial = myName.charAt(0).toUpperCase();
+    composerDiv.innerHTML = `
+      <div style="display:flex;gap:10px;align-items:flex-start;">
+        <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.75rem;font-family:'Playfair Display',serif;flex-shrink:0;">${myInitial}</div>
+        <div style="flex:1;">
+          <textarea id="pod-comment-input-${episodeId}" 
+            style="width:100%;padding:10px 12px;border:1.5px solid rgba(196,98,45,0.2);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--deep);resize:none;outline:none;background:white;line-height:1.6;"
+            rows="2" 
+            placeholder="Share your thoughts on this episode..."
+            onfocus="this.style.borderColor='var(--terra)'"
+            onblur="this.style.borderColor='rgba(196,98,45,0.2)'"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitPodcastComment('${episodeId}');}"></textarea>
+          <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+            <button onclick="submitPodcastComment('${episodeId}')" 
+              style="background:var(--terra);color:white;border:none;padding:8px 18px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;transition:background 0.2s;"
+              onmouseover="this.style.background='#a8501f'"
+              onmouseout="this.style.background='var(--terra)'">Comment ✦</button>
+          </div>
+        </div>
+      </div>`;
+  }
+  container.appendChild(composerDiv);
+}
+
+async function submitPodcastComment(episodeId) {
+  if (!currentUser) { openAuthModal('login'); return; }
+  const input = document.getElementById('pod-comment-input-' + episodeId);
+  if (!input) return;
+  const content = input.value.trim();
+  if (!content) { showToast('Write something first ✦'); return; }
+
+  input.disabled = true;
+  const { error } = await _supabase
+    .from('podcast_comments')
+    .insert({ episode_id: episodeId, user_id: currentUser.id, content });
+
+  input.disabled = false;
+  if (error) { showToast('Could not post comment: ' + error.message); return; }
+
+  input.value = '';
+  showToast('Comment posted ✦');
+  loadPodcastComments(episodeId);
+}
+
+async function deletePodcastComment(commentId, episodeId) {
+  if (!currentUser) return;
+  if (!confirm('Delete this comment?')) return;
+  const { error } = await _supabase
+    .from('podcast_comments')
+    .delete()
+    .eq('id', commentId)
+    .eq('user_id', currentUser.id);
+  if (error) { showToast('Could not delete: ' + error.message); return; }
+  showToast('Comment deleted ✦');
+  loadPodcastComments(episodeId);
+}
+
 </script>
 
 <!-- ONBOARDING MODAL -->
