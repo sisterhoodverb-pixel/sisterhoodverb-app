@@ -2241,6 +2241,7 @@ function showView(name, el) {
   });
   if (el && !el.classList.contains('nav-cta')) el.classList.add('active');
   window.scrollTo(0,0);
+  if (name === 'podcast') loadPodcastView();
   return false;
 }
 
