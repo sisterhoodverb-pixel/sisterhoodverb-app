@@ -3078,6 +3078,157 @@ async function onbFinish() {
     document.getElementById('confirmation-modal').classList.remove('open');
   }
 
+// ── PODCAST ──
+const PODCAST_SUPABASE_URL = 'https://cqiymqekdtewnorojlus.supabase.co';
+const PODCAST_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNxaXltcWVrZHRld25vcm9qbHVzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM0Mjk2MTUsImV4cCI6MjA4OTAwNTYxNX0.mWB4UEvOXyWWGG9AhBN-0YZO57ojal4mbpi0aSEeRDQ';
+const PAID_TIERS = ['founding', 'monthly', 'annual', 'founder', 'paid'];
+let podcastLoaded = false;
+let podcastAudio = null;
+let podcastPlaying = false;
+let podcastCurrentEp = null;
+
+function formatPodcastTime(sec) {
+  if (isNaN(sec)) return '0:00';
+  return Math.floor(sec/60) + ':' + String(Math.floor(sec%60)).padStart(2,'0');
+}
+
+function formatPodcastDate(str) {
+  if (!str) return '';
+  return new Date(str).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+
+async function loadPodcastView() {
+  if (podcastLoaded) return;
+  podcastLoaded = true;
+
+  const root = document.getElementById('podcast-view-root');
+  const tier = window._currentUserProfile?.membership_tier || 'free';
+  const isPaid = PAID_TIERS.includes(tier);
+
+  const { data: episodes } = await _supabase
+    .from('podcast_episodes')
+    .select('*')
+    .order('published_at', { ascending: true });
+
+  if (!episodes || episodes.length === 0) {
+    root.innerHTML = '<div style="text-align:center;padding:60px 20px;color:rgba(28,20,16,0.4);"><div style="font-size:2.5rem;margin-bottom:12px;">🎙</div><p style="font-size:0.9rem;line-height:1.7;">Episodes coming soon — check back shortly.</p></div>';
+    return;
+  }
+
+  const freeEpId = episodes[0].id;
+  const firstEp = episodes[0];
+
+  // Build player
+  const playerBg = isPaid ? '#c4622d' : '#1C1410';
+  root.innerHTML = `
+    <div style="background:var(--deep);border-radius:6px;padding:28px 24px;margin-bottom:24px;position:relative;overflow:hidden;">
+      <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(196,98,45,0.3),transparent 70%);pointer-events:none;"></div>
+      <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Now Playing</div>
+      <div id="pod-title" style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);margin-bottom:4px;line-height:1.3;">${firstEp.title}</div>
+      <div id="pod-date" style="font-size:0.75rem;color:rgba(245,239,230,0.45);margin-bottom:20px;">${formatPodcastDate(firstEp.published_at)}</div>
+      <div style="margin-bottom:12px;">
+        <div id="pod-progress-bar" style="width:100%;height:3px;background:rgba(255,255,255,0.12);border-radius:2px;cursor:pointer;margin-bottom:6px;" onclick="podSeek(event)">
+          <div id="pod-progress-fill" style="height:100%;background:var(--terra);border-radius:2px;width:0%;transition:width 0.1s linear;pointer-events:none;"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:rgba(245,239,230,0.35);">
+          <span id="pod-cur">0:00</span><span id="pod-dur">0:00</span>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:28px;">
+        <button onclick="podSkip(-15)" style="background:none;border:none;cursor:pointer;color:rgba(245,239,230,0.55);font-size:0.85rem;font-family:'DM Sans',sans-serif;">⟪ 15</button>
+        <button id="pod-play-btn" onclick="podToggle()" style="width:52px;height:52px;border-radius:50%;background:var(--terra);border:none;cursor:pointer;color:white;font-size:1.3rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s;">▶</button>
+        <button onclick="podSkip(30)" style="background:none;border:none;cursor:pointer;color:rgba(245,239,230,0.55);font-size:0.85rem;font-family:'DM Sans',sans-serif;">30 ⟫</button>
+      </div>
+    </div>
+
+    <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:14px;">All Episodes</div>
+    <div id="pod-episode-list"></div>
+  `;
+
+  // Build audio element
+  podcastAudio = new Audio();
+  podcastAudio.addEventListener('timeupdate', () => {
+    const fill = document.getElementById('pod-progress-fill');
+    const cur = document.getElementById('pod-cur');
+    const dur = document.getElementById('pod-dur');
+    if (fill) fill.style.width = (podcastAudio.duration ? (podcastAudio.currentTime/podcastAudio.duration)*100 : 0) + '%';
+    if (cur) cur.textContent = formatPodcastTime(podcastAudio.currentTime);
+    if (dur) dur.textContent = formatPodcastTime(podcastAudio.duration);
+  });
+  podcastAudio.addEventListener('ended', () => { podcastPlaying = false; const b = document.getElementById('pod-play-btn'); if(b) b.innerHTML='▶'; });
+
+  // Build episode list
+  const list = document.getElementById('pod-episode-list');
+  episodes.forEach((ep, i) => {
+    const canPlay = isPaid || ep.id === freeEpId;
+    const div = document.createElement('div');
+    div.id = 'pod-ep-' + ep.id;
+    div.style.cssText = 'display:flex;gap:14px;padding:14px 0;border-bottom:1px solid rgba(196,98,45,0.12);align-items:flex-start;cursor:' + (canPlay ? 'pointer' : 'default') + ';';
+    div.innerHTML = `
+      <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:300;color:rgba(196,98,45,0.3);min-width:2rem;padding-top:2px;">${String(i+1).padStart(2,'0')}</div>
+      <div style="flex:1;">
+        <div style="font-size:0.9rem;font-weight:500;margin-bottom:4px;color:var(--deep);">${ep.title}</div>
+        ${ep.description ? `<div style="font-size:0.78rem;color:rgba(28,20,16,0.55);line-height:1.5;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${ep.description}</div>` : ''}
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:0.68rem;color:rgba(28,20,16,0.4);">${formatPodcastDate(ep.published_at)}</span>
+          ${ep.duration ? `<span style="font-size:0.68rem;color:rgba(28,20,16,0.4);">${ep.duration}</span>` : ''}
+          ${!canPlay ? `<span style="font-size:0.65rem;color:var(--terra);background:rgba(196,98,45,0.1);padding:2px 8px;border-radius:10px;">Members only</span>` : ''}
+        </div>
+      </div>
+      <div style="font-size:1.1rem;color:rgba(28,20,16,0.3);padding-top:2px;">${canPlay ? '▶' : '🔒'}</div>
+    `;
+    if (canPlay) {
+      div.onclick = () => podPlayEpisode(ep);
+    }
+    list.appendChild(div);
+  });
+
+  // Auto-load first episode
+  podPlayEpisode(firstEp, false);
+}
+
+async function podPlayEpisode(ep, autoplay = false) {
+  podcastCurrentEp = ep;
+  const titleEl = document.getElementById('pod-title');
+  const dateEl = document.getElementById('pod-date');
+  if (titleEl) titleEl.textContent = ep.title;
+  if (dateEl) dateEl.textContent = formatPodcastDate(ep.published_at);
+
+  // Highlight active episode
+  document.querySelectorAll('[id^="pod-ep-"]').forEach(el => el.style.background = '');
+  const activeEl = document.getElementById('pod-ep-' + ep.id);
+  if (activeEl) activeEl.style.background = 'rgba(196,98,45,0.04)';
+
+  // Get audio URL
+  let url = ep.audio_url;
+  if (!url.startsWith('http')) {
+    const { data } = await _supabase.storage.from('podcast-audio').createSignedUrl(ep.audio_url, 3600);
+    if (data) url = data.signedUrl;
+  }
+
+  if (podcastAudio) {
+    podcastAudio.src = url;
+    podcastAudio.load();
+    if (autoplay) { podcastAudio.play(); podcastPlaying = true; const b = document.getElementById('pod-play-btn'); if(b) b.innerHTML='⏸'; }
+  }
+}
+
+function podToggle() {
+  if (!podcastAudio || !podcastAudio.src) return;
+  if (podcastPlaying) { podcastAudio.pause(); podcastPlaying = false; document.getElementById('pod-play-btn').innerHTML = '▶'; }
+  else { podcastAudio.play(); podcastPlaying = true; document.getElementById('pod-play-btn').innerHTML = '⏸'; }
+}
+
+function podSkip(secs) {
+  if (podcastAudio) podcastAudio.currentTime = Math.max(0, Math.min(podcastAudio.duration || 0, podcastAudio.currentTime + secs));
+}
+
+function podSeek(e) {
+  const bar = document.getElementById('pod-progress-bar');
+  if (!bar || !podcastAudio || !podcastAudio.duration) return;
+  const rect = bar.getBoundingClientRect();
+  podcastAudio.currentTime = ((e.clientX - rect.left) / rect.width) * podcastAudio.duration;
+}
 
 </script>
 
