@@ -2229,7 +2229,7 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-const views = ['home','circles','events','resources','profile','circle-detail'];
+const views = ['home','circles','events','resources','profile','circle-detail','podcast'];
 function showView(name, el) {
   views.forEach(v => document.getElementById('view-' + v).classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
