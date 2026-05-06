@@ -883,7 +883,8 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 <script>
   // iOS App detection
   function isIOSApp() {
-    return window.navigator.standalone === true ||
+    return !!window.Capacitor ||
+           window.navigator.standalone === true ||
            window.matchMedia('(display-mode: standalone)').matches;
   }
 
@@ -1398,6 +1399,7 @@ function toggleCircleQuestionMode() {
 function handlePhotoSelect(input) {
   const file = input.files[0];
   if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Please select an image file'); input.value = ''; return; }
   selectedPhotoFile = file;
   const reader = new FileReader();
   reader.onload = function(e) {
@@ -1406,6 +1408,7 @@ function handlePhotoSelect(input) {
     if (img) img.src = e.target.result;
     if (preview) preview.style.display = 'block';
   };
+  reader.onerror = function() { selectedPhotoFile = null; input.value = ''; showToast('Could not read photo — please try again'); };
   reader.readAsDataURL(file);
 }
 
@@ -2290,6 +2293,11 @@ async function loginRevenueCat(userId) {
   try { await Purchases.logIn({ appUserID: userId }); } catch(e) { console.warn('RC logIn failed', e); }
 }
 
+function closePaywall() {
+  document.getElementById('rc-paywall-modal')?.remove();
+  document.body.style.overflow = '';
+}
+
 async function showPaywall() {
   if (!window.Capacitor) { window.location.href = '/upgrade.html'; return; }
   const Purchases = window.Capacitor.Plugins.Purchases;
@@ -2324,35 +2332,44 @@ async function showPaywall() {
   const existing = document.getElementById('rc-paywall-modal');
   if (existing) existing.remove();
 
+  // On iPad (wide viewport) use a centered card; on iPhone use a bottom sheet
+  const isWide = window.innerWidth >= 600;
+  const sheetStyle = isWide
+    ? 'background:var(--warm-white);border-radius:16px;width:100%;max-width:480px;padding:32px 28px;box-shadow:0 8px 60px rgba(28,20,16,0.3);margin:auto;'
+    : 'background:var(--warm-white);border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:32px 28px calc(32px + env(safe-area-inset-bottom));box-shadow:0 -8px 40px rgba(28,20,16,0.2);';
+  const overlayAlign = isWide ? 'align-items:center;' : 'align-items:flex-end;';
+
   const modal = document.createElement('div');
   modal.id = 'rc-paywall-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(28,20,16,0.88);z-index:11000;display:flex;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(28,20,16,0.88);z-index:11000;display:flex;' + overlayAlign + 'justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);';
+  modal.addEventListener('click', function(e) { if (e.target === modal) closePaywall(); });
   modal.innerHTML = `
-    <div style="background:var(--warm-white);border-radius:16px 16px 0 0;width:100%;max-width:480px;padding:32px 28px calc(32px + env(safe-area-inset-bottom));box-shadow:0 -8px 40px rgba(28,20,16,0.2);">
+    <div style="${sheetStyle}" onclick="event.stopPropagation()">
       <div style="text-align:center;margin-bottom:24px;">
         <div style="font-size:2rem;margin-bottom:10px;">✦</div>
         <div style="font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--deep);margin-bottom:8px;">Become a Full Member</div>
         <div style="font-size:0.88rem;color:rgba(28,20,16,0.6);line-height:1.6;">Unlock all Circles, live events, workshop recordings, and the full community experience.</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
-        <button onclick="rcPurchase('annual')" style="background:var(--terra);color:white;border:none;border-radius:8px;padding:16px 20px;text-align:left;cursor:pointer;position:relative;">
+        <button onclick="rcPurchase('annual')" style="background:var(--terra);color:white;border:none;border-radius:8px;padding:16px 20px;text-align:left;cursor:pointer;position:relative;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
           <div style="font-weight:700;font-size:1rem;">Annual — ${annualPrice}</div>
           <div style="font-size:0.78rem;opacity:0.85;margin-top:2px;">Best value · billed once a year</div>
           <div style="position:absolute;top:10px;right:14px;background:var(--gold);color:var(--deep);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;border-radius:10px;">Best Value</div>
         </button>
-        <button onclick="rcPurchase('monthly')" style="background:white;color:var(--deep);border:1.5px solid rgba(196,98,45,0.3);border-radius:8px;padding:16px 20px;text-align:left;cursor:pointer;">
+        <button onclick="rcPurchase('monthly')" style="background:white;color:var(--deep);border:1.5px solid rgba(196,98,45,0.3);border-radius:8px;padding:16px 20px;text-align:left;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
           <div style="font-weight:700;font-size:1rem;">Monthly — ${monthlyPrice}</div>
           <div style="font-size:0.78rem;color:rgba(28,20,16,0.55);margin-top:2px;">Billed monthly · cancel anytime</div>
         </button>
       </div>
-      <button onclick="restorePurchases()" style="display:block;width:100%;background:none;border:none;color:rgba(28,20,16,0.45);font-size:0.78rem;cursor:pointer;padding:8px;text-align:center;margin-bottom:8px;">Restore Purchases</button>
-      <button onclick="document.getElementById('rc-paywall-modal').remove()" style="display:block;width:100%;background:none;border:none;color:rgba(28,20,16,0.4);font-size:0.82rem;cursor:pointer;padding:8px;text-align:center;">Not right now</button>
+      <button onclick="restorePurchases()" style="display:block;width:100%;background:none;border:none;color:rgba(28,20,16,0.45);font-size:0.78rem;cursor:pointer;padding:8px;text-align:center;margin-bottom:8px;touch-action:manipulation;">Restore Purchases</button>
+      <button onclick="closePaywall()" style="display:block;width:100%;background:none;border:none;color:rgba(28,20,16,0.4);font-size:0.82rem;cursor:pointer;padding:8px;text-align:center;touch-action:manipulation;">Not right now</button>
       <div style="text-align:center;font-size:0.68rem;color:rgba(28,20,16,0.35);margin-top:12px;line-height:1.6;">Subscriptions auto-renew. Cancel anytime in App Store settings. By subscribing you agree to our Terms of Use.</div>
     </div>`;
 
   // Store package refs for rcPurchase
   modal._monthly = monthly;
   modal._annual  = annual;
+  document.body.style.overflow = 'hidden';
   document.body.appendChild(modal);
 }
 
@@ -2369,7 +2386,7 @@ async function rcPurchase(type) {
     const entitlements = customerInfo?.entitlements?.active || {};
     const hasAccess = Object.keys(entitlements).length > 0;
     if (hasAccess) {
-      modal?.remove();
+      closePaywall();
       await _supabase.from('profiles').update({ membership_tier: 'paid' }).eq('id', currentUser.id);
       window._currentUserProfile = { ...window._currentUserProfile, membership_tier: 'paid' };
       window._currentUserTier = 'paid';
@@ -2395,7 +2412,7 @@ async function restorePurchases() {
     const entitlements = customerInfo?.entitlements?.active || {};
     const hasAccess = Object.keys(entitlements).length > 0;
     if (hasAccess) {
-      document.getElementById('rc-paywall-modal')?.remove();
+      closePaywall();
       await _supabase.from('profiles').update({ membership_tier: 'paid' }).eq('id', currentUser.id);
       window._currentUserProfile = { ...window._currentUserProfile, membership_tier: 'paid' };
       window._currentUserTier = 'paid';
