@@ -792,14 +792,17 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 <div class="view" id="view-podcast">
   <div class="circles-hero">
     <button onclick="showView('resources', null)" style="background:none;border:none;cursor:pointer;color:var(--terra);font-size:0.85rem;font-weight:600;letter-spacing:0.04em;margin-bottom:16px;display:flex;align-items:center;gap:6px;padding:0;">← Back to Library</button>
-    <div class="section-label" style="margin-bottom:12px">The Podcast</div>
-    <h1 class="page-title">Sisterhood(verb)</h1>
-    <p class="page-sub">Honest conversations about womanhood, healing, and building community — recorded by Tayllor.</p>
+    <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:16px;">
+      <img src="https://cqiymqekdtewnorojlus.supabase.co/storage/v1/object/public/Podcast-assets/Minimalist%20Podcast%20Logo%20-%201.png" 
+        style="width:90px;height:90px;border-radius:12px;object-fit:cover;box-shadow:0 4px 16px rgba(28,20,16,0.12);flex-shrink:0;" 
+        alt="The On My Way Home Podcast">
+      <div>
+        <div class="section-label" style="margin-bottom:6px">The Podcast</div>
+        <h1 class="page-title">The On My Way Home Podcast</h1>
+        <p class="page-sub" style="margin-top:6px;">Real talk on the way home — hosted by Tayllor Oyewole-Davis, exclusively for the Sisterhood(verb) community.</p>
+      </div>
+    </div>
   </div>
-  <div id="podcast-view-root" style="padding:24px 20px;max-width:700px;margin:0 auto;">
-    <div style="text-align:center;padding:40px;color:rgba(28,20,16,0.4);">Loading episodes...</div>
-  </div>
-</div>
 
 <!-- PROFILE -->
 
