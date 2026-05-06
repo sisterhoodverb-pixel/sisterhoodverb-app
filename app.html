@@ -3178,8 +3178,29 @@ async function loadPodcastView() {
       </div>
       <div style="font-size:1.1rem;color:rgba(28,20,16,0.3);padding-top:2px;">${canPlay ? '▶' : '🔒'}</div>
     `;
-    if (canPlay) {
-      div.onclick = () => podPlayEpisode(ep);
+        if (canPlay) {
+      div.onclick = () => {
+        podPlayEpisode(ep, true);
+        // Toggle comments
+        const existing = document.getElementById('pod-comments-wrap-' + ep.id);
+        if (existing) { existing.remove(); return; }
+        // Close any other open comment sections
+        document.querySelectorAll('[id^="pod-comments-wrap-"]').forEach(el => el.remove());
+        // Build comments section
+        const wrap = document.createElement('div');
+        wrap.id = 'pod-comments-wrap-' + ep.id;
+        wrap.style.cssText = 'padding:20px;background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;margin-top:-1px;margin-bottom:8px;';
+        wrap.innerHTML = `
+          <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:14px;">
+            💬 Discussion — ${ep.title}
+          </div>
+          <div id="pod-comments-${ep.id}"></div>
+        `;
+        div.after(wrap);
+        loadPodcastComments(ep.id);
+      };
+    } else {
+      div.onclick = () => showToast('Upgrade to access this episode ✦');
     }
     list.appendChild(div);
   });
