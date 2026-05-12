@@ -528,6 +528,18 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     </div>
   </div>
 </div>
+<div class="circle-card" style="border:1.5px solid rgba(166,187,166,0.4);position:relative;" onclick="openCircle('Women\'s Homebuying Workshop')">
+  <div style="position:absolute;top:10px;right:10px;background:linear-gradient(135deg,#a6bba6,#7a9a7a);color:white;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:10px;z-index:1;">Public ✦</div>
+  <div class="circle-banner" style="background:linear-gradient(135deg,#1C1410,#a6bba6)"><span class="circle-icon">🏡</span></div>
+  <div class="circle-body">
+    <div class="circle-name">Women's Homebuying Workshop</div>
+    <div class="circle-desc">A three-week series to demystify home-buying with trusted local professionals. In-person & virtual. Childcare available. RSVP required.</div>
+    <div class="circle-meta">
+      <span class="circle-members">Open to all</span>
+      <button class="join-btn" style="background:#a6bba6;color:white;border-color:#a6bba6;" onclick="event.stopPropagation();openCircle('Women\'s Homebuying Workshop')">View ✦</button>
+    </div>
+  </div>
+</div>
     <div class="circle-card" style="border:1.5px dashed rgba(196,98,45,0.3);background:var(--cream)"><div class="circle-banner" style="background:transparent;height:70px"><span class="circle-icon">✦</span></div><div class="circle-body"><div class="circle-name" style="color:var(--terra)">Start a Circle</div><div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the team.</div><div class="circle-meta"><span class="circle-members">Members only</span><button class="join-btn" onclick="openProposalModal()">Propose</button></div></div></div>
   </div>
 </div>
@@ -925,7 +937,13 @@ const circleInfo = {
   'Speak Poet!':{icon:'🎤',desc:'For slam poets, performers, and spoken word artists looking for space to share your work and connect.',bg:'linear-gradient(135deg,#1C1410,#2d1f3d)'},
   'Healing As We Hustle':{icon:'💼',desc:'Space for entrepreneurs to connect, network, and get support.',bg:'linear-gradient(135deg,#1C1410,#3d2b5c)'},
   'The Travel Girlies':{icon:'✈️',desc:'Trip tips, resources, warnings, and storytelling.',bg:'linear-gradient(135deg,#1C1410,#1a3a4a)'},
-  "NAACP Black Women's Health Equity Day":{icon:'🌺',desc:"A community space for Black Women's Health Equity Day — hosted by NAACP Santa Barbara. Read posts and resources freely. Create a free Sisterhood(verb) account to join the conversation.",bg:'linear-gradient(135deg,#1C1410,#b8860b)',isPublic:true}
+  "NAACP Black Women's Health Equity Day":{icon:'🌺',desc:"A community space for Black Women's Health Equity Day — hosted by NAACP Santa Barbara. Read posts and resources freely. Create a free Sisterhood(verb) account to join the conversation.",bg:'linear-gradient(135deg,#1C1410,#b8860b)',isPublic:true},
+  "Women's Homebuying Workshop": {
+  icon: '🏡',
+  desc: "A three-week series designed to demystify the home-buying process from a woman's perspective — with trusted local professionals in lending, escrow, and real estate. Public space to learn and connect. Create a free account to ask questions and join the conversation.",
+  bg: 'linear-gradient(135deg,#1C1410,#a6bba6)',
+  isPublic: true
+}
 };
 
 // ── AUTH ──
