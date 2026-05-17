@@ -1,6 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "www",
   "headers": [
     {
       "source": "/.well-known/apple-app-site-association",
