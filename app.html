@@ -2527,7 +2527,7 @@ function filterRes(btn) {
   });
 }
 
-window.addEventListener('load', function() {
+window.addEventListener('load', async function() {
   // Check for founding member link
   const params = new URLSearchParams(window.location.search);
  if (params.get('founding') === 'yes') {
@@ -2591,6 +2591,34 @@ if (circleParam === 'motherhood') {
   }
   applyNavMode();
   window.addEventListener('resize', applyNavMode);
+
+  // Handle Universal Links — extracts Supabase auth tokens from magic link URLs
+  async function handleSupabaseUrl(url) {
+    try {
+      const u = new URL(url);
+      const hash = u.hash.startsWith('#') ? u.hash.slice(1) : '';
+      const hp = new URLSearchParams(hash);
+      const accessToken = hp.get('access_token');
+      const refreshToken = hp.get('refresh_token');
+      if (accessToken && refreshToken) {
+        await _supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        return;
+      }
+      const code = u.searchParams.get('code');
+      if (code) await _supabase.auth.exchangeCodeForSession(code);
+    } catch (e) {
+      console.error('Universal link handling failed:', e);
+    }
+  }
+
+  if (window.Capacitor) {
+    const { App } = window.Capacitor.Plugins;
+    try {
+      const launch = await App.getLaunchUrl();
+      if (launch && launch.url) await handleSupabaseUrl(launch.url);
+    } catch (_) {}
+    App.addListener('appUrlOpen', (event) => handleSupabaseUrl(event.url));
+  }
 
   initRevenueCat();
   initAuth();

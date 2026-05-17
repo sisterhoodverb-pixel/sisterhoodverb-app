@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["6KB5YD892N.com.sisterhoodverb.community"],
+        "components": [
+          { "/": "/*" }
+        ]
+      }
+    ]
+  }
+}
