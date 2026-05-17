@@ -4,7 +4,7 @@
   "private": true,
   "description": "Sisterhood(verb) Community iOS App",
   "scripts": {
-    "build": "mkdir -p www && cp app.html www/index.html && cp manifest.json favicon.ico favicon-16.png favicon-32.png sw.js www/ && cp -r icons www/ && cp admin.html motherhood-speaks-recap.html reading-list.html poetry-prompts.html terms-of-service.html privacy-policy.html upgrade.html www/",
+    "build": "mkdir -p www && cp app.html www/index.html && cp manifest.json favicon.ico favicon-16.png favicon-32.png sw.js www/ && cp -r icons www/ && cp admin.html motherhood-speaks-recap.html reading-list.html poetry-prompts.html terms-of-service.html privacy-policy.html upgrade.html www/ && cp -r .well-known www/",
     "sync": "npm run build && npx cap sync",
     "open:ios": "npx cap open ios",
     "deploy:ios": "npm run sync && npx cap open ios"
