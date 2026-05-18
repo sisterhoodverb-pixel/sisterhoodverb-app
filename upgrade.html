@@ -506,6 +506,52 @@
       color: var(--gold);
     }
 
+    /* iOS NOTICE */
+    .ios-notice {
+      padding: 0 40px 60px;
+      background: white;
+    }
+
+    .ios-notice-inner {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .ios-notice-box {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: rgba(196,98,45,0.06);
+      border: 1.5px solid rgba(196,98,45,0.25);
+      border-left: 4px solid var(--terra);
+      border-radius: 4px;
+      padding: 20px 24px;
+    }
+
+    .ios-notice-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .ios-notice-text {
+      flex: 1;
+    }
+
+    .ios-notice-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--terra);
+      margin-bottom: 6px;
+    }
+
+    .ios-notice-body {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
     /* FINAL CTA */
     .final-cta {
       padding: 100px 40px;
@@ -615,8 +661,8 @@
   <h1 class="hero-title">Come <em>all the way</em> in, sis.</h1>
   <p class="hero-sub">You've already shown up. You already belong here. Full membership is just you saying yes to the whole thing — every Circle, every resource, every space we build together.</p>
   <div class="hero-cta">
-    <a href="https://buy.stripe.com/8x26oG5S3bP4g1ffKsbEA01" class="btn-primary">Join Monthly — $9 ✦</a>
-    <a href="https://buy.stripe.com/4gM7sK80b4mC4ix69SbEA00" class="btn-secondary">Best Value — $79/year ✦</a>
+    <a href="https://buy.stripe.com/8x26oG5S3bP4g1ffKsbEA01" class="btn-primary">Join Monthly — $8.99 ✦</a>
+    <a href="https://buy.stripe.com/4gM7sK80b4mC4ix69SbEA00" class="btn-secondary">Best Value — $79.99/year ✦</a>
   </div>
 </section>
 
@@ -689,8 +735,8 @@
         <div class="tier-badge">Most Popular ✦</div>
         <div class="tier-header">
           <div class="tier-name">Full Member</div>
-          <div class="tier-price">$9<span style="font-size:1rem;color:rgba(245,239,230,0.5)">/mo</span></div>
-          <div class="tier-price-note">or $79/year — save $29 when you commit to the practice</div>
+          <div class="tier-price">$8.99<span style="font-size:1rem;color:rgba(245,239,230,0.5)">/mo</span></div>
+          <div class="tier-price-note">or $79.99/year — save $28 when you commit to the practice</div>
         </div>
         <div class="tier-body">
           <div class="tier-feature" style="color:var(--cream);border-color:rgba(245,239,230,0.08)">
@@ -723,12 +769,25 @@
           </div>
         </div>
         <div class="tier-cta">
-          <a href="https://buy.stripe.com/8x26oG5S3bP4g1ffKsbEA01" class="tier-btn tier-btn-paid">Join Monthly — $9 ✦</a>
-          <a href="https://buy.stripe.com/4gM7sK80b4mC4ix69SbEA00" class="tier-btn tier-btn-annual">Best Value — $79/year ✦</a>
-          <p class="savings-note">Annual saves you $29 — that's a whole month free ✦</p>
+          <a href="https://buy.stripe.com/8x26oG5S3bP4g1ffKsbEA01" class="tier-btn tier-btn-paid">Join Monthly — $8.99 ✦</a>
+          <a href="https://buy.stripe.com/4gM7sK80b4mC4ix69SbEA00" class="tier-btn tier-btn-annual">Best Value — $79.99/year ✦</a>
+          <p class="savings-note">Annual saves you $28 — that's a whole month free ✦</p>
         </div>
       </div>
 
+    </div>
+  </div>
+</section>
+
+<!-- iOS NOTICE -->
+<section class="ios-notice">
+  <div class="ios-notice-inner">
+    <div class="ios-notice-box">
+      <div class="ios-notice-icon">📱</div>
+      <div class="ios-notice-text">
+        <div class="ios-notice-title">Subscribing on iPhone or iPad?</div>
+        <div class="ios-notice-body">To subscribe using Apple in-app purchase, open this app on your iOS device and tap <strong>Upgrade Now</strong> on the home screen. Monthly membership is <strong>$8.99/month</strong> and annual membership is <strong>$79.99/year</strong>, billed through your Apple ID. Cancel anytime in iOS Settings → Apple ID → Subscriptions.</div>
+      </div>
     </div>
   </div>
 </section>
@@ -780,8 +839,8 @@
   <h2 class="final-cta-title">You already <em>belong</em> here.<br>Now come all the way in.</h2>
   <p class="final-cta-sub">Join as a Full Member and get access to every Circle, every resource, and every space we build together.</p>
   <div class="final-buttons">
-    <a href="https://buy.stripe.com/8x26oG5S3bP4g1ffKsbEA01" class="btn-primary">Join Monthly — $9 ✦</a>
-    <a href="https://buy.stripe.com/4gM7sK80b4mC4ix69SbEA00" class="btn-secondary">Best Value — $79/year</a>
+    <a href="https://buy.stripe.com/8x26oG5S3bP4g1ffKsbEA01" class="btn-primary">Join Monthly — $8.99 ✦</a>
+    <a href="https://buy.stripe.com/4gM7sK80b4mC4ix69SbEA00" class="btn-secondary">Best Value — $79.99/year</a>
   </div>
   <p class="guarantee">Cancel anytime. No contracts. No fine print. Just sisterhood. ✦</p>
 </section>
