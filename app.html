@@ -2321,33 +2321,32 @@ function closePaywall() {
 }
 
 async function showPaywall() {
-  if (!window.Capacitor) { window.location.href = '/upgrade.html'; return; }
-  const Purchases = window.Capacitor.Plugins.Purchases;
-  if (!Purchases) { showToast('In-app purchases not available'); return; }
-
-  showToast('Loading subscription options...');
   let monthly = null, annual = null, monthlyPrice = '$9.99/mo', annualPrice = '$79.99/yr';
-  try {
-    console.log('[RC] calling getOfferings...');
-    const offeringsResult = await Purchases.getOfferings();
-    console.log('[RC] raw getOfferings result:', JSON.stringify(offeringsResult));
-    const { current } = offeringsResult;
-    console.log('[RC] current offering:', JSON.stringify(current));
-    if (current && current.availablePackages) {
-      console.log('[RC] availablePackages count:', current.availablePackages.length);
-      for (const pkg of current.availablePackages) {
-        const pid = pkg.product?.identifier || pkg.offeringIdentifier || '';
-        console.log('[RC] package — type:', pkg.packageType, '| product id:', pid, '| priceString:', pkg.product?.priceString, '| full pkg:', JSON.stringify(pkg));
-        if (pid === RC_MONTHLY_ID || pkg.packageType === 'MONTHLY') { monthly = pkg; monthlyPrice = pkg.product?.priceString || monthlyPrice; }
-        if (pid === RC_ANNUAL_ID  || pkg.packageType === 'ANNUAL')  { annual  = pkg; annualPrice  = pkg.product?.priceString || annualPrice; }
+
+  const Purchases = window.Capacitor?.Plugins?.Purchases;
+  if (Purchases) {
+    try {
+      console.log('[RC] calling getOfferings...');
+      const offeringsResult = await Purchases.getOfferings();
+      console.log('[RC] raw getOfferings result:', JSON.stringify(offeringsResult));
+      const { current } = offeringsResult;
+      console.log('[RC] current offering:', JSON.stringify(current));
+      if (current && current.availablePackages) {
+        console.log('[RC] availablePackages count:', current.availablePackages.length);
+        for (const pkg of current.availablePackages) {
+          const pid = pkg.product?.identifier || pkg.offeringIdentifier || '';
+          console.log('[RC] package — type:', pkg.packageType, '| product id:', pid, '| priceString:', pkg.product?.priceString, '| full pkg:', JSON.stringify(pkg));
+          if (pid === RC_MONTHLY_ID || pkg.packageType === 'MONTHLY') { monthly = pkg; monthlyPrice = pkg.product?.priceString || monthlyPrice; }
+          if (pid === RC_ANNUAL_ID  || pkg.packageType === 'ANNUAL')  { annual  = pkg; annualPrice  = pkg.product?.priceString || annualPrice; }
+        }
+      } else {
+        console.warn('[RC] no current offering or empty availablePackages — current:', JSON.stringify(current));
       }
-    } else {
-      console.warn('[RC] no current offering or empty availablePackages — current:', JSON.stringify(current));
+      console.log('[RC] resolved monthly pkg:', monthly ? 'found ('+monthlyPrice+')' : 'NULL');
+      console.log('[RC] resolved annual pkg:', annual ? 'found ('+annualPrice+')' : 'NULL');
+    } catch(e) {
+      console.warn('[RC] getOfferings failed — error:', e?.message || e, '| code:', e?.code, '| full:', JSON.stringify(e));
     }
-    console.log('[RC] resolved monthly pkg:', monthly ? 'found ('+monthlyPrice+')' : 'NULL');
-    console.log('[RC] resolved annual pkg:', annual ? 'found ('+annualPrice+')' : 'NULL');
-  } catch(e) {
-    console.warn('[RC] getOfferings failed — error:', e?.message || e, '| code:', e?.code, '| full:', JSON.stringify(e));
   }
 
   // Build and show paywall modal
@@ -2396,9 +2395,11 @@ async function showPaywall() {
 }
 
 async function rcPurchase(type) {
-  if (!window.Capacitor) return;
+  if (!window.Capacitor || !window.Capacitor.Plugins?.Purchases) {
+    window.location.href = '/upgrade.html';
+    return;
+  }
   const Purchases = window.Capacitor.Plugins.Purchases;
-  if (!Purchases) return;
   const modal = document.getElementById('rc-paywall-modal');
   const pkg = type === 'annual' ? modal?._annual : modal?._monthly;
   if (!pkg) { showToast('Product not available — try again'); return; }
@@ -2425,9 +2426,11 @@ async function rcPurchase(type) {
 }
 
 async function restorePurchases() {
-  if (!window.Capacitor) return;
+  if (!window.Capacitor || !window.Capacitor.Plugins?.Purchases) {
+    showToast('Restore is only available in the iOS app');
+    return;
+  }
   const Purchases = window.Capacitor.Plugins.Purchases;
-  if (!Purchases) return;
   try {
     showToast('Restoring purchases...');
     const { customerInfo } = await Purchases.restorePurchases();
