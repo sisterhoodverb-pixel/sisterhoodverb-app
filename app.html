@@ -30,7 +30,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--terra:#6B5BE8;--deep:#1A1A1A;--cream:#FBF7F0;--gold:#B8A1C9;--sage:#7A8C6E;--blush:#E8C4A0;--warm-white:#FAFAFA;--warm:#FAFAFA;--taupe:#6B5B4F;--lavender:#B8A1C9;--purple:#6B5BE8}
+:root{--terra:#6B5BE8;--deep:#1A1A1A;--deep-bg:#2D1B69;--cream:#FBF7F0;--gold:#B8A1C9;--sage:#7A8C6E;--blush:#E8C4A0;--warm-white:#FAFAFA;--warm:#FAFAFA;--taupe:#6B5B4F;--lavender:#B8A1C9;--purple:#6B5BE8}
 *{margin:0;padding:0;box-sizing:border-box}
 html{overflow-x:hidden}
 body{font-family:'DM Sans',sans-serif;background:var(--warm-white);color:var(--deep);min-height:100vh}
@@ -76,7 +76,7 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .cap-mode .view{padding-top:env(safe-area-inset-top)}
 .cap-mode #view-home{padding-top:0}
 #view-home{padding-top:0;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
-.home-hero{background:var(--deep);padding:152px 40px 80px;position:relative;overflow:hidden}
+.home-hero{background:var(--deep-bg);padding:152px 40px 80px;position:relative;overflow:hidden}
 .home-hero::after{content:’’;position:absolute;bottom:-2px;left:0;right:0;height:40px;background:var(--warm-white);clip-path:ellipse(55% 100% at 50% 100%)}
 .hero-greeting{font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
 .hero-title{font-family:‘Playfair Display’,serif;font-size:clamp(2rem,5vw,3.5rem);color:var(--cream);line-height:1.15;max-width:600px;margin-bottom:20px}
@@ -107,7 +107,7 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .gif-loading{text-align:center;padding:20px;font-size:0.82rem;color:rgba(26,26,26,0.5)}
 .gif-preview{margin-top:10px;position:relative;display:none}
 .gif-preview img{max-width:100%;border-radius:4px;max-height:200px;object-fit:cover}
-.gif-remove{position:absolute;top:6px;right:6px;background:rgba(26,26,26,0.7);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center}
+.gif-remove{position:absolute;top:6px;right:6px;background:rgba(45,27,105,0.7);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center}
 .post-btn{background:var(--terra);color:white;border:none;cursor:pointer;padding:9px 22px;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.85rem;font-weight:500;letter-spacing:0.04em;transition:background 0.2s}
 .post-btn:hover{background:#5649d4}
 .feed-card{background:white;border:1px solid rgba(107,91,232,0.1);border-radius:4px;padding:24px;margin-bottom:16px;box-shadow:0 2px 20px rgba(26,26,26,0.04);animation:fadeUp 0.4s ease both}
@@ -146,7 +146,7 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .membership-text span{font-size:0.82rem;opacity:0.85}
 .membership-cta{background:white;color:var(--terra);border:none;padding:10px 24px;font-family:‘DM Sans’,sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;white-space:nowrap;transition:opacity 0.2s;flex-shrink:0}
 .membership-cta:hover{opacity:0.9}
-.quote-card{background:var(--deep);color:var(--cream);padding:32px;border-radius:4px;margin-bottom:16px;position:relative;overflow:hidden}
+.quote-card{background:var(--deep-bg);color:var(--cream);padding:32px;border-radius:4px;margin-bottom:16px;position:relative;overflow:hidden}
 .quote-card::before{content:’”’;font-family:‘Playfair Display’,serif;font-size:8rem;color:rgba(184,161,201,0.15);position:absolute;top:-20px;left:16px;line-height:1}
 .quote-text{font-family:‘Playfair Display’,serif;font-size:1.1rem;font-style:italic;line-height:1.7;margin-bottom:14px;position:relative;z-index:1}
 .quote-author{font-size:0.78rem;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase}
@@ -165,7 +165,7 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .circle-members{font-size:0.75rem;color:rgba(26,26,26,0.45)}
 .join-btn{background:none;border:1.5px solid var(--terra);color:var(--terra);padding:6px 16px;font-family:‘DM Sans’,sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.2s}
 .join-btn:hover,.join-btn.joined{background:var(--terra);color:white}
-.circle-detail-header{background:var(--deep);padding:60px 40px 40px;position:relative;overflow:hidden}
+.circle-detail-header{background:var(--deep-bg);padding:60px 40px 40px;position:relative;overflow:hidden}
 .circle-detail-back{background:none;border:1px solid rgba(251,247,240,0.2);color:var(--cream);padding:8px 16px;font-family:‘DM Sans’,sans-serif;font-size:0.78rem;cursor:pointer;border-radius:2px;margin-bottom:24px;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s}
 .circle-detail-back:hover{border-color:var(--cream)}
 .circle-detail-icon{font-size:2.5rem;margin-bottom:12px;display:block}
@@ -184,7 +184,7 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .events-sidebar{padding:40px 32px}
 .event-card{display:flex;gap:20px;padding:22px;background:white;border:1px solid rgba(107,91,232,0.1);border-radius:4px;margin-bottom:14px;transition:box-shadow 0.2s;box-shadow:0 1px 12px rgba(26,26,26,0.04)}
 .event-card:hover{box-shadow:0 6px 24px rgba(26,26,26,0.09)}
-.event-date{min-width:56px;text-align:center;background:var(--deep);color:var(--cream);padding:10px 8px;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.event-date{min-width:56px;text-align:center;background:var(--deep-bg);color:var(--cream);padding:10px 8px;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .date-month{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--gold)}
 .date-day{font-family:‘Playfair Display’,serif;font-size:1.7rem;font-weight:700;line-height:1}
 .event-info{flex:1}
@@ -220,8 +220,8 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .resource-footer{display:flex;justify-content:space-between;align-items:center}
 .resource-author{font-size:0.72rem;color:rgba(26,26,26,0.45)}
 .resource-access{font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);cursor:pointer}
-.profile-banner{height:160px;border-radius:4px;margin-bottom:-50px;background:linear-gradient(135deg,var(--deep) 0%,#3d2b1f 50%,var(--terra) 100%);background-size:cover;background-position:center;position:relative;overflow:hidden;cursor:pointer}
-.photo-upload-overlay{position:absolute;inset:0;background:rgba(26,26,26,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;font-size:0.8rem;color:white;letter-spacing:0.08em;text-transform:uppercase;gap:8px}
+.profile-banner{height:160px;border-radius:4px;margin-bottom:-50px;background:linear-gradient(135deg,#2D1B69 0%,#3d2b1f 50%,var(--terra) 100%);background-size:cover;background-position:center;position:relative;overflow:hidden;cursor:pointer}
+.photo-upload-overlay{position:absolute;inset:0;background:rgba(45,27,105,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;font-size:0.8rem;color:white;letter-spacing:0.08em;text-transform:uppercase;gap:8px}
 .profile-banner:hover .photo-upload-overlay{opacity:1}
 .avatar-upload-btn{position:absolute;bottom:0;right:-4px;width:28px;height:28px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;border:2px solid var(--warm-white);cursor:pointer}
 input[type=“file”]{display:none}
@@ -237,7 +237,7 @@ input[type=“file”]{display:none}
 .stat-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(26,26,26,0.45)}
 .profile-tag{padding:5px 14px;border-radius:20px;background:var(--cream);color:var(--deep);font-size:0.78rem;font-weight:500}
 .profile-section-title{font-family:’Playfair Display’,serif;font-size:1rem;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(107,91,232,0.15)}
-.guest-bar{display:none;background:var(--deep);padding:16px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.guest-bar{display:none;background:var(--deep-bg);padding:16px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .guest-bar-text{font-size:0.88rem;color:rgba(251,247,240,0.75);line-height:1.5}
 .guest-bar-text strong{display:block;color:var(--cream);font-family:’Playfair Display’,serif;font-size:0.95rem;font-weight:700;margin-bottom:2px}
 .guest-bar-btns{display:flex;gap:10px;flex-shrink:0;flex-wrap:wrap}
@@ -254,7 +254,7 @@ input[type=“file”]{display:none}
 .mobile-nav-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:’DM Sans’,sans-serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(26,26,26,0.4);transition:all 0.2s;padding:6px 10px;border-radius:8px;min-width:54px;min-height:44px}
 .mobile-nav-btn.active{color:var(--terra);background:rgba(107,91,232,0.08)}
 .mobile-nav-btn span:first-child{font-size:1.4rem}
-.modal-overlay{position:fixed;inset:0;background:rgba(26,26,26,0.85);z-index:10100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay{position:fixed;inset:0;background:rgba(45,27,105,0.85);z-index:10100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
 .modal-overlay.open{display:flex}
 .modal{background:var(--warm-white);border-radius:6px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:40px;box-shadow:0 20px 60px rgba(26,26,26,0.3)}
 .modal-title{font-family:‘Playfair Display’,serif;font-size:1.5rem;font-weight:700;margin-bottom:6px;color:var(--deep)}
@@ -277,11 +277,11 @@ input[type=“file”]{display:none}
 .auth-sub{font-size:0.85rem;color:var(--terra);margin-bottom:24px}
 .auth-switch{text-align:center;font-size:0.82rem;color:rgba(26,26,26,0.5);margin-top:16px}
 .auth-switch a{color:var(--terra)!important;text-decoration:none;font-weight:600}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--deep);color:var(--cream);padding:12px 24px;border-radius:3px;font-size:0.85rem;opacity:0;transition:all 0.3s;pointer-events:none;z-index:10200;white-space:nowrap}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--deep-bg);color:var(--cream);padding:12px 24px;border-radius:3px;font-size:0.85rem;opacity:0;transition:all 0.3s;pointer-events:none;z-index:10200;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .mp-modal{max-width:520px;padding:0;overflow:hidden}
-.mp-banner{height:120px;background:linear-gradient(135deg,#1A1A1A,#6B5BE8);position:relative;background-size:cover;background-position:center}
-.mp-close-btn{position:absolute;top:12px;right:12px;background:rgba(26,26,26,0.6);color:white;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
+.mp-banner{height:120px;background:linear-gradient(135deg,#2D1B69,#6B5BE8);position:relative;background-size:cover;background-position:center}
+.mp-close-btn{position:absolute;top:12px;right:12px;background:rgba(45,27,105,0.6);color:white;border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center}
 .mp-avatar-wrap{margin:-36px 0 0 24px;margin-bottom:12px;width:fit-content}
 .mp-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-size:1.6rem;font-weight:700;font-family:‘Playfair Display’,serif;border:3px solid white;box-shadow:0 4px 16px rgba(26,26,26,0.2);background-size:cover;background-position:center}
 .mp-.modal-body-pad{padding:0 24px 24px}
@@ -314,7 +314,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 </head>
 <body>
 <!-- PWA Loading Screen -->
-<div id="pwa-loading" style="position:fixed;inset:0;background:#1A1A1A;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
+<div id="pwa-loading" style="position:fixed;inset:0;background:#2D1B69;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;">
   <img src="/icons/icon-192x192.png" style="width:80px;height:80px;border-radius:20px;">
   <div style="font-family:Georgia,serif;font-size:1.4rem;color:#FBF7F0;font-weight:700;">Sisterhood<em style="font-style:italic;font-weight:400;">(verb)</em></div>
   <div style="font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:#B8A1C9;">Loading your community...</div>
@@ -426,7 +426,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     </div>
     <button class="membership-cta" onclick="openModal()">Claim Your Spot ✦</button>
   </div>
-  <div id="regular-banner" style="display:none;background:linear-gradient(135deg,#1A1A1A,#3d2b1f);padding:28px 40px;">
+  <div id="regular-banner" style="display:none;background:linear-gradient(135deg,#2D1B69,#3d2b1f);padding:28px 40px;">
   <div style="max-width:700px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
     <div>
       <div style="font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">✦ Full Membership</div>
@@ -450,7 +450,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
   </div>
 
   <div class="feed-section">
-    <div id="announcement-bar" style="display:none;background:linear-gradient(135deg,var(--deep),#3d2b1f);color:var(--cream);padding:18px 24px;border-radius:4px;margin-bottom:20px;">
+    <div id="announcement-bar" style="display:none;background:linear-gradient(135deg,#2D1B69,#3d2b1f);color:var(--cream);padding:18px 24px;border-radius:4px;margin-bottom:20px;">
       <div style="font-size:0.68rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;">📌 From Tayllor</div>
       <div id="announcement-text" style="font-size:0.9rem;line-height:1.7;"></div>
     </div>
@@ -477,7 +477,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 <input type="file" id="photo-upload-input" accept="image/*" style="display:none" onchange="handlePhotoSelect(this)">
 <div id="photo-preview" style="display:none;position:relative;margin:8px 0;">
   <img id="photo-preview-img" src="" alt="Photo preview" style="max-width:100%;max-height:200px;border-radius:6px;object-fit:cover;">
-  <button onclick="removePhoto()" style="position:absolute;top:6px;right:6px;background:rgba(26,26,26,0.7);color:white;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:0.9rem;">✕</button>
+  <button onclick="removePhoto()" style="position:absolute;top:6px;right:6px;background:rgba(45,27,105,0.7);color:white;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:0.9rem;">✕</button>
 </div>
       </div>
     </div>
@@ -513,12 +513,12 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     <div class="circle-card" onclick="openCircle('Motherhood Speaks')"><div class="circle-banner" style="background:linear-gradient(135deg,#FBF7F0,#E8C4A0)"><span class="circle-icon">🌺</span></div><div class="circle-body"><div class="circle-name">Motherhood Speaks</div><div class="circle-desc">A space to share your wins, losses, resources, hopes, fears, and faith with other moms who get it.</div><div class="circle-meta"><span class="circle-members">48 sisters</span><button class="join-btn" data-circle="Motherhood Speaks" onclick="event.stopPropagation();toggleJoin(this,'Motherhood Speaks')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('Writers Block? I Think Not!')"><div class="circle-banner" style="background:linear-gradient(135deg,#E8F0E4,#c5d9be)"><span class="circle-icon">✍🏾</span></div><div class="circle-body"><div class="circle-name">Writers Block? I Think Not!</div><div class="circle-desc">Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.</div><div class="circle-meta"><button class="join-btn" data-circle="Writers Block? I Think Not!" onclick="event.stopPropagation();toggleJoin(this,'Writers Block? I Think Not!')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('Burnout to Bloom')"><div class="circle-banner" style="background:linear-gradient(135deg,#FBF7F0,#ddc9b0)"><span class="circle-icon">🔥</span></div><div class="circle-body"><div class="circle-name">Burnout to Bloom</div><div class="circle-desc">For educators, organizers, activists, and artists trying to keep your cup full. We get it. We got you.</div><div class="circle-meta"><button class="join-btn" data-circle="Burnout to Bloom" onclick="event.stopPropagation();toggleJoin(this,'Burnout to Bloom')">Join</button></div></div></div>
-    <div class="circle-card" onclick="openCircle('Speak Poet!')"><div class="circle-banner" style="background:linear-gradient(135deg,#1A1A1A,#3d2b1f)"><span class="circle-icon">🎤</span></div><div class="circle-body"><div class="circle-name">Speak Poet!</div><div class="circle-desc">For slam poets, performers, and spoken word artists looking for space to share and connect.</div><div class="circle-meta"><button class="join-btn" data-circle="Speak Poet!" onclick="event.stopPropagation();toggleJoin(this,'Speak Poet!')">Join</button></div></div></div>
+    <div class="circle-card" onclick="openCircle('Speak Poet!')"><div class="circle-banner" style="background:linear-gradient(135deg,#2D1B69,#3d2b1f)"><span class="circle-icon">🎤</span></div><div class="circle-body"><div class="circle-name">Speak Poet!</div><div class="circle-desc">For slam poets, performers, and spoken word artists looking for space to share and connect.</div><div class="circle-meta"><button class="join-btn" data-circle="Speak Poet!" onclick="event.stopPropagation();toggleJoin(this,'Speak Poet!')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('Healing As We Hustle')"><div class="circle-banner" style="background:linear-gradient(135deg,#2d1f3d,#5c3d7a)"><span class="circle-icon">💼</span></div><div class="circle-body"><div class="circle-name">Healing As We Hustle</div><div class="circle-desc">Space for entrepreneurs to connect, network, and get support as we go big or go home.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="Healing As We Hustle" onclick="event.stopPropagation();toggleJoin(this,'Healing As We Hustle')">Join</button></div></div></div>
     <div class="circle-card" onclick="openCircle('The Travel Girlies')"><div class="circle-banner" style="background:linear-gradient(135deg,#1a3a4a,#2d6a8a)"><span class="circle-icon">✈️</span></div><div class="circle-body"><div class="circle-name">The Travel Girlies</div><div class="circle-desc">Trip tips, resources, warnings, and storytelling. Booked and busy or still in the group chat — you're welcome.</div><div class="circle-meta"><span class="circle-members">0 sisters</span><button class="join-btn" data-circle="The Travel Girlies" onclick="event.stopPropagation();toggleJoin(this,'The Travel Girlies')">Join</button></div></div></div>
    <div class="circle-card" style="border:1.5px solid rgba(184,161,201,0.4);position:relative;" onclick="openCircle('NAACP Black Women\'s Health Equity Day')">
   <div style="position:absolute;top:10px;right:10px;background:linear-gradient(135deg,var(--gold),#b8860b);color:white;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:10px;z-index:1;">Public ✦</div>
-  <div class="circle-banner" style="background:linear-gradient(135deg,#1A1A1A,#b8860b)"><span class="circle-icon">🌺</span></div>
+  <div class="circle-banner" style="background:linear-gradient(135deg,#2D1B69,#b8860b)"><span class="circle-icon">🌺</span></div>
   <div class="circle-body">
     <div class="circle-name">NAACP Black Women's Health Equity Day</div>
     <div class="circle-desc">A public space for health equity resources and conversation — open to all. April 25, 2026.</div>
@@ -530,7 +530,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 </div>
 <div class="circle-card" style="border:1.5px solid rgba(166,187,166,0.4);position:relative;" onclick="openCircle('Women\'s Homebuying Workshop')">
   <div style="position:absolute;top:10px;right:10px;background:linear-gradient(135deg,#a6bba6,#7a9a7a);color:white;font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:10px;z-index:1;">Public ✦</div>
-  <div class="circle-banner" style="background:linear-gradient(135deg,#1A1A1A,#a6bba6)"><span class="circle-icon">🏡</span></div>
+  <div class="circle-banner" style="background:linear-gradient(135deg,#2D1B69,#a6bba6)"><span class="circle-icon">🏡</span></div>
   <div class="circle-body">
     <div class="circle-name">Women's Homebuying Workshop</div>
     <div class="circle-desc">A three-week series to demystify home-buying with trusted local professionals. In-person & virtual. Childcare available. RSVP required.</div>
@@ -684,7 +684,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
   <div class="resources-layout">
 
     <!-- Coming soon banner -->
-    <div style="background:var(--deep);border-radius:6px;padding:32px 40px;margin-bottom:40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
+    <div style="background:var(--deep-bg);border-radius:6px;padding:32px 40px;margin-bottom:40px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;">
       <div>
         <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Coming Spring 2026</div>
         <h3 style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);margin-bottom:8px;">The Library is being built ✦</h3>
@@ -719,9 +719,9 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
       </div>
 
       <div class="resource-card" data-type="audio" onclick="checkResourceAccess()" style="cursor:pointer;">
-        <div class="resource-thumb" style="background:linear-gradient(135deg,#1A1A1A,#3d2b1f);position:relative;">
+        <div class="resource-thumb" style="background:linear-gradient(135deg,#2D1B69,#3d2b1f);position:relative;">
           🎙<span class="resource-type" style="color:var(--gold);">Audio</span>
-          <div id="audio-lock" style="position:absolute;inset:0;background:rgba(26,26,26,0.6);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🔒</div>
+          <div id="audio-lock" style="position:absolute;inset:0;background:rgba(45,27,105,0.6);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🔒</div>
         </div>
         <div class="resource-body">
           <div class="resource-title">River Meditation</div>
@@ -769,7 +769,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
       <div class="resource-card" data-type="guides" onclick="checkResourceAccess()" style="cursor:pointer;">
         <div class="resource-thumb" style="background:linear-gradient(135deg,#eee8f5,#d9c8f0);position:relative;">
           🗺<span class="resource-type" style="color:#6B3FA0;">Guide</span>
-          <div id="guide-lock" style="position:absolute;inset:0;background:rgba(26,26,26,0.4);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🔒</div>
+          <div id="guide-lock" style="position:absolute;inset:0;background:rgba(45,27,105,0.4);display:flex;align-items:center;justify-content:center;font-size:1.5rem;">🔒</div>
         </div>
         <div class="resource-body">
           <div class="resource-title">Community Care Guide</div>
@@ -870,7 +870,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 
     <div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(107,91,232,0.15);">
       <div class="profile-section-title" style="margin-bottom:20px;">Account</div>
-      <button class="save-btn" onclick="signOut()" style="background:var(--deep);margin-bottom:12px;width:100%;">Log Out</button>
+      <button class="save-btn" onclick="signOut()" style="background:var(--deep-bg);margin-bottom:12px;width:100%;">Log Out</button>
       <button onclick="confirmDeleteAccount()" style="width:100%;padding:14px;background:none;border:1.5px solid #cc3333;color:#cc3333;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;">Delete My Account</button>
       <p style="font-size:0.78rem;color:var(--muted);margin-top:10px;line-height:1.6;">Deleting your account is permanent and cannot be undone. All your posts, circles, and profile data will be removed.</p>
     </div>
@@ -931,17 +931,17 @@ let currentCircle = null;
 let circleIsJoined = false;
 
 const circleInfo = {
-  'Motherhood Speaks':{icon:'🌺',desc:'A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.',bg:'linear-gradient(135deg,#1A1A1A,#6B5BE8)'},
-  'Writers Block? I Think Not!':{icon:'✍🏾',desc:'Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.',bg:'linear-gradient(135deg,#1A1A1A,#2d5a3d)'},
-  'Burnout to Bloom':{icon:'🔥',desc:'For educators, organizers, activists, and artists trying to exist in the world and keep your cup full.',bg:'linear-gradient(135deg,#1A1A1A,#8B4513)'},
-  'Speak Poet!':{icon:'🎤',desc:'For slam poets, performers, and spoken word artists looking for space to share your work and connect.',bg:'linear-gradient(135deg,#1A1A1A,#2d1f3d)'},
-  'Healing As We Hustle':{icon:'💼',desc:'Space for entrepreneurs to connect, network, and get support.',bg:'linear-gradient(135deg,#1A1A1A,#3d2b5c)'},
-  'The Travel Girlies':{icon:'✈️',desc:'Trip tips, resources, warnings, and storytelling.',bg:'linear-gradient(135deg,#1A1A1A,#1a3a4a)'},
-  "NAACP Black Women's Health Equity Day":{icon:'🌺',desc:"A community space for Black Women's Health Equity Day — hosted by NAACP Santa Barbara. Read posts and resources freely. Create a free Sisterhood(verb) account to join the conversation.",bg:'linear-gradient(135deg,#1A1A1A,#b8860b)',isPublic:true},
+  'Motherhood Speaks':{icon:'🌺',desc:'A space to share your wins, losses, resources, hopes, fears, and faith in community with other moms who get it.',bg:'linear-gradient(135deg,#2D1B69,#6B5BE8)'},
+  'Writers Block? I Think Not!':{icon:'✍🏾',desc:'Weekly prompts to dig deeper and find the grace and inspiration to keep pen to paper — in community.',bg:'linear-gradient(135deg,#2D1B69,#2d5a3d)'},
+  'Burnout to Bloom':{icon:'🔥',desc:'For educators, organizers, activists, and artists trying to exist in the world and keep your cup full.',bg:'linear-gradient(135deg,#2D1B69,#8B4513)'},
+  'Speak Poet!':{icon:'🎤',desc:'For slam poets, performers, and spoken word artists looking for space to share your work and connect.',bg:'linear-gradient(135deg,#2D1B69,#2d1f3d)'},
+  'Healing As We Hustle':{icon:'💼',desc:'Space for entrepreneurs to connect, network, and get support.',bg:'linear-gradient(135deg,#2D1B69,#3d2b5c)'},
+  'The Travel Girlies':{icon:'✈️',desc:'Trip tips, resources, warnings, and storytelling.',bg:'linear-gradient(135deg,#2D1B69,#1a3a4a)'},
+  "NAACP Black Women's Health Equity Day":{icon:'🌺',desc:"A community space for Black Women's Health Equity Day — hosted by NAACP Santa Barbara. Read posts and resources freely. Create a free Sisterhood(verb) account to join the conversation.",bg:'linear-gradient(135deg,#2D1B69,#b8860b)',isPublic:true},
   "Women's Homebuying Workshop": {
   icon: '🏡',
   desc: "A three-week series designed to demystify the home-buying process from a woman's perspective — with trusted local professionals in lending, escrow, and real estate. Public space to learn and connect. Create a free account to ask questions and join the conversation.",
-  bg: 'linear-gradient(135deg,#1A1A1A,#a6bba6)',
+  bg: 'linear-gradient(135deg,#2D1B69,#a6bba6)',
   isPublic: true
 }
 };
@@ -1056,7 +1056,7 @@ async function onLogin() {
     const badge = document.getElementById('founding-badge');
     if (badge) {
       if (profile.membership_tier === 'founder') {
-        badge.style.display = 'flex'; badge.style.background = 'linear-gradient(135deg,var(--deep),var(--terra))'; badge.textContent = '♦ Founder';
+        badge.style.display = 'flex'; badge.style.background = 'linear-gradient(135deg,#2D1B69,var(--terra))'; badge.textContent = '♦ Founder';
       } else if (profile.membership_tier === 'founding') {
         badge.style.display = 'flex'; badge.style.background = 'linear-gradient(135deg,var(--gold),#b8860b)'; badge.textContent = '♦ Founding Sister';
       } else {
@@ -1641,7 +1641,7 @@ async function refreshProfileStats() {
 
 async function openCircle(name) {
   currentCircle = name;
-  const info = circleInfo[name] || {icon:'✦', desc:'', bg:'var(--deep)'};
+  const info = circleInfo[name] || {icon:'✦', desc:'', bg:'#2D1B69'};
   const isPublicCircle = !!info.isPublic;
 
   document.getElementById('circle-detail-icon').textContent = info.icon;
@@ -1681,7 +1681,7 @@ if (name === 'Motherhood Speaks') {
     if (!currentUser) {
       const prompt = document.createElement('div');
       prompt.id = 'public-join-prompt';
-      prompt.innerHTML = '<div style="background:linear-gradient(135deg,var(--deep),#3d2b1f);border-radius:6px;padding:32px;margin-bottom:28px;text-align:center;"><div style="font-size:2rem;margin-bottom:12px;">🌺</div><div style="font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Welcome, Sister</div><h3 style="font-family:\'Playfair Display\',serif;font-size:1.3rem;color:var(--cream);margin-bottom:12px;line-height:1.4;">Sisterhood(verb) is a private community for women who are ready to refuel, connect, and show up — together.</h3><p style="color:rgba(251,247,240,0.65);font-size:0.85rem;line-height:1.8;max-width:380px;margin:0 auto 20px;">You can read this circle freely. To join the conversation and access all our spaces, create a free account — it takes less than a minute.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;"><button onclick="openModal()" style="background:var(--terra);color:white;border:none;padding:12px 28px;font-family:\'DM Sans\',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;">Join Free ✦</button><button onclick="openAuthModal(\'login\')" style="background:none;border:1.5px solid rgba(251,247,240,0.3);color:var(--cream);padding:12px 28px;font-family:\'DM Sans\',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;border-radius:2px;">Log In</button></div></div>';
+      prompt.innerHTML = '<div style="background:linear-gradient(135deg,#2D1B69,#3d2b1f);border-radius:6px;padding:32px;margin-bottom:28px;text-align:center;"><div style="font-size:2rem;margin-bottom:12px;">🌺</div><div style="font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Welcome, Sister</div><h3 style="font-family:\'Playfair Display\',serif;font-size:1.3rem;color:var(--cream);margin-bottom:12px;line-height:1.4;">Sisterhood(verb) is a private community for women who are ready to refuel, connect, and show up — together.</h3><p style="color:rgba(251,247,240,0.65);font-size:0.85rem;line-height:1.8;max-width:380px;margin:0 auto 20px;">You can read this circle freely. To join the conversation and access all our spaces, create a free account — it takes less than a minute.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;"><button onclick="openModal()" style="background:var(--terra);color:white;border:none;padding:12px 28px;font-family:\'DM Sans\',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;">Join Free ✦</button><button onclick="openAuthModal(\'login\')" style="background:none;border:1.5px solid rgba(251,247,240,0.3);color:var(--cream);padding:12px 28px;font-family:\'DM Sans\',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;border-radius:2px;">Log In</button></div></div>';
       const feed = document.getElementById('circle-feed-posts');
       feed.parentNode.insertBefore(prompt, feed);
     }
@@ -2028,7 +2028,7 @@ async function openMemberProfile(userId) {
   const initial = name.charAt(0).toUpperCase();
 
   const bannerEl = document.getElementById('mp-banner');
-  bannerEl.style.background = 'linear-gradient(135deg,#1A1A1A,#6B5BE8)';
+  bannerEl.style.background = 'linear-gradient(135deg,#2D1B69,#6B5BE8)';
   if (profile?.banner_url) {
     bannerEl.style.backgroundImage = 'url(' + profile.banner_url + ')';
     bannerEl.style.backgroundSize = 'cover';
@@ -2049,7 +2049,7 @@ async function openMemberProfile(userId) {
   const mpBadge = document.getElementById('mp-tier-badge');
   if (mpBadge) {
     if (profile?.membership_tier === 'founder') {
-      mpBadge.style.display = 'inline-block'; mpBadge.style.background = 'linear-gradient(135deg,var(--deep),var(--terra))'; mpBadge.textContent = '♦ Founder';
+      mpBadge.style.display = 'inline-block'; mpBadge.style.background = 'linear-gradient(135deg,#2D1B69,var(--terra))'; mpBadge.textContent = '♦ Founder';
     } else if (profile?.membership_tier === 'founding') {
       mpBadge.style.display = 'inline-block'; mpBadge.style.background = 'linear-gradient(135deg,var(--gold),#b8860b)'; mpBadge.textContent = '♦ Founding Sister';
     } else { mpBadge.style.display = 'none'; }
@@ -2101,7 +2101,7 @@ async function loadProfile() {
     if (badge) {
       if (profile.membership_tier === 'founder') {
         badge.style.display = 'flex';
-        badge.style.background = 'linear-gradient(135deg,var(--deep),var(--terra))';
+        badge.style.background = 'linear-gradient(135deg,#2D1B69,var(--terra))';
         badge.textContent = '✦ Founder';
       } else if (profile.membership_tier === 'founding' || profile.membership_tier === 'paid') {
         badge.style.display = 'flex';
@@ -2362,7 +2362,7 @@ async function showPaywall() {
 
   const modal = document.createElement('div');
   modal.id = 'rc-paywall-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(26,26,26,0.88);z-index:11000;display:flex;' + overlayAlign + 'justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(45,27,105,0.88);z-index:11000;display:flex;' + overlayAlign + 'justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);';
   modal.addEventListener('click', function(e) { if (e.target === modal) closePaywall(); });
   modal.innerHTML = `
     <div style="${sheetStyle}" onclick="event.stopPropagation()">
@@ -3197,9 +3197,9 @@ async function loadPodcastView() {
   const firstEp = episodes[0];
 
   // Build player
-  const playerBg = isPaid ? '#6B5BE8' : '#1A1A1A';
+  const playerBg = isPaid ? '#6B5BE8' : '#2D1B69';
   root.innerHTML = `
-    <div style="background:var(--deep);border-radius:6px;padding:28px 24px;margin-bottom:24px;position:relative;overflow:hidden;">
+    <div style="background:var(--deep-bg);border-radius:6px;padding:28px 24px;margin-bottom:24px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(107,91,232,0.3),transparent 70%);pointer-events:none;"></div>
       <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Now Playing</div>
       <div id="pod-title" style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);margin-bottom:4px;line-height:1.3;">${firstEp.title}</div>
@@ -3487,7 +3487,7 @@ async function deletePodcastComment(commentId, episodeId) {
 
 <!-- Step 1: Welcome -->
 <div id="onb-step-1" class="onb-step">
-  <div style="background:var(--deep);padding:48px 40px;text-align:center;">
+  <div style="background:var(--deep-bg);padding:48px 40px;text-align:center;">
     <div style="font-size:0.7rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Welcome home</div>
     <h2 style="font-family:'Playfair Display',serif;font-size:2rem;color:var(--cream);margin-bottom:16px;">You made it, sis ✦</h2>
     <p style="color:rgba(251,247,240,0.7);font-size:0.9rem;line-height:1.8;max-width:340px;margin:0 auto;">You've just joined a private community built for women who are ready to practice sisterhood — not just talk about it.</p>
@@ -3559,7 +3559,7 @@ async function deletePodcastComment(commentId, episodeId) {
 
 <!-- Step 4: Community Agreements -->
 <div id="onb-step-4" class="onb-step" style="display:none;">
-  <div style="background:var(--deep);padding:32px 40px 24px;">
+  <div style="background:var(--deep-bg);padding:32px 40px 24px;">
     <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Step 3 of 3</div>
     <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--cream);margin-bottom:6px;">Our Community Agreements</h2>
     <p style="color:rgba(251,247,240,0.6);font-size:0.85rem;">What makes this space sacred ✦</p>
@@ -3680,7 +3680,7 @@ async function deletePodcastComment(commentId, episodeId) {
 
 <!-- SITE FOOTER -->
 
-<div style="background:var(--deep);padding:24px 40px;text-align:center;margin-top:0;">
+<div style="background:var(--deep-bg);padding:24px 40px;text-align:center;margin-top:0;">
   <div style="font-family:'Playfair Display',serif;font-size:0.95rem;color:var(--cream);margin-bottom:10px;">Sisterhood<em style="font-style:italic;font-weight:400;">(verb)</em></div>
   <div style="display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:12px;">
     <a href="/privacy-policy.html" style="color:rgba(251,247,240,0.45);font-size:0.72rem;text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--cream)'" onmouseout="this.style.color='rgba(251,247,240,0.45)'">Privacy Policy</a>
