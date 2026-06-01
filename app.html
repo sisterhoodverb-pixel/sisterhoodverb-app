@@ -30,47 +30,47 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--terra:#6B5BE8;--deep:#1A1A1A;--deep-bg:#2D1B69;--cream:#FBF7F0;--gold:#B8A1C9;--sage:#7A8C6E;--blush:#E8C4A0;--warm-white:#FAFAFA;--warm:#FAFAFA;--taupe:#6B5B4F;--lavender:#B8A1C9;--purple:#6B5BE8}
+:root{--terra:#6B5BE8;--deep:#1A1A1A;--deep-bg:#2D1B69;--cream:#FBF7F0;--gold:#D4A853;--sage:#7A8C6E;--blush:#E8C4A0;--warm-white:#FAFAFA;--warm:#FAFAFA;--taupe:#6B5B4F;--lavender:#B8A1C9;--purple:#6B5BE8}
 *{margin:0;padding:0;box-sizing:border-box}
 html{overflow-x:hidden}
 body{font-family:'DM Sans',sans-serif;background:var(--warm-white);color:var(--deep);min-height:100vh}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4}
-nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top)) 40px 18px;background:rgba(250,250,250,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(107,91,232,0.12);z-index:100}
+nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top)) 40px 18px;background:rgba(250,250,250,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(212,168,83,0.12);z-index:100}
 .nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--terra);letter-spacing:0.02em}
 .nav-logo span{font-style:italic;font-weight:400}
 .nav-links{display:flex;gap:32px;align-items:center}
 .nav-links a{text-decoration:none;color:var(--deep);font-size:0.85rem;font-weight:500;letter-spacing:0.04em;text-transform:uppercase;opacity:0.7;transition:opacity 0.2s}
 .nav-links a:hover{opacity:1}
-.nav-links a.active{color:var(--terra);opacity:1}
-.nav-cta{background:var(--terra);color:white!important;padding:8px 20px;border-radius:2px;opacity:1!important;font-weight:500!important;transition:background 0.2s!important}
-.nav-cta:hover{background:#5649d4!important}
+.nav-links a.active{color:var(--gold);opacity:1}
+.nav-cta{background:var(--gold);color:white!important;padding:8px 20px;border-radius:2px;opacity:1!important;font-weight:500!important;transition:background 0.2s!important}
+.nav-cta:hover{background:#b8860b!important}
 
 .notif-bell{background:none;border:none;cursor:pointer;font-size:1.1rem;padding:6px;border-radius:50%;position:relative;transition:background 0.2s;touch-action:manipulation}
 .notif-bell:hover{background:var(--cream)}
-.logout-btn{background:none;border:1.5px solid rgba(107,91,232,0.3);color:var(--terra);padding:6px 14px;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;display:none;transition:all 0.2s}
-.logout-btn:hover{background:var(--terra);color:white}
+.logout-btn{background:none;border:1.5px solid rgba(212,168,83,0.3);color:var(--gold);padding:6px 14px;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;display:none;transition:all 0.2s}
+.logout-btn:hover{background:var(--gold);color:white}
 .notif-badge{position:absolute;top:-2px;right:-2px;background:#e74c3c;color:white;border-radius:50%;width:18px;height:18px;font-size:0.6rem;font-weight:700;display:flex!important;align-items:center;justify-content:center;border:2px solid white}
-.notif-dropdown{position:fixed;bottom:calc(68px + env(safe-area-inset-bottom));right:16px;left:16px;width:auto;max-width:340px;margin-left:auto;background:white;border-radius:6px;box-shadow:0 8px 30px rgba(26,26,26,0.15);border:1px solid rgba(107,91,232,0.12);z-index:10002;overflow:hidden}
+.notif-dropdown{position:fixed;bottom:calc(68px + env(safe-area-inset-bottom));right:16px;left:16px;width:auto;max-width:340px;margin-left:auto;background:white;border-radius:6px;box-shadow:0 8px 30px rgba(26,26,26,0.15);border:1px solid rgba(212,168,83,0.12);z-index:10002;overflow:hidden}
 @media(min-width:769px){.notif-dropdown{left:auto;right:20px;top:70px;bottom:auto;}}
-.notif-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(107,91,232,0.1);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--deep)}
-.notif-header button{background:none;border:none;cursor:pointer;font-size:0.72rem;color:var(--terra);font-family:‘DM Sans’,sans-serif;font-weight:500}
+.notif-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid rgba(212,168,83,0.1);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--deep)}
+.notif-header button{background:none;border:none;cursor:pointer;font-size:0.72rem;color:var(--gold);font-family:‘DM Sans’,sans-serif;font-weight:500}
 .notif-list{max-height:360px;overflow-y:auto}
-.notif-item{padding:14px 16px;border-bottom:1px solid rgba(107,91,232,0.06);cursor:pointer;transition:background 0.15s;display:flex;gap:10px;align-items:flex-start}
+.notif-item{padding:14px 16px;border-bottom:1px solid rgba(212,168,83,0.06);cursor:pointer;transition:background 0.15s;display:flex;gap:10px;align-items:flex-start}
 .notif-item:hover{background:var(--cream)}
 .notif-item.unread{background:rgba(184,161,201,0.06)}
-.notif-item.unread::before{content:’’;width:6px;height:6px;border-radius:50%;background:var(--terra);flex-shrink:0;margin-top:5px}
+.notif-item.unread::before{content:’’;width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:5px}
 .notif-item-text{flex:1;font-size:0.83rem;color:var(--deep);line-height:1.5}
 .notif-item-time{font-size:0.72rem;color:rgba(26,26,26,0.4);margin-top:3px}
 .notif-empty{padding:24px;text-align:center;font-size:0.83rem;color:rgba(26,26,26,0.4)}
 .onb-step{animation:fadeUp 0.3s ease both}
-.onb-btn-primary{width:100%;padding:14px;background:var(--terra);color:white;border:none;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.88rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;transition:background 0.2s}
-.onb-btn-primary:hover{background:#5649d4}
-.onb-btn-secondary{padding:14px;background:none;border:1.5px solid var(--terra);color:var(--terra);border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s}
+.onb-btn-primary{width:100%;padding:14px;background:var(--gold);color:white;border:none;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.88rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;transition:background 0.2s}
+.onb-btn-primary:hover{background:#b8860b}
+.onb-btn-secondary{padding:14px;background:none;border:1.5px solid var(--gold);color:var(--gold);border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.85rem;font-weight:600;cursor:pointer;transition:all 0.2s}
 .onb-btn-secondary:hover{background:var(--cream)}
 .onb-circle-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--cream);border-radius:4px;border:1.5px solid transparent;transition:all 0.2s;cursor:pointer}
-.onb-circle-item.joined{border-color:var(--terra);background:rgba(107,91,232,0.05)}
-.onb-circle-join{background:none;border:1.5px solid var(--terra);color:var(--terra);padding:5px 14px;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap}
-.onb-circle-join.joined{background:var(--terra);color:white}
+.onb-circle-item.joined{border-color:var(--gold);background:rgba(212,168,83,0.05)}
+.onb-circle-join{background:none;border:1.5px solid var(--gold);color:var(--gold);padding:5px 14px;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap}
+.onb-circle-join.joined{background:var(--gold);color:white}
 .view{display:none;padding-top:72px;padding-bottom:calc(70px + env(safe-area-inset-bottom));min-height:100vh}
 .view.active{display:block}
 .cap-mode .view{padding-top:env(safe-area-inset-top)}
@@ -84,23 +84,23 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .hero-sub{color:rgba(251,247,240,0.85);font-size:0.95rem;max-width:480px;line-height:1.7}
 .hero-accent{position:absolute;right:40px;top:50%;transform:translateY(-50%);width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(107,91,232,0.3),transparent 70%);border:1px solid rgba(184,161,201,0.2)}
 .feed-section{padding:48px 40px;max-width:900px;margin:0 auto}
-.section-label{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:24px;display:flex;align-items:center;gap:12px}
-.section-label::after{content:’’;flex:1;height:1px;background:rgba(107,91,232,0.2)}
-.post-composer{background:white;border:1px solid rgba(107,91,232,0.15);border-radius:4px;padding:20px;margin-bottom:32px;box-shadow:0 2px 20px rgba(26,26,26,0.04)}
+.section-label{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:24px;display:flex;align-items:center;gap:12px}
+.section-label::after{content:’’;flex:1;height:1px;background:rgba(212,168,83,0.2)}
+.post-composer{background:white;border:1px solid rgba(212,168,83,0.15);border-radius:4px;padding:20px;margin-bottom:32px;box-shadow:0 2px 20px rgba(26,26,26,0.04)}
 .composer-top{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px}
 .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.85rem;flex-shrink:0;font-family:‘Playfair Display’,serif}
 .composer-input{flex:1;border:none;outline:none;font-family:‘DM Sans’,sans-serif;font-size:0.95rem;color:var(--deep);resize:none;background:transparent;line-height:1.6}
 .composer-actions{display:flex;justify-content:space-between;align-items:center}
 .composer-tools{display:flex;gap:8px;flex-wrap:wrap}
 .tool-btn{background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:2px;font-size:0.8rem;color:rgba(26,26,26,0.5);transition:all 0.2s;font-family:‘DM Sans’,sans-serif}
-.tool-btn:hover,.tool-btn.active{background:var(--cream);color:var(--terra)}
+.tool-btn:hover,.tool-btn.active{background:var(--cream);color:var(--gold)}
 .tool-btn.question-active{background:rgba(184,161,201,0.15);color:var(--gold);border:1px solid var(--gold)}
-.gif-picker{display:none;margin-top:12px;border:1px solid rgba(107,91,232,0.2);border-radius:4px;overflow:hidden;background:var(--cream)}
+.gif-picker{display:none;margin-top:12px;border:1px solid rgba(212,168,83,0.2);border-radius:4px;overflow:hidden;background:var(--cream)}
 .gif-picker.open{display:block}
-.gif-search-bar{display:flex;gap:8px;padding:10px;border-bottom:1px solid rgba(107,91,232,0.1)}
-.gif-search-input{flex:1;padding:8px 12px;border:1.5px solid rgba(107,91,232,0.2);border-radius:3px;font-family:‘DM Sans’,sans-serif;font-size:0.85rem;color:var(--deep);outline:none;background:white}
-.gif-search-input:focus{border-color:var(--terra)}
-.gif-search-btn{background:var(--terra);color:white;border:none;padding:8px 16px;border-radius:3px;cursor:pointer;font-family:‘DM Sans’,sans-serif;font-size:0.82rem;font-weight:500}
+.gif-search-bar{display:flex;gap:8px;padding:10px;border-bottom:1px solid rgba(212,168,83,0.1)}
+.gif-search-input{flex:1;padding:8px 12px;border:1.5px solid rgba(212,168,83,0.2);border-radius:3px;font-family:‘DM Sans’,sans-serif;font-size:0.85rem;color:var(--deep);outline:none;background:white}
+.gif-search-input:focus{border-color:var(--gold)}
+.gif-search-btn{background:var(--gold);color:white;border:none;padding:8px 16px;border-radius:3px;cursor:pointer;font-family:‘DM Sans’,sans-serif;font-size:0.82rem;font-weight:500}
 .gif-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:8px;max-height:200px;overflow-y:auto}
 .gif-item{width:100%;aspect-ratio:1;object-fit:cover;border-radius:3px;cursor:pointer;transition:opacity 0.2s}
 .gif-item:hover{opacity:0.8}
@@ -108,53 +108,53 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .gif-preview{margin-top:10px;position:relative;display:none}
 .gif-preview img{max-width:100%;border-radius:4px;max-height:200px;object-fit:cover}
 .gif-remove{position:absolute;top:6px;right:6px;background:rgba(45,27,105,0.7);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:0.8rem;display:flex;align-items:center;justify-content:center}
-.post-btn{background:var(--terra);color:white;border:none;cursor:pointer;padding:9px 22px;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.85rem;font-weight:500;letter-spacing:0.04em;transition:background 0.2s}
-.post-btn:hover{background:#5649d4}
-.feed-card{background:white;border:1px solid rgba(107,91,232,0.1);border-radius:4px;padding:24px;margin-bottom:16px;box-shadow:0 2px 20px rgba(26,26,26,0.04);animation:fadeUp 0.4s ease both}
+.post-btn{background:var(--gold);color:white;border:none;cursor:pointer;padding:9px 22px;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.85rem;font-weight:500;letter-spacing:0.04em;transition:background 0.2s}
+.post-btn:hover{background:#b8860b}
+.feed-card{background:white;border:1px solid rgba(212,168,83,0.1);border-radius:4px;padding:24px;margin-bottom:16px;box-shadow:0 2px 20px rgba(26,26,26,0.04);animation:fadeUp 0.4s ease both}
 .feed-card.question-card{border-left:3px solid var(--gold);border-color:rgba(184,161,201,0.4)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 .card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
 .card-meta{flex:1}
 .card-name{font-weight:600;font-size:0.9rem;color:var(--deep);font-family:‘Playfair Display’,serif;cursor:pointer;transition:color 0.2s}
-.card-name:hover{color:var(--terra)}
+.card-name:hover{color:var(--gold)}
 .card-time{font-size:0.75rem;color:rgba(26,26,26,0.45);margin-top:2px}
-.card-tag{font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;padding:4px 10px;border-radius:20px;background:var(--cream);color:var(--terra);font-weight:500}
+.card-tag{font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;padding:4px 10px;border-radius:20px;background:var(--cream);color:var(--gold);font-weight:500}
 .card-tag.question-tag{background:linear-gradient(135deg,var(--gold),#b8860b);color:white}
 .card-body{font-size:0.93rem;line-height:1.75;color:rgba(26,26,26,0.8);margin-bottom:18px;white-space:pre-wrap;word-wrap:break-word}
 .card-body.question-body{font-family:‘Playfair Display’,serif;font-style:italic;font-size:1rem}
-.card-footer{display:flex;gap:20px;padding-top:14px;border-top:1px solid rgba(107,91,232,0.08)}
+.card-footer{display:flex;gap:20px;padding-top:14px;border-top:1px solid rgba(212,168,83,0.08)}
 .react-btn{background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:‘DM Sans’,sans-serif;font-size:0.8rem;color:rgba(26,26,26,0.5);transition:all 0.2s;padding:4px 0}
-.react-btn:hover,.react-btn.liked{color:var(--terra)}
-.delete-btn{color:rgba(107,91,232,0.5)!important}.delete-btn:hover{color:#c0392b!important}
-.report-btn{color:rgba(26,26,26,0.3)!important}.report-btn:hover{color:var(--terra)!important}
-.react-btn.reply-active{color:var(--terra)}
-.replies-section{display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(107,91,232,0.08)}
+.react-btn:hover,.react-btn.liked{color:var(--gold)}
+.delete-btn{color:rgba(212,168,83,0.5)!important}.delete-btn:hover{color:#c0392b!important}
+.report-btn{color:rgba(26,26,26,0.3)!important}.report-btn:hover{color:var(--gold)!important}
+.react-btn.reply-active{color:var(--gold)}
+.replies-section{display:none;margin-top:16px;padding-top:16px;border-top:1px solid rgba(212,168,83,0.08)}
 .reply-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
 .reply-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.65rem;flex-shrink:0;font-family:‘Playfair Display’,serif;background-size:cover;background-position:center}
 .reply-bubble{flex:1;background:var(--cream);border-radius:4px;padding:10px 12px}
 .reply-name{font-size:0.78rem;font-weight:600;font-family:‘Playfair Display’,serif;margin-bottom:3px}
 .reply-text{font-size:0.84rem;color:rgba(26,26,26,0.8);line-height:1.6}
 .reply-time{font-size:0.7rem;color:rgba(26,26,26,0.4);margin-top:4px}
-.reply-composer{display:flex;gap:10px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(107,91,232,0.1)}
-.reply-input{flex:1;padding:8px 12px;border:1.5px solid rgba(107,91,232,0.2);border-radius:3px;font-family:‘DM Sans’,sans-serif;font-size:0.84rem;outline:none;color:var(--deep);background:white}
-.reply-input:focus{border-color:var(--terra)}
-.reply-submit{background:var(--terra);color:white;border:none;padding:8px 14px;border-radius:2px;cursor:pointer;font-size:0.78rem;font-weight:600;font-family:‘DM Sans’,sans-serif;white-space:nowrap;transition:background 0.2s}
-.reply-submit:hover{background:#5649d4}
-.membership-banner{background:linear-gradient(135deg,var(--terra),#5649d4);padding:20px 40px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.reply-composer{display:flex;gap:10px;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(212,168,83,0.1)}
+.reply-input{flex:1;padding:8px 12px;border:1.5px solid rgba(212,168,83,0.2);border-radius:3px;font-family:‘DM Sans’,sans-serif;font-size:0.84rem;outline:none;color:var(--deep);background:white}
+.reply-input:focus{border-color:var(--gold)}
+.reply-submit{background:var(--gold);color:white;border:none;padding:8px 14px;border-radius:2px;cursor:pointer;font-size:0.78rem;font-weight:600;font-family:‘DM Sans’,sans-serif;white-space:nowrap;transition:background 0.2s}
+.reply-submit:hover{background:#b8860b}
+.membership-banner{background:linear-gradient(135deg,#2D1B69,var(--terra));padding:20px 40px;display:flex;align-items:center;justify-content:space-between;gap:20px}
 .membership-text{color:white}
 .membership-text strong{font-family:‘Playfair Display’,serif;font-size:1rem;display:block;margin-bottom:4px}
 .membership-text span{font-size:0.82rem;opacity:0.85}
-.membership-cta{background:white;color:var(--terra);border:none;padding:10px 24px;font-family:‘DM Sans’,sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;white-space:nowrap;transition:opacity 0.2s;flex-shrink:0}
+.membership-cta{background:white;color:var(--gold);border:none;padding:10px 24px;font-family:‘DM Sans’,sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;white-space:nowrap;transition:opacity 0.2s;flex-shrink:0}
 .membership-cta:hover{opacity:0.9}
 .quote-card{background:var(--deep-bg);color:var(--cream);padding:32px;border-radius:4px;margin-bottom:16px;position:relative;overflow:hidden}
 .quote-card::before{content:’”’;font-family:‘Playfair Display’,serif;font-size:8rem;color:rgba(184,161,201,0.15);position:absolute;top:-20px;left:16px;line-height:1}
 .quote-text{font-family:‘Playfair Display’,serif;font-size:1.1rem;font-style:italic;line-height:1.7;margin-bottom:14px;position:relative;z-index:1}
 .quote-author{font-size:0.78rem;color:var(--gold);letter-spacing:0.08em;text-transform:uppercase}
-.circles-hero{padding:60px 40px 40px;background:linear-gradient(160deg,var(--cream) 0%,var(--warm-white) 100%);border-bottom:1px solid rgba(107,91,232,0.1)}
+.circles-hero{padding:60px 40px 40px;background:linear-gradient(160deg,var(--cream) 0%,var(--warm-white) 100%);border-bottom:1px solid rgba(212,168,83,0.1)}
 .page-title{font-family:‘Playfair Display’,serif;font-size:clamp(1.8rem,4vw,2.8rem);line-height:1.2;margin-bottom:10px}
 .page-sub{color:rgba(26,26,26,0.6);font-size:0.95rem;line-height:1.7;max-width:500px}
 .circles-grid{padding:40px;display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px;max-width:1100px;margin:0 auto}
-.circle-card{border-radius:4px;overflow:hidden;border:1px solid rgba(107,91,232,0.12);background:white;box-shadow:0 2px 20px rgba(26,26,26,0.05);transition:transform 0.2s,box-shadow 0.2s;cursor:pointer}
+.circle-card{border-radius:4px;overflow:hidden;border:1px solid rgba(212,168,83,0.12);background:white;box-shadow:0 2px 20px rgba(26,26,26,0.05);transition:transform 0.2s,box-shadow 0.2s;cursor:pointer}
 .circle-card:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(26,26,26,0.1)}
 .circle-banner{height:90px;position:relative;display:flex;align-items:center;justify-content:center}
 .circle-icon{font-size:2.4rem}
@@ -163,8 +163,8 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .circle-desc{font-size:0.83rem;color:rgba(26,26,26,0.6);line-height:1.6;margin-bottom:14px}
 .circle-meta{display:flex;justify-content:space-between;align-items:center}
 .circle-members{font-size:0.75rem;color:rgba(26,26,26,0.45)}
-.join-btn{background:none;border:1.5px solid var(--terra);color:var(--terra);padding:6px 16px;font-family:‘DM Sans’,sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.2s}
-.join-btn:hover,.join-btn.joined{background:var(--terra);color:white}
+.join-btn{background:none;border:1.5px solid var(--gold);color:var(--gold);padding:6px 16px;font-family:‘DM Sans’,sans-serif;font-size:0.78rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:all 0.2s}
+.join-btn:hover,.join-btn.joined{background:var(--gold);color:white}
 .circle-detail-header{background:var(--deep-bg);padding:60px 40px 40px;position:relative;overflow:hidden}
 .circle-detail-back{background:none;border:1px solid rgba(251,247,240,0.2);color:var(--cream);padding:8px 16px;font-family:‘DM Sans’,sans-serif;font-size:0.78rem;cursor:pointer;border-radius:2px;margin-bottom:24px;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s}
 .circle-detail-back:hover{border-color:var(--cream)}
@@ -173,16 +173,16 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .circle-detail-desc{color:rgba(251,247,240,0.65);font-size:0.95rem;line-height:1.7;max-width:560px;margin-bottom:20px}
 .circle-detail-meta{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
 .circle-detail-count{font-size:0.78rem;color:rgba(251,247,240,0.4);letter-spacing:0.06em}
-.circle-join-btn{background:var(--terra);color:white;border:none;padding:10px 24px;font-family:‘DM Sans’,sans-serif;font-size:0.82rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
-.circle-join-btn:hover{background:#5649d4}
+.circle-join-btn{background:var(--gold);color:white;border:none;padding:10px 24px;font-family:‘DM Sans’,sans-serif;font-size:0.82rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
+.circle-join-btn:hover{background:#b8860b}
 .circle-join-btn.joined{background:var(--sage)}
 .circle-feed{padding:40px;max-width:700px;margin:0 auto}
 .circle-empty{text-align:center;padding:60px 20px;color:rgba(26,26,26,0.4);font-size:0.9rem;line-height:1.8}
 .circle-empty-icon{font-size:2.5rem;display:block;margin-bottom:12px}
 .events-layout{display:grid;grid-template-columns:1fr 320px;gap:0;max-width:1100px;margin:0 auto}
-.events-main{padding:40px;border-right:1px solid rgba(107,91,232,0.1)}
+.events-main{padding:40px;border-right:1px solid rgba(212,168,83,0.1)}
 .events-sidebar{padding:40px 32px}
-.event-card{display:flex;gap:20px;padding:22px;background:white;border:1px solid rgba(107,91,232,0.1);border-radius:4px;margin-bottom:14px;transition:box-shadow 0.2s;box-shadow:0 1px 12px rgba(26,26,26,0.04)}
+.event-card{display:flex;gap:20px;padding:22px;background:white;border:1px solid rgba(212,168,83,0.1);border-radius:4px;margin-bottom:14px;transition:box-shadow 0.2s;box-shadow:0 1px 12px rgba(26,26,26,0.04)}
 .event-card:hover{box-shadow:0 6px 24px rgba(26,26,26,0.09)}
 .event-date{min-width:56px;text-align:center;background:var(--deep-bg);color:var(--cream);padding:10px 8px;border-radius:3px;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .date-month{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--gold)}
@@ -192,25 +192,25 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .event-meta{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:8px}
 .event-detail{font-size:0.78rem;color:rgba(26,26,26,0.5);display:flex;align-items:center;gap:4px}
 .event-desc{font-size:0.85rem;color:rgba(26,26,26,0.65);line-height:1.6;margin-bottom:12px}
-.event-register{background:var(--terra);color:white;border:none;padding:8px 20px;cursor:pointer;font-family:‘DM Sans’,sans-serif;font-size:0.8rem;font-weight:500;border-radius:2px;transition:background 0.2s}
-.event-register:hover{background:#5649d4}
+.event-register{background:var(--gold);color:white;border:none;padding:8px 20px;cursor:pointer;font-family:‘DM Sans’,sans-serif;font-size:0.8rem;font-weight:500;border-radius:2px;transition:background 0.2s}
+.event-register:hover{background:#b8860b}
 .event-register.registered{background:var(--sage)}
-.mini-cal{background:white;border:1px solid rgba(107,91,232,0.1);border-radius:4px;padding:20px;margin-bottom:20px}
+.mini-cal{background:white;border:1px solid rgba(212,168,83,0.1);border-radius:4px;padding:20px;margin-bottom:20px}
 .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .cal-title{font-family:‘Playfair Display’,serif;font-size:0.95rem;font-weight:700}
-.cal-nav{background:none;border:none;cursor:pointer;color:var(--terra);font-size:1rem;padding:4px 8px}
+.cal-nav{background:none;border:none;cursor:pointer;color:var(--gold);font-size:1rem;padding:4px 8px}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
 .cal-day-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:rgba(26,26,26,0.4);padding:4px 0}
 .cal-day{padding:6px 4px;border-radius:50%;font-size:0.8rem;cursor:pointer;transition:all 0.15s}
 .cal-day:hover{background:var(--cream)}
-.cal-day.has-event{background:var(--blush);color:var(--terra);font-weight:600}
-.cal-day.today{background:var(--terra);color:white;font-weight:700}
+.cal-day.has-event{background:var(--blush);color:var(--gold);font-weight:600}
+.cal-day.today{background:var(--gold);color:white;font-weight:700}
 .resources-layout{padding:40px;max-width:1000px;margin:0 auto}
 .resources-filter{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:32px}
-.filter-chip{padding:8px 18px;border-radius:20px;border:1.5px solid rgba(107,91,232,0.25);background:transparent;cursor:pointer;font-family:‘DM Sans’,sans-serif;font-size:0.8rem;font-weight:500;color:rgba(26,26,26,0.6);transition:all 0.2s}
-.filter-chip:hover,.filter-chip.active{background:var(--terra);color:white;border-color:var(--terra)}
+.filter-chip{padding:8px 18px;border-radius:20px;border:1.5px solid rgba(212,168,83,0.25);background:transparent;cursor:pointer;font-family:‘DM Sans’,sans-serif;font-size:0.8rem;font-weight:500;color:rgba(26,26,26,0.6);transition:all 0.2s}
+.filter-chip:hover,.filter-chip.active{background:var(--gold);color:white;border-color:var(--gold)}
 .resources-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
-.resource-card{background:white;border:1px solid rgba(107,91,232,0.1);border-radius:4px;overflow:hidden;box-shadow:0 1px 12px rgba(26,26,26,0.04);transition:transform 0.2s,box-shadow 0.2s;cursor:pointer}
+.resource-card{background:white;border:1px solid rgba(212,168,83,0.1);border-radius:4px;overflow:hidden;box-shadow:0 1px 12px rgba(26,26,26,0.04);transition:transform 0.2s,box-shadow 0.2s;cursor:pointer}
 .resource-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(26,26,26,0.09)}
 .resource-thumb{height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;position:relative}
 .resource-type{position:absolute;top:10px;right:10px;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;padding:3px 8px;border-radius:10px;font-weight:600;background:rgba(255,255,255,0.9)}
@@ -219,64 +219,64 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .resource-desc{font-size:0.8rem;color:rgba(26,26,26,0.6);line-height:1.6;margin-bottom:12px}
 .resource-footer{display:flex;justify-content:space-between;align-items:center}
 .resource-author{font-size:0.72rem;color:rgba(26,26,26,0.45)}
-.resource-access{font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);cursor:pointer}
+.resource-access{font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold);cursor:pointer}
 .profile-banner{height:160px;border-radius:4px;margin-bottom:-50px;background:linear-gradient(135deg,#2D1B69 0%,#3d2b1f 50%,var(--terra) 100%);background-size:cover;background-position:center;position:relative;overflow:hidden;cursor:pointer}
 .photo-upload-overlay{position:absolute;inset:0;background:rgba(45,27,105,0.5);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;font-size:0.8rem;color:white;letter-spacing:0.08em;text-transform:uppercase;gap:8px}
 .profile-banner:hover .photo-upload-overlay{opacity:1}
-.avatar-upload-btn{position:absolute;bottom:0;right:-4px;width:28px;height:28px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;border:2px solid var(--warm-white);cursor:pointer}
+.avatar-upload-btn{position:absolute;bottom:0;right:-4px;width:28px;height:28px;border-radius:50%;background:var(--gold);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;border:2px solid var(--warm-white);cursor:pointer}
 input[type=“file”]{display:none}
 .profile-avatar-wrap{position:relative;margin-left:32px;margin-bottom:16px;width:fit-content}
 .profile-avatar{width:90px;height:90px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-size:2rem;font-weight:700;font-family:‘Playfair Display’,serif;border:4px solid var(--warm-white);box-shadow:0 4px 20px rgba(26,26,26,0.2);background-size:cover;background-position:center}
 .profile-info{padding:0 32px;margin-bottom:32px}
 .profile-name{font-family:‘Playfair Display’,serif;font-size:1.6rem;font-weight:700;margin-bottom:4px}
-.profile-handle{color:var(--terra);font-size:0.85rem;margin-bottom:10px}
+.profile-handle{color:var(--gold);font-size:0.85rem;margin-bottom:10px}
 .profile-bio{color:rgba(26,26,26,0.65);font-size:0.9rem;line-height:1.7;max-width:420px;margin-bottom:16px}
 .profile-stats{display:flex;gap:28px;margin-bottom:20px}
 .stat{text-align:center}
-.stat-num{font-family:‘Playfair Display’,serif;font-size:1.4rem;font-weight:700;color:var(--terra)}
+.stat-num{font-family:‘Playfair Display’,serif;font-size:1.4rem;font-weight:700;color:var(--gold)}
 .stat-label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(26,26,26,0.45)}
 .profile-tag{padding:5px 14px;border-radius:20px;background:var(--cream);color:var(--deep);font-size:0.78rem;font-weight:500}
-.profile-section-title{font-family:’Playfair Display’,serif;font-size:1rem;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(107,91,232,0.15)}
+.profile-section-title{font-family:’Playfair Display’,serif;font-size:1rem;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(212,168,83,0.15)}
 .guest-bar{display:none;background:var(--deep-bg);padding:16px 24px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .guest-bar-text{font-size:0.88rem;color:rgba(251,247,240,0.75);line-height:1.5}
 .guest-bar-text strong{display:block;color:var(--cream);font-family:’Playfair Display’,serif;font-size:0.95rem;font-weight:700;margin-bottom:2px}
 .guest-bar-btns{display:flex;gap:10px;flex-shrink:0;flex-wrap:wrap}
 .guest-bar-btns button{padding:10px 20px;font-family:’DM Sans’,sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:2px;cursor:pointer;white-space:nowrap}
-.guest-bar-join{background:var(--terra);color:white;border:none}
+.guest-bar-join{background:var(--gold);color:white;border:none}
 .guest-bar-login{background:transparent;color:var(--gold);border:1px solid rgba(184,161,201,0.45)}
 .form-group{margin-bottom:20px}
 .form-label{display:block;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.1em;color:rgba(26,26,26,0.5);margin-bottom:8px;font-weight:500}
-.form-input{width:100%;padding:12px 16px;border:1.5px solid rgba(107,91,232,0.2);border-radius:3px;font-family:‘DM Sans’,sans-serif;font-size:0.9rem;color:var(--deep);background:white;outline:none;transition:border-color 0.2s}
-.form-input:focus{border-color:var(--terra)}
-.save-btn{background:var(--terra);color:white;border:none;padding:12px 32px;font-family:‘DM Sans’,sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
-.save-btn:hover{background:#5649d4}
-.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:rgba(250,250,250,0.97);backdrop-filter:blur(16px);border-top:1px solid rgba(107,91,232,0.15);padding:8px 8px calc(8px + env(safe-area-inset-bottom));justify-content:space-around;align-items:center;min-height:56px;z-index:100}
+.form-input{width:100%;padding:12px 16px;border:1.5px solid rgba(212,168,83,0.2);border-radius:3px;font-family:‘DM Sans’,sans-serif;font-size:0.9rem;color:var(--deep);background:white;outline:none;transition:border-color 0.2s}
+.form-input:focus{border-color:var(--gold)}
+.save-btn{background:var(--gold);color:white;border:none;padding:12px 32px;font-family:‘DM Sans’,sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
+.save-btn:hover{background:#b8860b}
+.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:rgba(250,250,250,0.97);backdrop-filter:blur(16px);border-top:1px solid rgba(212,168,83,0.15);padding:8px 8px calc(8px + env(safe-area-inset-bottom));justify-content:space-around;align-items:center;min-height:56px;z-index:100}
 .mobile-nav-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:’DM Sans’,sans-serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(26,26,26,0.4);transition:all 0.2s;padding:6px 10px;border-radius:8px;min-width:54px;min-height:44px}
-.mobile-nav-btn.active{color:var(--terra);background:rgba(107,91,232,0.08)}
+.mobile-nav-btn.active{color:var(--gold);background:rgba(212,168,83,0.08)}
 .mobile-nav-btn span:first-child{font-size:1.4rem}
 .modal-overlay{position:fixed;inset:0;background:rgba(45,27,105,0.85);z-index:10100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
 .modal-overlay.open{display:flex}
 .modal{background:var(--warm-white);border-radius:6px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:40px;box-shadow:0 20px 60px rgba(26,26,26,0.3)}
 .modal-title{font-family:‘Playfair Display’,serif;font-size:1.5rem;font-weight:700;margin-bottom:6px;color:var(--deep)}
-.modal-sub{font-size:0.85rem;color:var(--terra);margin-bottom:24px;letter-spacing:0.04em}
-.agreement-item{display:flex;gap:14px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid rgba(107,91,232,0.1)}
+.modal-sub{font-size:0.85rem;color:var(--gold);margin-bottom:24px;letter-spacing:0.04em}
+.agreement-item{display:flex;gap:14px;margin-bottom:18px;padding-bottom:18px;border-bottom:1px solid rgba(212,168,83,0.1)}
 .agreement-item:last-of-type{border-bottom:none}
-.agreement-num{width:28px;height:28px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px}
+.agreement-num{width:28px;height:28px;border-radius:50%;background:var(--gold);color:white;display:flex;align-items:center;justify-content:center;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px}
 .agreement-text strong{display:block;font-size:0.9rem;margin-bottom:4px;color:var(--deep)}
 .agreement-text p{font-size:0.82rem;color:rgba(26,26,26,0.65);line-height:1.6}
 .modal-check{display:flex;gap:10px;align-items:flex-start;margin:24px 0 20px}
-.modal-check input{margin-top:3px;accent-color:var(--terra);width:16px;height:16px}
+.modal-check input{margin-top:3px;accent-color:var(--gold);width:16px;height:16px}
 .modal-check label{font-size:0.85rem;color:var(--deep);line-height:1.5;cursor:pointer}
-.modal-agree-btn{width:100%;padding:14px;background:var(--terra);color:white;border:none;font-family:‘DM Sans’,sans-serif;font-size:0.9rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
-.modal-agree-btn:hover{background:#5649d4}
-.modal-agree-btn:disabled{background:rgba(107,91,232,0.3);cursor:not-allowed}
+.modal-agree-btn{width:100%;padding:14px;background:var(--gold);color:white;border:none;font-family:‘DM Sans’,sans-serif;font-size:0.9rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
+.modal-agree-btn:hover{background:#b8860b}
+.modal-agree-btn:disabled{background:rgba(212,168,83,0.3);cursor:not-allowed}
 .modal-cancel{text-align:center;margin-top:12px}
 .modal-cancel button{background:none;border:none;color:rgba(26,26,26,0.45);font-size:0.82rem;cursor:pointer;font-family:‘DM Sans’,sans-serif}
 .auth-modal{max-width:420px}
 .auth-title{font-family:‘Playfair Display’,serif;font-size:1.5rem;font-weight:700;margin-bottom:6px}
-.auth-sub{font-size:0.85rem;color:var(--terra);margin-bottom:24px}
+.auth-sub{font-size:0.85rem;color:var(--gold);margin-bottom:24px}
 .auth-switch{text-align:center;font-size:0.82rem;color:rgba(26,26,26,0.5);margin-top:16px}
-.auth-switch a{color:var(--terra)!important;text-decoration:none;font-weight:600}
+.auth-switch a{color:var(--gold)!important;text-decoration:none;font-weight:600}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--deep-bg);color:var(--cream);padding:12px 24px;border-radius:3px;font-size:0.85rem;opacity:0;transition:all 0.3s;pointer-events:none;z-index:10200;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .mp-modal{max-width:520px;padding:0;overflow:hidden}
@@ -286,11 +286,11 @@ input[type=“file”]{display:none}
 .mp-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-size:1.6rem;font-weight:700;font-family:‘Playfair Display’,serif;border:3px solid white;box-shadow:0 4px 16px rgba(26,26,26,0.2);background-size:cover;background-position:center}
 .mp-.modal-body-pad{padding:0 24px 24px}
 .mp-name{font-family:‘Playfair Display’,serif;font-size:1.3rem;font-weight:700;margin-bottom:2px}
-.mp-handle{color:var(--terra);font-size:0.82rem;margin-bottom:10px}
+.mp-handle{color:var(--gold);font-size:0.82rem;margin-bottom:10px}
 .mp-bio{font-size:0.88rem;color:rgba(26,26,26,0.7);line-height:1.7;margin-bottom:20px}
-.mp-section-title{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--terra);margin-bottom:10px;font-weight:600;padding-bottom:6px;border-bottom:1px solid rgba(107,91,232,0.12)}
+.mp-section-title{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.15em;color:var(--gold);margin-bottom:10px;font-weight:600;padding-bottom:6px;border-bottom:1px solid rgba(212,168,83,0.12)}
 .mp-circles{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:20px}
-.mp-post-item{padding:12px 0;border-bottom:1px solid rgba(107,91,232,0.08)}
+.mp-post-item{padding:12px 0;border-bottom:1px solid rgba(212,168,83,0.08)}
 .mp-post-item:last-child{border-bottom:none}
 .mp-post-text{font-size:0.86rem;color:rgba(26,26,26,0.75);line-height:1.6;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .mp-post-time{font-size:0.72rem;color:rgba(26,26,26,0.4)}
@@ -382,7 +382,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     <div class="agreement-item"><div class="agreement-num">4</div><div class="agreement-text"><strong>0 Tolerance Policy</strong><p>This is an affirming space. Bigotry, discrimination, or harm of any kind will not be tolerated.</p></div></div>
     <div class="agreement-item"><div class="agreement-num">5</div><div class="agreement-text"><strong>What is Said Here Stays Here</strong><p>This space is by us for us. Please protect it by not sharing what you see here without written permission.</p></div></div>
     <div class="modal-check"><input type="checkbox" id="agree-check" onchange="toggleAgreeBtn()"><label for="agree-check">I have read and agree to the Sisterhood(verb) Community Agreements</label></div>
-<div class="modal-check" style="margin-top:10px;"><input type="checkbox" id="terms-check" onchange="toggleAgreeBtn()"><label for="terms-check">I have read and agree to the <a href="/terms.html" target="_blank" style="color:var(--terra);">Terms of Use</a></label></div>
+<div class="modal-check" style="margin-top:10px;"><input type="checkbox" id="terms-check" onchange="toggleAgreeBtn()"><label for="terms-check">I have read and agree to the <a href="/terms.html" target="_blank" style="color:var(--gold);">Terms of Use</a></label></div>
     <button class="modal-agree-btn" id="agree-btn" disabled onclick="handleAgree()">I Agree — Join the Sisterhood</button>
     <div class="modal-cancel"><button onclick="closeModal()">Not right now</button></div>
   </div>
@@ -434,7 +434,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
       <div style="font-size:0.82rem;color:rgba(251,247,240,0.6);line-height:1.7;">Unlock all Circles, live events, workshop recordings, and the full community experience.</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;flex-shrink:0;">
-      <button onclick="showPaywall()" style="display:block;background:var(--terra);color:white;padding:12px 24px;text-align:center;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:2px;white-space:nowrap;border:none;cursor:pointer;">Upgrade Now ✦</button>
+      <button onclick="showPaywall()" style="display:block;background:var(--gold);color:white;padding:12px 24px;text-align:center;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:2px;white-space:nowrap;border:none;cursor:pointer;">Upgrade Now ✦</button>
     </div>
   </div>
 </div>
@@ -485,16 +485,16 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
       <p class="quote-text">Sisterhood(verb): loving yourself and your kin with ancestral abundance.</p>
       <div class="quote-author">— Tayllor Oyewole-Davis, Founder</div>
     </div>
-    <div style="background:white;border:1px solid rgba(107,91,232,0.1);border-radius:4px;padding:32px;margin-bottom:24px;box-shadow:0 2px 20px rgba(26,26,26,0.04)">
+    <div style="background:white;border:1px solid rgba(212,168,83,0.1);border-radius:4px;padding:32px;margin-bottom:24px;box-shadow:0 2px 20px rgba(26,26,26,0.04)">
       <div class="section-label" style="margin-bottom:16px">Our Why</div>
       <p style="font-family:'Playfair Display',serif;font-size:1.15rem;font-style:italic;color:var(--deep);margin-bottom:14px;line-height:1.6">Sisterhood is a practice.</p>
       <p style="font-size:0.92rem;color:rgba(26,26,26,0.7);line-height:1.8;margin-bottom:20px">We help women and communities return to themselves through creativity, care, and collective action. Sisterhood(verb) is a community-rooted creative practice offering workshops, programs, and partnerships that use storytelling, arts integration, and facilitated dialogue to support wellness, belonging, and cultural connection.</p>
-      <p style="font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:14px;font-weight:600">We Create Spaces Where...</p>
+      <p style="font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;font-weight:600">We Create Spaces Where...</p>
       <ul style="list-style:none;display:flex;flex-direction:column;gap:10px">
-        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(26,26,26,0.7);line-height:1.6"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>Creativity is a tool for healing and truth-telling</li>
-        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(26,26,26,0.7);line-height:1.6"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>Community care replaces burnout and isolation</li>
-        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(26,26,26,0.7);line-height:1.6"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>Culture, identity, and lived experience are honored</li>
-        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(26,26,26,0.7);line-height:1.6"><span style="color:var(--terra);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>People feel resourced — not extracted from</li>
+        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(26,26,26,0.7);line-height:1.6"><span style="color:var(--gold);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>Creativity is a tool for healing and truth-telling</li>
+        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(26,26,26,0.7);line-height:1.6"><span style="color:var(--gold);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>Community care replaces burnout and isolation</li>
+        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(26,26,26,0.7);line-height:1.6"><span style="color:var(--gold);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>Culture, identity, and lived experience are honored</li>
+        <li style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(26,26,26,0.7);line-height:1.6"><span style="color:var(--gold);font-size:0.65rem;margin-top:5px;flex-shrink:0">✦</span>People feel resourced — not extracted from</li>
       </ul>
     </div>
     <div id="feed-posts">
@@ -540,7 +540,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     </div>
   </div>
 </div>
-    <div class="circle-card" style="border:1.5px dashed rgba(107,91,232,0.3);background:var(--cream)"><div class="circle-banner" style="background:transparent;height:70px"><span class="circle-icon">✦</span></div><div class="circle-body"><div class="circle-name" style="color:var(--terra)">Start a Circle</div><div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the team.</div><div class="circle-meta"><span class="circle-members">Members only</span><button class="join-btn" onclick="openProposalModal()">Propose</button></div></div></div>
+    <div class="circle-card" style="border:1.5px dashed rgba(212,168,83,0.3);background:var(--cream)"><div class="circle-banner" style="background:transparent;height:70px"><span class="circle-icon">✦</span></div><div class="circle-body"><div class="circle-name" style="color:var(--gold)">Start a Circle</div><div class="circle-desc">Have a practice you want to hold space for? Propose a new Circle and co-facilitate with the team.</div><div class="circle-meta"><span class="circle-members">Members only</span><button class="join-btn" onclick="openProposalModal()">Propose</button></div></div></div>
   </div>
 </div>
 
@@ -667,7 +667,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 </div>
 <div class="events-sidebar">
   <div class="mini-cal"><div class="cal-header"><div class="cal-title">March 2026</div><button class="cal-nav">‹</button><button class="cal-nav">›</button></div><div class="cal-grid"><div class="cal-day-label">S</div><div class="cal-day-label">M</div><div class="cal-day-label">T</div><div class="cal-day-label">W</div><div class="cal-day-label">T</div><div class="cal-day-label">F</div><div class="cal-day-label">S</div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day"></div><div class="cal-day">1</div><div class="cal-day">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div><div class="cal-day">6</div><div class="cal-day">7</div><div class="cal-day">8</div><div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day today">17</div><div class="cal-day has-event">18</div><div class="cal-day">19</div><div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day has-event">25</div><div class="cal-day">26</div><div class="cal-day">27</div><div class="cal-day">28</div><div class="cal-day">29</div><div class="cal-day">30</div><div class="cal-day">31</div></div></div>
-  <div style="background:white;border:1px solid rgba(107,91,232,0.1);border-radius:4px;padding:20px"><div class="profile-section-title">Host a Workshop</div><p style="font-size:0.83rem;color:rgba(26,26,26,0.6);line-height:1.6;margin-bottom:14px">Are you an educator, healer, or artist? Propose a workshop to our community.</p><button class="save-btn" style="width:100%;padding:10px" onclick="showToast('Proposal form coming soon ✦')">Propose Event</button></div>
+  <div style="background:white;border:1px solid rgba(212,168,83,0.1);border-radius:4px;padding:20px"><div class="profile-section-title">Host a Workshop</div><p style="font-size:0.83rem;color:rgba(26,26,26,0.6);line-height:1.6;margin-bottom:14px">Are you an educator, healer, or artist? Propose a workshop to our community.</p><button class="save-btn" style="width:100%;padding:10px" onclick="showToast('Proposal form coming soon ✦')">Propose Event</button></div>
 </div>
 ```
 
@@ -727,20 +727,20 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
           <div class="resource-title">River Meditation</div>
           <div class="resource-desc">A grounding guided meditation to help you return to yourself, your breath, and your flow.</div>
           <div id="audio-player" style="display:none;">
-            <audio controls style="width:100%;margin:12px 0;border-radius:4px;accent-color:var(--terra);">
+            <audio controls style="width:100%;margin:12px 0;border-radius:4px;accent-color:var(--gold);">
               <source src="https://cqiymqekdtewnorojlus.supabase.co/storage/v1/object/public/Audio/River%20Meditation%20Final.m4a" type="audio/mp4">
             </audio>
           </div>
           <div class="resource-footer">
             <span class="resource-author">by Tayllor Oyewole-Davis</span>
-            <span id="audio-badge" style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(107,91,232,0.15);color:var(--terra);font-weight:600;">Members Only ✦</span>
+            <span id="audio-badge" style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(212,168,83,0.15);color:var(--gold);font-weight:600;">Members Only ✦</span>
           </div>
         </div>
       </div>
 
       <div class="resource-card" data-type="workshops" onclick="openPage('/motherhood-speaks-recap.html')" style="cursor:pointer;">
         <div class="resource-thumb" style="background:linear-gradient(135deg,#FBF7F0,#E8C4A0);">
-          📋<span class="resource-type" style="color:var(--terra);">Recap</span>
+          📋<span class="resource-type" style="color:var(--gold);">Recap</span>
         </div>
         <div class="resource-body">
           <div class="resource-title">Motherhood Speaks — Session Recaps</div>
@@ -776,7 +776,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
           <div class="resource-desc">What they don't tell you about building community for yourself and others.</div>
           <div class="resource-footer">
             <span class="resource-author">by Tayllor Oyewole-Davis</span>
-            <span id="guide-badge" style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(107,91,232,0.15);color:var(--terra);font-weight:600;">Members Only ✦</span>
+            <span id="guide-badge" style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(212,168,83,0.15);color:var(--gold);font-weight:600;">Members Only ✦</span>
           </div>
         </div>
       </div>
@@ -791,7 +791,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     <div class="resource-desc">Join Tayllor on her way home for real conversations about womanhood, motherhood, love, and community. Free members get the first episode.</div>
           <div class="resource-footer">
             <span class="resource-author">by Tayllor Oyewole-Davis</span>
-            <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(107,91,232,0.15);color:var(--terra);font-weight:600;">Listen Now ✦</span>
+            <span style="font-size:0.7rem;padding:3px 10px;border-radius:10px;background:rgba(212,168,83,0.15);color:var(--gold);font-weight:600;">Listen Now ✦</span>
           </div>
         </div>
       </div>
@@ -803,7 +803,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 <!-- PODCAST -->
 <div class="view" id="view-podcast">
   <div class="circles-hero">
-    <button onclick="showView('resources', null)" style="background:none;border:none;cursor:pointer;color:var(--terra);font-size:0.85rem;font-weight:600;letter-spacing:0.04em;margin-bottom:16px;display:flex;align-items:center;gap:6px;padding:0;">← Back to Library</button>
+    <button onclick="showView('resources', null)" style="background:none;border:none;cursor:pointer;color:var(--gold);font-size:0.85rem;font-weight:600;letter-spacing:0.04em;margin-bottom:16px;display:flex;align-items:center;gap:6px;padding:0;">← Back to Library</button>
     <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:16px;">
       <img src="https://cqiymqekdtewnorojlus.supabase.co/storage/v1/object/public/Podcast-assets/Minimalist%20Podcast%20Logo%20-%201.png"
         style="width:90px;height:90px;border-radius:12px;object-fit:cover;box-shadow:0 4px 16px rgba(26,26,26,0.12);flex-shrink:0;"
@@ -852,10 +852,10 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" id="profile-bio-input" rows="3" style="resize:vertical" placeholder="Tell your sisters about yourself..."></textarea></div>
     <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="profile-location-input" type="text" placeholder="Where are you based?"></div>
     <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="profile-email-input" type="email" placeholder="your@email.com"></div>
-    <div class="form-group"><label class="form-label">Membership Plan</label><input class="form-input" id="profile-tier-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--terra);font-weight:600"></div>
+    <div class="form-group"><label class="form-label">Membership Plan</label><input class="form-input" id="profile-tier-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--gold);font-weight:600"></div>
     <button class="save-btn" onclick="saveProfile()">Save Changes</button>
 
-    <div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(107,91,232,0.15);">
+    <div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(212,168,83,0.15);">
       <div class="profile-section-title" style="margin-bottom:20px;">Change Password</div>
       <div class="form-group">
         <label class="form-label">New Password</label>
@@ -868,7 +868,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
       <button class="save-btn" onclick="changePassword()">Update Password</button>
     </div>
 
-    <div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(107,91,232,0.15);">
+    <div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(212,168,83,0.15);">
       <div class="profile-section-title" style="margin-bottom:20px;">Account</div>
       <button class="save-btn" onclick="signOut()" style="background:var(--deep-bg);margin-bottom:12px;width:100%;">Log Out</button>
       <button onclick="confirmDeleteAccount()" style="width:100%;padding:14px;background:none;border:1.5px solid #cc3333;color:#cc3333;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;">Delete My Account</button>
@@ -897,11 +897,17 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 </div>
 
 <script>
-  // iOS App detection
-  function isIOSApp() {
+  // Native app detection (iOS or Android Capacitor build)
+  function isNativeApp() {
     return !!window.Capacitor ||
            window.navigator.standalone === true ||
            window.matchMedia('(display-mode: standalone)').matches;
+  }
+  // Keep alias so any remaining callsites work
+  const isIOSApp = isNativeApp;
+
+  function getPlatform() {
+    return window.Capacitor?.getPlatform() || 'web'; // 'ios' | 'android' | 'web'
   }
 
   // Opens site-relative paths in the system browser when running in Capacitor,
@@ -918,7 +924,9 @@ const _supabase = window.supabase.createClient(
   'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
 );
 const GIPHY_KEY = 'AgkjTleIOrzAZS8xROMk5MBOhC87TO4v';
-const RC_API_KEY = 'appl_cgCetigFNVJDpxiLGLWXOejNfym';
+const RC_API_KEY_IOS     = 'appl_cgCetigFNVJDpxiLGLWXOejNfym';
+const RC_API_KEY_ANDROID = 'PASTE_YOUR_GOOGLE_RC_KEY_HERE'; // get from RevenueCat dashboard → Android app
+const RC_API_KEY = getPlatform() === 'android' ? RC_API_KEY_ANDROID : RC_API_KEY_IOS;
 const RC_MONTHLY_ID = 'com.sisterhoodverb.community.monthly';
 const RC_ANNUAL_ID = 'com.sisterhoodverb.community.annual';
 let currentUser = null;
@@ -1056,7 +1064,7 @@ async function onLogin() {
     const badge = document.getElementById('founding-badge');
     if (badge) {
       if (profile.membership_tier === 'founder') {
-        badge.style.display = 'flex'; badge.style.background = 'linear-gradient(135deg,#2D1B69,var(--terra))'; badge.textContent = '♦ Founder';
+        badge.style.display = 'flex'; badge.style.background = 'linear-gradient(135deg,#b8860b,#D4A853)'; badge.textContent = '♦ Founder';
       } else if (profile.membership_tier === 'founding') {
         badge.style.display = 'flex'; badge.style.background = 'linear-gradient(135deg,var(--gold),#b8860b)'; badge.textContent = '♦ Founding Sister';
       } else {
@@ -1259,7 +1267,7 @@ async function signOut() {
 function linkifyText(text) {
   const urlRegex = /(https?:\/\/[^\s]+)/g;
   return text.replace(urlRegex, function(url) {
-    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:var(--terra);text-decoration:underline;word-break:break-all;">' + url + '</a>';
+    return '<a href="' + url + '" target="_blank" rel="noopener noreferrer" style="color:var(--gold);text-decoration:underline;word-break:break-all;">' + url + '</a>';
   });
 }
 
@@ -1286,14 +1294,14 @@ if (gifMatch) {
 const detectedUrl = extractUrl(textContent);
 textContent = linkifyText(textContent);
 if (detectedUrl && !gifMatch) {
-  linkPreviewHtml = '<a href="' + detectedUrl + '" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:12px;border:1px solid rgba(107,91,232,0.15);border-radius:6px;overflow:hidden;text-decoration:none;background:var(--warm);">' +
+  linkPreviewHtml = '<a href="' + detectedUrl + '" target="_blank" rel="noopener noreferrer" style="display:block;margin-top:12px;border:1px solid rgba(212,168,83,0.15);border-radius:6px;overflow:hidden;text-decoration:none;background:var(--warm);">' +
     '<div style="padding:14px 16px;display:flex;align-items:center;gap:12px;">' +
       '<div style="font-size:1.2rem;flex-shrink:0;">🔗</div>' +
       '<div style="flex:1;min-width:0;">' +
-        '<div style="font-size:0.82rem;color:var(--terra);font-weight:600;letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + detectedUrl.replace(/^https?:\/\//, '').split('/')[0] + '</div>' +
+        '<div style="font-size:0.82rem;color:var(--gold);font-weight:600;letter-spacing:0.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + detectedUrl.replace(/^https?:\/\//, '').split('/')[0] + '</div>' +
         '<div style="font-size:0.78rem;color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + detectedUrl + '</div>' +
       '</div>' +
-      '<div style="font-size:0.75rem;color:var(--terra);flex-shrink:0;">Visit →</div>' +
+      '<div style="font-size:0.75rem;color:var(--gold);flex-shrink:0;">Visit →</div>' +
     '</div>' +
   '</a>';
 }
@@ -1657,9 +1665,9 @@ if (name === 'Motherhood Speaks') {
   recapBtn.href = '#';
   recapBtn.onclick = (e) => { e.preventDefault(); openPage('/motherhood-speaks-recap.html'); };
   recapBtn.textContent = '📖 View Session Recaps';
-  recapBtn.style.cssText = 'display:inline-block;margin-top:12px;background:rgba(107,91,232,0.1);color:var(--terra);border:1px solid rgba(107,91,232,0.25);padding:8px 18px;border-radius:2px;font-size:0.8rem;font-weight:600;letter-spacing:0.06em;text-decoration:none;transition:background 0.2s;';
-  recapBtn.onmouseover = () => recapBtn.style.background = 'rgba(107,91,232,0.18)';
-  recapBtn.onmouseout = () => recapBtn.style.background = 'rgba(107,91,232,0.1)';
+  recapBtn.style.cssText = 'display:inline-block;margin-top:12px;background:rgba(212,168,83,0.1);color:var(--gold);border:1px solid rgba(212,168,83,0.25);padding:8px 18px;border-radius:2px;font-size:0.8rem;font-weight:600;letter-spacing:0.06em;text-decoration:none;transition:background 0.2s;';
+  recapBtn.onmouseover = () => recapBtn.style.background = 'rgba(212,168,83,0.18)';
+  recapBtn.onmouseout = () => recapBtn.style.background = 'rgba(212,168,83,0.1)';
   document.getElementById('circle-detail-desc').after(recapBtn);
 }
   document.getElementById('circle-detail-header').style.background = info.bg;
@@ -1681,7 +1689,7 @@ if (name === 'Motherhood Speaks') {
     if (!currentUser) {
       const prompt = document.createElement('div');
       prompt.id = 'public-join-prompt';
-      prompt.innerHTML = '<div style="background:linear-gradient(135deg,#2D1B69,#3d2b1f);border-radius:6px;padding:32px;margin-bottom:28px;text-align:center;"><div style="font-size:2rem;margin-bottom:12px;">🌺</div><div style="font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Welcome, Sister</div><h3 style="font-family:\'Playfair Display\',serif;font-size:1.3rem;color:var(--cream);margin-bottom:12px;line-height:1.4;">Sisterhood(verb) is a private community for women who are ready to refuel, connect, and show up — together.</h3><p style="color:rgba(251,247,240,0.65);font-size:0.85rem;line-height:1.8;max-width:380px;margin:0 auto 20px;">You can read this circle freely. To join the conversation and access all our spaces, create a free account — it takes less than a minute.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;"><button onclick="openModal()" style="background:var(--terra);color:white;border:none;padding:12px 28px;font-family:\'DM Sans\',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;">Join Free ✦</button><button onclick="openAuthModal(\'login\')" style="background:none;border:1.5px solid rgba(251,247,240,0.3);color:var(--cream);padding:12px 28px;font-family:\'DM Sans\',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;border-radius:2px;">Log In</button></div></div>';
+      prompt.innerHTML = '<div style="background:linear-gradient(135deg,#2D1B69,#3d2b1f);border-radius:6px;padding:32px;margin-bottom:28px;text-align:center;"><div style="font-size:2rem;margin-bottom:12px;">🌺</div><div style="font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;">Welcome, Sister</div><h3 style="font-family:\'Playfair Display\',serif;font-size:1.3rem;color:var(--cream);margin-bottom:12px;line-height:1.4;">Sisterhood(verb) is a private community for women who are ready to refuel, connect, and show up — together.</h3><p style="color:rgba(251,247,240,0.65);font-size:0.85rem;line-height:1.8;max-width:380px;margin:0 auto 20px;">You can read this circle freely. To join the conversation and access all our spaces, create a free account — it takes less than a minute.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;"><button onclick="openModal()" style="background:var(--gold);color:white;border:none;padding:12px 28px;font-family:\'DM Sans\',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;">Join Free ✦</button><button onclick="openAuthModal(\'login\')" style="background:none;border:1.5px solid rgba(251,247,240,0.3);color:var(--cream);padding:12px 28px;font-family:\'DM Sans\',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;border-radius:2px;">Log In</button></div></div>';
       const feed = document.getElementById('circle-feed-posts');
       feed.parentNode.insertBefore(prompt, feed);
     }
@@ -1725,13 +1733,13 @@ async function loadCircleResources(circleName) {
       <div class="section-label" style="margin-bottom:16px;">Resources & Links</div>
       <div style="display:flex;flex-direction:column;gap:10px;">
         ${resources.map(r => `
-          <a href="${r.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(107,91,232,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(26,26,26,0.04);">
+          <a href="${r.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(212,168,83,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(26,26,26,0.04);">
             <span style="font-size:1.4rem;flex-shrink:0;">${r.type === 'pdf' ? '📄' : r.type === 'video' ? '🎥' : '🔗'}</span>
             <div style="flex:1;">
               <div style="font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">${r.title}</div>
               ${r.description ? `<div style="font-size:0.82rem;color:rgba(26,26,26,0.6);line-height:1.6;">${r.description}</div>` : ''}
             </div>
-            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">${r.type === 'pdf' ? 'Download' : 'Visit →'}</span>
+            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold);white-space:nowrap;margin-top:2px;">${r.type === 'pdf' ? 'Download' : 'Visit →'}</span>
           </a>`).join('')}
       </div>
     </div>`;
@@ -1760,13 +1768,13 @@ async function loadCircleResources(circleName) {
   if (isNAACP) {
     // Build two-tab layout for NAACP circle
     section.innerHTML = `
-      <div style="display:flex;border-bottom:2px solid rgba(107,91,232,0.15);margin-bottom:24px;gap:0;">
+      <div style="display:flex;border-bottom:2px solid rgba(212,168,83,0.15);margin-bottom:24px;gap:0;">
         <button id="tab-resources" onclick="switchCircleTab('resources')"
-          style="flex:1;padding:14px;background:var(--terra);color:white;border:none;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;border-radius:4px 0 0 0;">
+          style="flex:1;padding:14px;background:var(--gold);color:white;border:none;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;border-radius:4px 0 0 0;">
           📋 Resources
         </button>
         <button id="tab-posts" onclick="switchCircleTab('posts')"
-          style="flex:1;padding:14px;background:white;color:var(--muted);border:none;border-left:1px solid rgba(107,91,232,0.15);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;border-radius:0 4px 0 0;">
+          style="flex:1;padding:14px;background:white;color:var(--muted);border:none;border-left:1px solid rgba(212,168,83,0.15);font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;border-radius:0 4px 0 0;">
           💬 Conversation
         </button>
       </div>
@@ -1774,33 +1782,33 @@ async function loadCircleResources(circleName) {
       <div id="circle-tab-resources">
         <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
           ${(resources || []).map(r =>
-            `<a href="${r.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(107,91,232,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(26,26,26,0.04);">
+            `<a href="${r.url}" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(212,168,83,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(26,26,26,0.04);">
               <span style="font-size:1.4rem;flex-shrink:0;">${r.type === 'pdf' ? '📄' : r.type === 'video' ? '🎥' : '🔗'}</span>
               <div style="flex:1;">
                 <div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">${r.title}</div>
                 ${r.description ? `<div style="font-size:0.82rem;color:rgba(26,26,26,0.6);line-height:1.6;">${r.description}</div>` : ''}
               </div>
-              <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">${r.type === 'pdf' ? 'Download' : 'Visit →'}</span>
+              <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold);white-space:nowrap;margin-top:2px;">${r.type === 'pdf' ? 'Download' : 'Visit →'}</span>
             </a>`
           ).join('')}
 
           <!-- Sisterhood(verb) public resource links -->
-          <a href="#" onclick="event.preventDefault();openPage('/reading-list.html')" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(107,91,232,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(26,26,26,0.04);">
+          <a href="#" onclick="event.preventDefault();openPage('/reading-list.html')" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(212,168,83,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(26,26,26,0.04);">
             <span style="font-size:1.4rem;flex-shrink:0;">📚</span>
             <div style="flex:1;">
               <div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">Community Care Reading List</div>
               <div style="font-size:0.82rem;color:rgba(26,26,26,0.6);line-height:1.6;">25 curated books on collective healing, Black feminist thought, and care work.</div>
             </div>
-            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">Visit →</span>
+            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold);white-space:nowrap;margin-top:2px;">Visit →</span>
           </a>
 
-          <a href="#" onclick="event.preventDefault();openPage('/motherhood-speaks-recap.html')" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(107,91,232,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(26,26,26,0.04);">
+          <a href="#" onclick="event.preventDefault();openPage('/motherhood-speaks-recap.html')" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(212,168,83,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(26,26,26,0.04);">
             <span style="font-size:1.4rem;flex-shrink:0;">📋</span>
             <div style="flex:1;">
               <div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">Motherhood Speaks — Session Recaps</div>
               <div style="font-size:0.82rem;color:rgba(26,26,26,0.6);line-height:1.6;">Written recaps from our 6-session motherhood writing workshop series.</div>
             </div>
-            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">Visit →</span>
+            <span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold);white-space:nowrap;margin-top:2px;">Visit →</span>
           </a>
         </div>
       </div>
@@ -1823,13 +1831,13 @@ async function loadCircleResources(circleName) {
       '<div class="section-label" style="margin-bottom:16px;">Resources & Links</div>' +
       '<div style="display:flex;flex-direction:column;gap:10px;">' +
       (resources || []).map(r =>
-        '<a href="' + r.url + '" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(107,91,232,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(26,26,26,0.04);">' +
+        '<a href="' + r.url + '" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:flex-start;gap:14px;padding:16px;background:white;border:1px solid rgba(212,168,83,0.12);border-radius:4px;text-decoration:none;box-shadow:0 1px 8px rgba(26,26,26,0.04);">' +
           '<span style="font-size:1.4rem;flex-shrink:0;">' + (r.type === 'pdf' ? '📄' : r.type === 'video' ? '🎥' : '🔗') + '</span>' +
           '<div style="flex:1;">' +
             '<div style="font-family:Georgia,serif;font-size:0.95rem;font-weight:700;color:var(--deep);margin-bottom:4px;">' + r.title + '</div>' +
             (r.description ? '<div style="font-size:0.82rem;color:rgba(26,26,26,0.6);line-height:1.6;">' + r.description + '</div>' : '') +
           '</div>' +
-          '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--terra);white-space:nowrap;margin-top:2px;">' + (r.type === 'pdf' ? 'Download' : 'Visit →') + '</span>' +
+          '<span style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--gold);white-space:nowrap;margin-top:2px;">' + (r.type === 'pdf' ? 'Download' : 'Visit →') + '</span>' +
         '</a>'
       ).join('') +
       '</div></div>';
@@ -1848,14 +1856,14 @@ function switchCircleTab(tab) {
   if (tab === 'resources') {
     resourcesTab.style.display = 'block';
     postsTab.style.display = 'none';
-    resourcesBtn.style.background = 'var(--terra)';
+    resourcesBtn.style.background = 'var(--gold)';
     resourcesBtn.style.color = 'white';
     postsBtn.style.background = 'white';
     postsBtn.style.color = 'var(--muted)';
   } else {
     resourcesTab.style.display = 'none';
     postsTab.style.display = 'block';
-    postsBtn.style.background = 'var(--terra)';
+    postsBtn.style.background = 'var(--gold)';
     postsBtn.style.color = 'white';
     resourcesBtn.style.background = 'white';
     resourcesBtn.style.color = 'var(--muted)';
@@ -2049,7 +2057,7 @@ async function openMemberProfile(userId) {
   const mpBadge = document.getElementById('mp-tier-badge');
   if (mpBadge) {
     if (profile?.membership_tier === 'founder') {
-      mpBadge.style.display = 'inline-block'; mpBadge.style.background = 'linear-gradient(135deg,#2D1B69,var(--terra))'; mpBadge.textContent = '♦ Founder';
+      mpBadge.style.display = 'inline-block'; mpBadge.style.background = 'linear-gradient(135deg,#b8860b,#D4A853)'; mpBadge.textContent = '♦ Founder';
     } else if (profile?.membership_tier === 'founding') {
       mpBadge.style.display = 'inline-block'; mpBadge.style.background = 'linear-gradient(135deg,var(--gold),#b8860b)'; mpBadge.textContent = '♦ Founding Sister';
     } else { mpBadge.style.display = 'none'; }
@@ -2101,7 +2109,7 @@ async function loadProfile() {
     if (badge) {
       if (profile.membership_tier === 'founder') {
         badge.style.display = 'flex';
-        badge.style.background = 'linear-gradient(135deg,#2D1B69,var(--terra))';
+        badge.style.background = 'linear-gradient(135deg,#b8860b,#D4A853)';
         badge.textContent = '✦ Founder';
       } else if (profile.membership_tier === 'founding' || profile.membership_tier === 'paid') {
         badge.style.display = 'flex';
@@ -2266,7 +2274,7 @@ function showView(name, el) {
   // Update cap-nav active button color
   ['home','circles','events','resources','profile'].forEach(v => {
     const btn = document.getElementById('mob-' + v);
-    if (btn) btn.style.color = (v === name) ? 'var(--terra)' : '#333';
+    if (btn) btn.style.color = (v === name) ? 'var(--gold)' : '#333';
   });
   if (el && !el.classList.contains('nav-cta')) el.classList.add('active');
   window.scrollTo(0,0);
@@ -2372,12 +2380,12 @@ async function showPaywall() {
         <div style="font-size:0.88rem;color:rgba(26,26,26,0.6);line-height:1.6;">Unlock all Circles, live events, workshop recordings, and the full community experience.</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
-        <button onclick="rcPurchase('annual')" style="background:var(--terra);color:white;border:none;border-radius:8px;padding:16px 20px;text-align:left;cursor:pointer;position:relative;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+        <button onclick="rcPurchase('annual')" style="background:var(--gold);color:white;border:none;border-radius:8px;padding:16px 20px;text-align:left;cursor:pointer;position:relative;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
           <div style="font-weight:700;font-size:1rem;">Annual — ${annualPrice}</div>
           <div style="font-size:0.78rem;opacity:0.85;margin-top:2px;">Best value · billed once a year</div>
           <div style="position:absolute;top:10px;right:14px;background:var(--gold);color:var(--deep);font-size:0.6rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;padding:3px 8px;border-radius:10px;">Best Value</div>
         </button>
-        <button onclick="rcPurchase('monthly')" style="background:white;color:var(--deep);border:1.5px solid rgba(107,91,232,0.3);border-radius:8px;padding:16px 20px;text-align:left;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
+        <button onclick="rcPurchase('monthly')" style="background:white;color:var(--deep);border:1.5px solid rgba(212,168,83,0.3);border-radius:8px;padding:16px 20px;text-align:left;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;">
           <div style="font-weight:700;font-size:1rem;">Monthly — ${monthlyPrice}</div>
           <div style="font-size:0.78rem;color:rgba(26,26,26,0.55);margin-top:2px;">Billed monthly · cancel anytime</div>
         </button>
@@ -2427,7 +2435,7 @@ async function rcPurchase(type) {
 
 async function restorePurchases() {
   if (!window.Capacitor || !window.Capacitor.Plugins?.Purchases) {
-    showToast('Restore is only available in the iOS app');
+    showToast('Restore is only available in the mobile app');
     return;
   }
   const Purchases = window.Capacitor.Plugins.Purchases;
@@ -2818,7 +2826,7 @@ async function changePassword() {
         if (postEl) {
           postEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
           postEl.style.transition = 'box-shadow 0.3s';
-          postEl.style.boxShadow = '0 0 0 2px var(--terra)';
+          postEl.style.boxShadow = '0 0 0 2px var(--gold)';
           setTimeout(() => postEl.style.boxShadow = '', 2000);
           // Auto-open replies if not already open
           const repliesSection = document.getElementById('replies-' + postId);
@@ -2896,17 +2904,17 @@ async function changePassword() {
   <div class="modal" style="max-width:360px;padding:24px;">
     <div class="modal-title" style="margin-bottom:4px;">Adjust Your Photo</div>
     <div class="modal-sub" style="margin-bottom:16px;">Drag to reposition · Slide to zoom</div>
-    <div id="crop-container" style="position:relative;width:260px;height:260px;border-radius:50%;overflow:hidden;margin:0 auto 16px;background:var(--cream);cursor:grab;border:3px solid var(--terra);">
+    <div id="crop-container" style="position:relative;width:260px;height:260px;border-radius:50%;overflow:hidden;margin:0 auto 16px;background:var(--cream);cursor:grab;border:3px solid var(--gold);">
       <img id="crop-img" style="position:absolute;transform-origin:center;user-select:none;-webkit-user-select:none;pointer-events:none;" draggable="false">
     </div>
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
       <span style="font-size:0.75rem;color:rgba(26,26,26,0.5);">🔍</span>
-      <input type="range" id="crop-zoom" min="100" max="300" value="100" style="flex:1;accent-color:var(--terra);">
+      <input type="range" id="crop-zoom" min="100" max="300" value="100" style="flex:1;accent-color:var(--gold);">
       <span style="font-size:0.75rem;color:rgba(26,26,26,0.5);">🔎</span>
     </div>
     <div style="display:flex;gap:10px;">
-      <button onclick="closeCropModal()" style="flex:1;padding:12px;background:none;border:1.5px solid var(--terra);color:var(--terra);border-radius:2px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;">Cancel</button>
-      <button onclick="saveCroppedAvatar()" style="flex:2;padding:12px;background:var(--terra);color:white;border:none;border-radius:2px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;">Save Photo ✦</button>
+      <button onclick="closeCropModal()" style="flex:1;padding:12px;background:none;border:1.5px solid var(--gold);color:var(--gold);border-radius:2px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;">Cancel</button>
+      <button onclick="saveCroppedAvatar()" style="flex:2;padding:12px;background:var(--gold);color:white;border:none;border-radius:2px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;">Save Photo ✦</button>
     </div>
   </div>
 </div>
@@ -2951,7 +2959,7 @@ async function changePassword() {
     }
     if (tier === 'free' && !isIOSApp()) {
       const circleNote = document.createElement('p');
-      circleNote.style.cssText = 'font-size:0.78rem;color:var(--terra);margin-bottom:16px;padding:10px 14px;background:rgba(107,91,232,0.06);border-radius:3px;border-left:2px solid var(--terra);';
+      circleNote.style.cssText = 'font-size:0.78rem;color:var(--gold);margin-bottom:16px;padding:10px 14px;background:rgba(212,168,83,0.06);border-radius:3px;border-left:2px solid var(--gold);';
       circleNote.textContent = 'Free members can join up to 2 Circles. Upgrade anytime for unlimited access ♦';
       const circlesList = document.getElementById('onb-circles-list');
       if (circlesList) circlesList.parentNode.insertBefore(circleNote, circlesList);
@@ -3073,7 +3081,7 @@ async function onbFinish() {
 
     if (!circleName || !desc || !why || !contactName || !contact) {
       msg.style.display = 'block';
-      msg.style.cssText = 'display:block;padding:12px 14px;border-radius:3px;font-size:0.85rem;margin-bottom:16px;background:rgba(107,91,232,0.08);border:1px solid rgba(107,91,232,0.2);color:var(--terra);';
+      msg.style.cssText = 'display:block;padding:12px 14px;border-radius:3px;font-size:0.85rem;margin-bottom:16px;background:rgba(212,168,83,0.08);border:1px solid rgba(212,168,83,0.2);color:var(--gold);';
       msg.textContent = 'Please fill in all fields before submitting.';
       return;
     }
@@ -3091,7 +3099,7 @@ async function onbFinish() {
     });
 
     if (error) {
-      msg.style.cssText = 'display:block;padding:12px 14px;border-radius:3px;font-size:0.85rem;margin-bottom:16px;background:rgba(107,91,232,0.08);border:1px solid rgba(107,91,232,0.2);color:var(--terra);';
+      msg.style.cssText = 'display:block;padding:12px 14px;border-radius:3px;font-size:0.85rem;margin-bottom:16px;background:rgba(212,168,83,0.08);border:1px solid rgba(212,168,83,0.2);color:var(--gold);';
       msg.textContent = 'Could not submit — please try again.';
       btn.disabled = false;
       btn.textContent = 'Submit My Proposal ♦';
@@ -3201,12 +3209,12 @@ async function loadPodcastView() {
   root.innerHTML = `
     <div style="background:var(--deep-bg);border-radius:6px;padding:28px 24px;margin-bottom:24px;position:relative;overflow:hidden;">
       <div style="position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:radial-gradient(circle,rgba(107,91,232,0.3),transparent 70%);pointer-events:none;"></div>
-      <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Now Playing</div>
+      <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Now Playing</div>
       <div id="pod-title" style="font-family:'Playfair Display',serif;font-size:1.3rem;color:var(--cream);margin-bottom:4px;line-height:1.3;">${firstEp.title}</div>
       <div id="pod-date" style="font-size:0.75rem;color:rgba(251,247,240,0.45);margin-bottom:20px;">${formatPodcastDate(firstEp.published_at)}</div>
       <div style="margin-bottom:12px;">
         <div id="pod-progress-bar" style="width:100%;height:3px;background:rgba(255,255,255,0.12);border-radius:2px;cursor:pointer;margin-bottom:6px;" onclick="podSeek(event)">
-          <div id="pod-progress-fill" style="height:100%;background:var(--terra);border-radius:2px;width:0%;transition:width 0.1s linear;pointer-events:none;"></div>
+          <div id="pod-progress-fill" style="height:100%;background:var(--gold);border-radius:2px;width:0%;transition:width 0.1s linear;pointer-events:none;"></div>
         </div>
         <div style="display:flex;justify-content:space-between;font-size:0.68rem;color:rgba(251,247,240,0.35);">
           <span id="pod-cur">0:00</span><span id="pod-dur">0:00</span>
@@ -3214,12 +3222,12 @@ async function loadPodcastView() {
       </div>
       <div style="display:flex;align-items:center;justify-content:center;gap:28px;">
         <button onclick="podSkip(-15)" style="background:none;border:none;cursor:pointer;color:rgba(251,247,240,0.55);font-size:0.85rem;font-family:'DM Sans',sans-serif;">⟪ 15</button>
-        <button id="pod-play-btn" onclick="podToggle()" style="width:52px;height:52px;border-radius:50%;background:var(--terra);border:none;cursor:pointer;color:white;font-size:1.3rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s;">▶</button>
+        <button id="pod-play-btn" onclick="podToggle()" style="width:52px;height:52px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;color:white;font-size:1.3rem;display:flex;align-items:center;justify-content:center;transition:background 0.2s;">▶</button>
         <button onclick="podSkip(30)" style="background:none;border:none;cursor:pointer;color:rgba(251,247,240,0.55);font-size:0.85rem;font-family:'DM Sans',sans-serif;">30 ⟫</button>
       </div>
     </div>
 
-    <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:14px;">All Episodes</div>
+    <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">All Episodes</div>
     <div id="pod-episode-list"></div>
   `;
 
@@ -3241,16 +3249,16 @@ async function loadPodcastView() {
     const canPlay = isPaid || ep.id === freeEpId;
     const div = document.createElement('div');
     div.id = 'pod-ep-' + ep.id;
-    div.style.cssText = 'display:flex;gap:14px;padding:14px 0;border-bottom:1px solid rgba(107,91,232,0.12);align-items:flex-start;cursor:' + (canPlay ? 'pointer' : 'default') + ';';
+    div.style.cssText = 'display:flex;gap:14px;padding:14px 0;border-bottom:1px solid rgba(212,168,83,0.12);align-items:flex-start;cursor:' + (canPlay ? 'pointer' : 'default') + ';';
     div.innerHTML = `
-      <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:300;color:rgba(107,91,232,0.3);min-width:2rem;padding-top:2px;">${String(i+1).padStart(2,'0')}</div>
+      <div style="font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:300;color:rgba(212,168,83,0.3);min-width:2rem;padding-top:2px;">${String(i+1).padStart(2,'0')}</div>
       <div style="flex:1;">
         <div style="font-size:0.9rem;font-weight:500;margin-bottom:4px;color:var(--deep);">${ep.title}</div>
         ${ep.description ? `<div style="font-size:0.78rem;color:rgba(26,26,26,0.55);line-height:1.5;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">${ep.description}</div>` : ''}
         <div style="display:flex;align-items:center;gap:8px;">
           <span style="font-size:0.68rem;color:rgba(26,26,26,0.4);">${formatPodcastDate(ep.published_at)}</span>
           ${ep.duration ? `<span style="font-size:0.68rem;color:rgba(26,26,26,0.4);">${ep.duration}</span>` : ''}
-          ${!canPlay ? `<span style="font-size:0.65rem;color:var(--terra);background:rgba(107,91,232,0.1);padding:2px 8px;border-radius:10px;">Members only</span>` : ''}
+          ${!canPlay ? `<span style="font-size:0.65rem;color:var(--gold);background:rgba(212,168,83,0.1);padding:2px 8px;border-radius:10px;">Members only</span>` : ''}
         </div>
       </div>
       <div style="font-size:1.1rem;color:rgba(26,26,26,0.3);padding-top:2px;">${canPlay ? '▶' : '🔒'}</div>
@@ -3266,9 +3274,9 @@ async function loadPodcastView() {
         // Build comments section
         const wrap = document.createElement('div');
         wrap.id = 'pod-comments-wrap-' + ep.id;
-        wrap.style.cssText = 'padding:20px;background:white;border:1px solid rgba(107,91,232,0.1);border-radius:4px;margin-top:-1px;margin-bottom:8px;';
+        wrap.style.cssText = 'padding:20px;background:white;border:1px solid rgba(212,168,83,0.1);border-radius:4px;margin-top:-1px;margin-bottom:8px;';
         wrap.innerHTML = `
-          <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--terra);margin-bottom:14px;">
+          <div style="font-size:0.65rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:14px;">
             💬 Discussion — ${ep.title}
           </div>
           <div id="pod-comments-${ep.id}"></div>
@@ -3296,7 +3304,7 @@ async function podPlayEpisode(ep, autoplay = false) {
   // Highlight active episode
   document.querySelectorAll('[id^="pod-ep-"]').forEach(el => el.style.background = '');
   const activeEl = document.getElementById('pod-ep-' + ep.id);
-  if (activeEl) activeEl.style.background = 'rgba(107,91,232,0.04)';
+  if (activeEl) activeEl.style.background = 'rgba(212,168,83,0.04)';
 
   // Get audio URL
   let url = ep.audio_url;
@@ -3386,7 +3394,7 @@ async function loadPodcastComments(episodeId) {
             <div style="font-size:0.8rem;font-weight:600;font-family:'Playfair Display',serif;color:var(--deep);">${name}</div>
             <div style="display:flex;align-items:center;gap:8px;">
               <div style="font-size:0.7rem;color:rgba(26,26,26,0.4);">${timeAgo(c.created_at)}</div>
-              ${isOwn ? `<button onclick="deletePodcastComment('${c.id}','${episodeId}')" style="background:none;border:none;cursor:pointer;font-size:0.7rem;color:rgba(107,91,232,0.5);padding:0;">🗑</button>` : ''}
+              ${isOwn ? `<button onclick="deletePodcastComment('${c.id}','${episodeId}')" style="background:none;border:none;cursor:pointer;font-size:0.7rem;color:rgba(212,168,83,0.5);padding:0;">🗑</button>` : ''}
             </div>
           </div>
           <div style="font-size:0.85rem;color:rgba(26,26,26,0.8);line-height:1.6;">${c.content}</div>
@@ -3402,16 +3410,16 @@ async function loadPodcastComments(episodeId) {
 
   if (!isLoggedIn) {
     composerDiv.innerHTML = `
-      <div style="text-align:center;padding:16px;background:var(--cream);border-radius:4px;border:1px dashed rgba(107,91,232,0.3);">
+      <div style="text-align:center;padding:16px;background:var(--cream);border-radius:4px;border:1px dashed rgba(212,168,83,0.3);">
         <div style="font-size:0.85rem;color:rgba(26,26,26,0.6);margin-bottom:10px;">Sign in to join the conversation ✦</div>
-        <button onclick="openAuthModal('login')" style="background:var(--terra);color:white;border:none;padding:8px 20px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;">Log In</button>
+        <button onclick="openAuthModal('login')" style="background:var(--gold);color:white;border:none;padding:8px 20px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;">Log In</button>
       </div>`;
   } else if (!isPaid) {
     composerDiv.innerHTML = `
-      <div style="text-align:center;padding:16px;background:var(--cream);border-radius:4px;border:1px dashed rgba(107,91,232,0.3);">
+      <div style="text-align:center;padding:16px;background:var(--cream);border-radius:4px;border:1px dashed rgba(212,168,83,0.3);">
         <div style="font-size:0.85rem;color:rgba(26,26,26,0.6);margin-bottom:4px;">Paid members can join the discussion ✦</div>
         <div style="font-size:0.75rem;color:rgba(26,26,26,0.4);margin-bottom:10px;">Upgrade to comment and connect with your sisters</div>
-        <button onclick="showPaywall()" style="background:var(--terra);color:white;border:none;padding:8px 20px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;">Upgrade to Comment ✦</button>
+        <button onclick="showPaywall()" style="background:var(--gold);color:white;border:none;padding:8px 20px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;">Upgrade to Comment ✦</button>
       </div>`;
   } else {
     const myName = window._currentUserName || 'S';
@@ -3421,17 +3429,17 @@ async function loadPodcastComments(episodeId) {
         <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.75rem;font-family:'Playfair Display',serif;flex-shrink:0;">${myInitial}</div>
         <div style="flex:1;">
           <textarea id="pod-comment-input-${episodeId}" 
-            style="width:100%;padding:10px 12px;border:1.5px solid rgba(107,91,232,0.2);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--deep);resize:none;outline:none;background:white;line-height:1.6;"
+            style="width:100%;padding:10px 12px;border:1.5px solid rgba(212,168,83,0.2);border-radius:3px;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--deep);resize:none;outline:none;background:white;line-height:1.6;"
             rows="2" 
             placeholder="Share your thoughts on this episode..."
-            onfocus="this.style.borderColor='var(--terra)'"
-            onblur="this.style.borderColor='rgba(107,91,232,0.2)'"
+            onfocus="this.style.borderColor='var(--gold)'"
+            onblur="this.style.borderColor='rgba(212,168,83,0.2)'"
             onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitPodcastComment('${episodeId}');}"></textarea>
           <div style="display:flex;justify-content:flex-end;margin-top:6px;">
             <button onclick="submitPodcastComment('${episodeId}')" 
-              style="background:var(--terra);color:white;border:none;padding:8px 18px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;transition:background 0.2s;"
-              onmouseover="this.style.background='#5649d4'"
-              onmouseout="this.style.background='var(--terra)'">Comment ✦</button>
+              style="background:var(--gold);color:white;border:none;padding:8px 18px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.8rem;font-weight:600;cursor:pointer;transition:background 0.2s;"
+              onmouseover="this.style.background='#b8860b'"
+              onmouseout="this.style.background='var(--gold)'">Comment ✦</button>
           </div>
         </div>
       </div>`;
@@ -3493,19 +3501,19 @@ async function deletePodcastComment(commentId, episodeId) {
     <p style="color:rgba(251,247,240,0.7);font-size:0.9rem;line-height:1.8;max-width:340px;margin:0 auto;">You've just joined a private community built for women who are ready to practice sisterhood — not just talk about it.</p>
   </div>
   <div style="padding:32px 40px;">
-    <div style="background:var(--cream);border-radius:4px;padding:24px;margin-bottom:28px;border-left:3px solid var(--terra);">
+    <div style="background:var(--cream);border-radius:4px;padding:24px;margin-bottom:28px;border-left:3px solid var(--gold);">
       <p style="font-family:'Playfair Display',serif;font-style:italic;font-size:1rem;color:var(--deep);line-height:1.7;margin:0 0 10px;">"Sisterhood(verb): loving yourself and your kin with ancestral abundance."</p>
-      <p style="font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--terra);margin:0;">— Tayllor Oyewole-Davis, Founder</p>
+      <p style="font-size:0.72rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin:0;">— Tayllor Oyewole-Davis, Founder</p>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
       <div style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(26,26,26,0.75);line-height:1.6;">
-        <span style="color:var(--terra);flex-shrink:0;">✦</span>Share freely in a space that was made for you
+        <span style="color:var(--gold);flex-shrink:0;">✦</span>Share freely in a space that was made for you
       </div>
       <div style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(26,26,26,0.75);line-height:1.6;">
-        <span style="color:var(--terra);flex-shrink:0;">✦</span>Join intimate Circles built around your passions
+        <span style="color:var(--gold);flex-shrink:0;">✦</span>Join intimate Circles built around your passions
       </div>
       <div style="display:flex;gap:12px;align-items:flex-start;font-size:0.88rem;color:rgba(26,26,26,0.75);line-height:1.6;">
-        <span style="color:var(--terra);flex-shrink:0;">✦</span>Connect with sisters who get it
+        <span style="color:var(--gold);flex-shrink:0;">✦</span>Connect with sisters who get it
       </div>
     </div>
     <button onclick="onbNext(2)" class="onb-btn-primary">Let's Get You Set Up ✦</button>
@@ -3514,8 +3522,8 @@ async function deletePodcastComment(commentId, episodeId) {
 
 <!-- Step 2: Complete Profile -->
 <div id="onb-step-2" class="onb-step" style="display:none;">
-  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(107,91,232,0.1);">
-    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 1 of 3</div>
+  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(212,168,83,0.1);">
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Step 1 of 3</div>
     <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Tell us about yourself</h2>
     <p style="color:rgba(26,26,26,0.55);font-size:0.85rem;">Your sisters want to know you ✦</p>
   </div>
@@ -3541,8 +3549,8 @@ async function deletePodcastComment(commentId, episodeId) {
 
 <!-- Step 3: Join Circles -->
 <div id="onb-step-3" class="onb-step" style="display:none;">
-  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(107,91,232,0.1);">
-    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--terra);margin-bottom:8px;">Step 2 of 3</div>
+  <div style="background:linear-gradient(135deg,var(--cream),var(--warm-white));padding:32px 40px 24px;border-bottom:1px solid rgba(212,168,83,0.1);">
+    <div style="font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;">Step 2 of 3</div>
     <h2 style="font-family:'Playfair Display',serif;font-size:1.5rem;color:var(--deep);margin-bottom:6px;">Find your Circle</h2>
     <p style="color:rgba(26,26,26,0.55);font-size:0.85rem;">Join the spaces that speak to you ✦</p>
   </div>
@@ -3567,31 +3575,31 @@ async function deletePodcastComment(commentId, episodeId) {
   <div style="padding:24px 40px;">
     <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
       <div style="display:flex;gap:12px;align-items:flex-start;">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">1</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--gold);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">1</div>
         <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>Safe Space.</strong> Vulnerability is honored here.</div>
       </div>
       <div style="display:flex;gap:12px;align-items:flex-start;">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">2</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--gold);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">2</div>
         <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>No Judgement.</strong> Offer opinions only when invited.</div>
       </div>
       <div style="display:flex;gap:12px;align-items:flex-start;">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">3</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--gold);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">3</div>
         <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>Assume Best Intentions.</strong> Pause before responding.</div>
       </div>
       <div style="display:flex;gap:12px;align-items:flex-start;">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">4</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--gold);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">4</div>
         <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>Zero Tolerance.</strong> Bigotry and harm are not welcome here.</div>
       </div>
       <div style="display:flex;gap:12px;align-items:flex-start;">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--terra);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">5</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--gold);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;flex-shrink:0;">5</div>
         <div style="font-size:0.85rem;color:var(--deep);line-height:1.6;"><strong>What's Said Here Stays Here.</strong> Protect this space.</div>
       </div>
     </div>
-    <div style="margin-bottom:16px;padding:16px;background:rgba(107,91,232,0.08);border-radius:4px;border:1px solid rgba(107,91,232,0.2);">
+    <div style="margin-bottom:16px;padding:16px;background:rgba(212,168,83,0.08);border-radius:4px;border:1px solid rgba(212,168,83,0.2);">
   <label style="display:flex;gap:12px;align-items:flex-start;cursor:pointer;">
-    <input type="checkbox" id="onb-terms-checkbox" style="margin-top:3px;accent-color:var(--terra);width:16px;height:16px;flex-shrink:0;">
+    <input type="checkbox" id="onb-terms-checkbox" style="margin-top:3px;accent-color:var(--gold);width:16px;height:16px;flex-shrink:0;">
     <span style="font-size:0.82rem;color:rgba(26,26,26,0.75);line-height:1.7;">
-      I agree to the <a href="/terms.html" target="_blank" style="color:var(--terra);text-decoration:underline;">Terms of Use</a> and confirm there is zero tolerance for objectionable content or abusive behavior in this community.
+      I agree to the <a href="/terms.html" target="_blank" style="color:var(--gold);text-decoration:underline;">Terms of Use</a> and confirm there is zero tolerance for objectionable content or abusive behavior in this community.
     </span>
   </label>
 </div>
@@ -3652,22 +3660,22 @@ async function deletePodcastComment(commentId, episodeId) {
 <div class="modal-overlay" id="confirmation-modal">
   <div class="modal" style="max-width:440px;text-align:center;">
     <div style="font-size:3rem;margin-bottom:20px;">🌺</div>
-    <div style="font-size:0.68rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--terra);margin-bottom:12px;">Almost there, sis</div>
+    <div style="font-size:0.68rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;">Almost there, sis</div>
     <h2 style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--deep);margin-bottom:16px;line-height:1.3;">Check your inbox ✦</h2>
     <p style="font-size:0.9rem;color:rgba(26,26,26,0.65);line-height:1.8;margin-bottom:8px;">We sent a confirmation email to:</p>
-    <p style="font-size:0.95rem;font-weight:600;color:var(--terra);margin-bottom:24px;" id="confirm-email-display"></p>
+    <p style="font-size:0.95rem;font-weight:600;color:var(--gold);margin-bottom:24px;" id="confirm-email-display"></p>
     <div style="background:var(--cream);border-radius:4px;padding:20px 24px;margin-bottom:24px;text-align:left;">
       <div style="display:flex;flex-direction:column;gap:12px;">
         <div style="display:flex;gap:12px;align-items:flex-start;font-size:0.85rem;color:rgba(26,26,26,0.75);line-height:1.6;">
-          <span style="color:var(--terra);flex-shrink:0;font-weight:700;">1.</span>
+          <span style="color:var(--gold);flex-shrink:0;font-weight:700;">1.</span>
           Open the email from Sisterhood(verb)
         </div>
         <div style="display:flex;gap:12px;align-items:flex-start;font-size:0.85rem;color:rgba(26,26,26,0.75);line-height:1.6;">
-          <span style="color:var(--terra);flex-shrink:0;font-weight:700;">2.</span>
+          <span style="color:var(--gold);flex-shrink:0;font-weight:700;">2.</span>
           Click the confirmation link inside
         </div>
         <div style="display:flex;gap:12px;align-items:flex-start;font-size:0.85rem;color:rgba(26,26,26,0.75);line-height:1.6;">
-          <span style="color:var(--terra);flex-shrink:0;font-weight:700;">3.</span>
+          <span style="color:var(--gold);flex-shrink:0;font-weight:700;">3.</span>
           Come back here and log in — your sisters are waiting ✦
         </div>
       </div>

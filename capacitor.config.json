@@ -9,17 +9,29 @@
   "ios": {
     "contentInset": "automatic"
   },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,
       "launchAutoHide": true,
-      "backgroundColor": "#FBF7F2",
-      "spinnerColor": "#C4622D",
-      "showSpinner": false
+      "backgroundColor": "#FAFAFA",
+      "spinnerColor": "#6B5BE8",
+      "showSpinner": false,
+      "androidSplashResourceName": "splash",
+      "androidScaleType": "CENTER_CROP"
     },
     "StatusBar": {
       "style": "DARK",
-      "overlaysWebView": true
+      "overlaysWebView": true,
+      "backgroundColor": "#2D1B69"
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
     }
   }
 }

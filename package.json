@@ -2,14 +2,17 @@
   "name": "sisterhoodverb-community",
   "version": "1.0.0",
   "private": true,
-  "description": "Sisterhood(verb) Community iOS App",
+  "description": "Sisterhood(verb) Community App",
   "scripts": {
     "build": "mkdir -p www && cp app.html www/index.html && cp manifest.json favicon.ico favicon-16.png favicon-32.png sw.js www/ && cp -r icons www/ && cp admin.html motherhood-speaks-recap.html reading-list.html poetry-prompts.html terms-of-service.html privacy-policy.html upgrade.html support.html www/ && cp -r .well-known www/",
     "sync": "npm run build && npx cap sync",
     "open:ios": "npx cap open ios",
-    "deploy:ios": "npm run sync && npx cap open ios"
+    "open:android": "npx cap open android",
+    "deploy:ios": "npm run sync && npx cap open ios",
+    "deploy:android": "npm run sync && npx cap open android"
   },
   "dependencies": {
+    "@capacitor/android": "^7.6.5",
     "@capacitor/app": "^7.1.2",
     "@capacitor/core": "^7.6.2",
     "@capacitor/haptics": "^7.0.5",

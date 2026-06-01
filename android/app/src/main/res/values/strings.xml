@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Sisterhood(verb)</string>
+    <string name="title_activity_main">Sisterhood(verb)</string>
+    <string name="package_name">com.sisterhoodverb.community</string>
+    <string name="custom_url_scheme">com.sisterhoodverb.community</string>
+</resources>
