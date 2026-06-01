@@ -30,12 +30,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--terra:#6B5BE8;--deep:#1A1A1A;--deep-bg:#2D1B69;--cream:#FBF7F0;--gold:#D4A853;--sage:#7A8C6E;--blush:#E8C4A0;--warm-white:#FAFAFA;--warm:#FAFAFA;--taupe:#6B5B4F;--lavender:#B8A1C9;--purple:#6B5BE8}
+:root{--terra:#6B5BE8;--deep:#1A1A1A;--deep-bg:#2D1B69;--cream:#FBF7F0;--gold:#D4A853;--sage:#7A8C6E;--blush:#E8C4A0;--warm-white:#F7F5FF;--warm:#F7F5FF;--taupe:#6B5B4F;--lavender:#B8A1C9;--purple:#6B5BE8}
 *{margin:0;padding:0;box-sizing:border-box}
 html{overflow-x:hidden}
 body{font-family:'DM Sans',sans-serif;background:var(--warm-white);color:var(--deep);min-height:100vh}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4}
-nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top)) 40px 18px;background:rgba(250,250,250,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(212,168,83,0.12);z-index:100}
+nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:calc(18px + env(safe-area-inset-top)) 40px 18px;background:rgba(240,237,255,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(212,168,83,0.12);z-index:100}
 .nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--terra);letter-spacing:0.02em}
 .nav-logo span{font-style:italic;font-weight:400}
 .nav-links{display:flex;gap:32px;align-items:center}
@@ -84,8 +84,8 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .hero-sub{color:rgba(251,247,240,0.85);font-size:0.95rem;max-width:480px;line-height:1.7}
 .hero-accent{position:absolute;right:40px;top:50%;transform:translateY(-50%);width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(107,91,232,0.3),transparent 70%);border:1px solid rgba(184,161,201,0.2)}
 .feed-section{padding:48px 40px;max-width:900px;margin:0 auto}
-.section-label{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:24px;display:flex;align-items:center;gap:12px}
-.section-label::after{content:’’;flex:1;height:1px;background:rgba(212,168,83,0.2)}
+.section-label{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--lavender);margin-bottom:24px;display:flex;align-items:center;gap:12px}
+.section-label::after{content:’’;flex:1;height:1px;background:rgba(184,161,201,0.2)}
 .post-composer{background:white;border:1px solid rgba(212,168,83,0.15);border-radius:4px;padding:20px;margin-bottom:32px;box-shadow:0 2px 20px rgba(26,26,26,0.04)}
 .composer-top{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px}
 .avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--terra),var(--gold));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:0.85rem;flex-shrink:0;font-family:‘Playfair Display’,serif}
@@ -250,7 +250,7 @@ input[type=“file”]{display:none}
 .form-input:focus{border-color:var(--gold)}
 .save-btn{background:var(--gold);color:white;border:none;padding:12px 32px;font-family:‘DM Sans’,sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;border-radius:2px;transition:background 0.2s}
 .save-btn:hover{background:#b8860b}
-.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:rgba(250,250,250,0.97);backdrop-filter:blur(16px);border-top:1px solid rgba(212,168,83,0.15);padding:8px 8px calc(8px + env(safe-area-inset-bottom));justify-content:space-around;align-items:center;min-height:56px;z-index:100}
+.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;background:rgba(240,237,255,0.97);backdrop-filter:blur(16px);border-top:1px solid rgba(212,168,83,0.15);padding:8px 8px calc(8px + env(safe-area-inset-bottom));justify-content:space-around;align-items:center;min-height:56px;z-index:100}
 .mobile-nav-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:’DM Sans’,sans-serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(26,26,26,0.4);transition:all 0.2s;padding:6px 10px;border-radius:8px;min-width:54px;min-height:44px}
 .mobile-nav-btn.active{color:var(--gold);background:rgba(212,168,83,0.08)}
 .mobile-nav-btn span:first-child{font-size:1.4rem}
@@ -887,7 +887,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 </div>
 
 <!-- MOBILE NAV: direct child of body, outside all .view divs -->
-<div id="cap-nav" style="position:fixed;bottom:0;left:0;width:100%;min-height:60px;background:white;display:flex;justify-content:space-around;align-items:center;z-index:10001;border-top:1px solid #eee;padding-bottom:env(safe-area-inset-bottom);">
+<div id="cap-nav" style="position:fixed;bottom:0;left:0;width:100%;min-height:60px;background:#F0EDFF;display:flex;justify-content:space-around;align-items:center;z-index:10001;border-top:1px solid #eee;padding-bottom:env(safe-area-inset-bottom);">
   <button id="mob-home" onclick="showView('home',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:#6B5BE8;cursor:pointer;padding:6px 10px;">🏠<span>Home</span></button>
   <button id="mob-circles" onclick="showViewWithProfile('circles',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(26,26,26,0.4);cursor:pointer;padding:6px 10px;">⭕<span>Circles</span></button>
   <button id="mob-events" onclick="showView('events',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(26,26,26,0.4);cursor:pointer;padding:6px 10px;">📅<span>Events</span></button>
