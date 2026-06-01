@@ -2295,19 +2295,28 @@ async function loadProfileCircles() {
   if (!currentUser) return;
   const list = document.getElementById('profile-circles-list');
   if (!list) return;
-  const {data:memberships, error} = await _supabase.from('circle_members').select('circle_name,joined_at').eq('user_id', currentUser.id).order('joined_at', {ascending: false});
-  if (error || !memberships || memberships.length === 0) {
+  // Select only circle_name — avoids failure if joined_at column doesn't exist
+  const {data:memberships, error} = await _supabase.from('circle_members').select('circle_name').eq('user_id', currentUser.id);
+  console.log('[Profile Circles] memberships:', memberships, 'error:', error);
+  if (error) {
+    console.error('[Profile Circles] query error:', error);
+    list.innerHTML = '<div class="profile-empty">Could not load circles — please try again.</div>';
+    return;
+  }
+  if (!memberships || memberships.length === 0) {
     list.innerHTML = '<div class="profile-empty">No circles joined yet ✦<p>Join a Circle to connect with sisters around your passions.</p></div>';
     return;
   }
   const grid = document.createElement('div');
   grid.className = 'profile-circles-grid';
   memberships.forEach(m => {
-    const info = (typeof circleInfo !== 'undefined' && circleInfo[m.circle_name]) || {icon: '✦', desc: ''};
+    const name = m.circle_name;
+    if (!name) return;
+    const info = (typeof circleInfo !== 'undefined' && circleInfo[name]) || {icon: '✦', desc: ''};
     const chip = document.createElement('div');
     chip.className = 'pcc';
-    chip.onclick = () => { if (typeof openCircle === 'function') openCircle(m.circle_name); };
-    chip.innerHTML = '<div class="pcc-icon">' + info.icon + '</div><div><div class="pcc-name">' + m.circle_name + '</div><div class="pcc-meta">Joined ' + timeAgo(m.joined_at) + '</div></div>';
+    chip.onclick = () => { if (typeof openCircle === 'function') { showView('circles'); openCircle(name); } };
+    chip.innerHTML = '<div class="pcc-icon">' + info.icon + '</div><div><div class="pcc-name">' + name + '</div><div class="pcc-meta">' + (info.desc ? info.desc.slice(0, 55) + (info.desc.length > 55 ? '…' : '') : 'Circle') + '</div></div>';
     grid.appendChild(chip);
   });
   list.innerHTML = '';
