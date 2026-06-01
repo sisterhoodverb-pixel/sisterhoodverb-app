@@ -309,6 +309,61 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 .feed-section{padding:28px 20px}
 .notif-wrap{display:block!important}
 }
+/* ── PROFILE REDESIGN ── */
+#view-profile{padding-top:0}
+.profile-hdr{background:var(--deep-bg);padding-bottom:28px}
+.profile-hdr-top{padding-top:72px}
+.cap-mode .profile-hdr-top{padding-top:env(safe-area-inset-top)}
+#view-profile .profile-banner{height:130px;border-radius:0;margin-bottom:0;cursor:pointer;position:relative;overflow:hidden;background:linear-gradient(135deg,#1a0f40 0%,var(--deep-bg) 55%,var(--terra) 100%)}
+#view-profile .photo-upload-overlay{font-size:0.72rem}
+.profile-hdr-avatar-row{display:flex;align-items:flex-start;justify-content:space-between;padding:0 20px;margin-top:-46px;margin-bottom:10px}
+#view-profile .profile-avatar-wrap{margin-left:0;margin-bottom:0;flex-shrink:0}
+#view-profile .profile-avatar{width:92px;height:92px;border:4px solid var(--deep-bg);box-shadow:0 4px 24px rgba(0,0,0,0.35)}
+#view-profile #founding-badge{bottom:-12px;left:50%;transform:translateX(-50%)}
+.profile-edit-btn{background:none;border:1.5px solid rgba(212,168,83,0.45);color:var(--gold);padding:8px 18px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:54px}
+.profile-edit-btn:hover{background:var(--gold);color:white;border-color:var(--gold)}
+.profile-hdr-info{padding:0 20px}
+#view-profile .profile-name{color:var(--cream);font-size:1.4rem;margin-bottom:3px}
+#view-profile .profile-handle{color:var(--gold);font-size:0.82rem;margin-bottom:6px}
+.profile-hdr-location{font-size:0.8rem;color:rgba(251,247,240,0.45);margin-bottom:8px;display:none}
+.profile-hdr-location.visible{display:flex;align-items:center;gap:4px}
+#view-profile .profile-bio{color:rgba(251,247,240,0.7);font-size:0.88rem;max-width:none;margin-bottom:16px;line-height:1.65}
+#view-profile .profile-stats{margin-bottom:0;gap:24px}
+#view-profile .stat-num{color:var(--gold)}
+#view-profile .stat-label{color:rgba(251,247,240,0.42);font-size:0.68rem}
+.profile-tabs{display:flex;background:var(--warm-white);border-bottom:1px solid rgba(212,168,83,0.12)}
+.profile-tab{flex:1;padding:14px 8px;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;color:rgba(26,26,26,0.35);position:relative;transition:color 0.2s}
+.profile-tab.active{color:var(--gold)}
+.profile-tab.active::after{content:'';position:absolute;bottom:-1px;left:20%;right:20%;height:2px;background:var(--gold);border-radius:2px 2px 0 0}
+.profile-tab-panel{padding:24px 20px;max-width:720px;margin:0 auto;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+.profile-empty{text-align:center;padding:48px 24px;color:rgba(26,26,26,0.35);font-size:0.88rem;line-height:1.6}
+.profile-circles-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.pcc{display:flex;align-items:center;gap:12px;padding:14px 16px;background:white;border:1px solid rgba(212,168,83,0.12);border-radius:4px;cursor:pointer;transition:box-shadow 0.2s;box-shadow:0 1px 8px rgba(26,26,26,0.04)}
+.pcc:hover{box-shadow:0 4px 16px rgba(26,26,26,0.1)}
+.pcc-icon{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,var(--deep-bg),var(--terra));display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.pcc-name{font-weight:600;font-size:0.9rem;color:var(--deep);font-family:'Playfair Display',serif;margin-bottom:2px}
+.pcc-meta{font-size:0.72rem;color:rgba(26,26,26,0.42)}
+/* Edit profile modal */
+#edit-profile-modal{position:fixed;inset:0;background:rgba(45,27,105,0.75);z-index:10500;display:none;align-items:flex-end;justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#edit-profile-modal.open{display:flex}
+.ep-sheet{background:var(--warm-white);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
+.ep-drag{width:36px;height:4px;border-radius:2px;background:rgba(26,26,26,0.15);margin:12px auto 0}
+.ep-hdr{display:flex;justify-content:space-between;align-items:center;padding:16px 24px;border-bottom:1px solid rgba(212,168,83,0.12);position:sticky;top:0;background:var(--warm-white);z-index:1}
+.ep-title{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--deep)}
+.ep-close{background:none;border:none;font-size:1.2rem;cursor:pointer;color:rgba(26,26,26,0.4);padding:6px;line-height:1;border-radius:50%;transition:background 0.15s}
+.ep-close:hover{background:var(--cream)}
+.ep-body{padding:20px 24px}
+.ep-sec{margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid rgba(212,168,83,0.1)}
+.ep-sec:last-child{border-bottom:none;padding-bottom:calc(16px + env(safe-area-inset-bottom))}
+.ep-sec-title{font-family:'Playfair Display',serif;font-size:0.9rem;font-weight:700;color:var(--deep);margin-bottom:14px}
+@media(min-width:769px){
+  .profile-hdr-info{padding:0 40px}
+  .profile-hdr-avatar-row{padding:0 40px}
+  .profile-tab-panel{padding:32px 40px;padding-bottom:calc(48px + env(safe-area-inset-bottom))}
+  #view-profile .profile-banner{height:160px}
+  .profile-tabs{justify-content:center}
+  .profile-tab{max-width:200px}
+}
 </style>
 
 </head>
@@ -823,56 +878,87 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 <!-- PROFILE -->
 
 <div class="view" id="view-profile">
-  <div class="profile-inner" style="padding:32px 20px 0">
-    <div class="profile-banner" id="profile-banner" onclick="document.getElementById('banner-upload').click()">
-      <img id="profile-banner-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0">
-      <div class="photo-upload-overlay">📷 Change Banner</div>
+  <input type="file" id="banner-upload" accept="image/*" onchange="uploadBanner(this)" style="display:none">
+  <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(this)" style="display:none">
+
+  <!-- ── PROFILE HEADER ── -->
+  <div class="profile-hdr">
+    <div class="profile-hdr-top">
+      <div class="profile-banner" id="profile-banner" onclick="document.getElementById('banner-upload').click()">
+        <img id="profile-banner-img" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;position:absolute;inset:0">
+        <div class="photo-upload-overlay">📷 Change Banner</div>
+      </div>
     </div>
-    <input type="file" id="banner-upload" accept="image/*" onchange="uploadBanner(this)">
-    <input type="file" id="avatar-upload" accept="image/*" onchange="uploadAvatar(this)">
-    <div class="profile-avatar-wrap">
-      <div class="profile-avatar" id="profile-avatar-display">T</div>
-      <div class="avatar-upload-btn" onclick="document.getElementById('avatar-upload').click()">📷</div>
-      <div id="founding-badge" style="display:none;position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,var(--gold),#b8860b);color:white;font-size:0.62rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px;white-space:nowrap;border:2px solid white;">✦ Founding Sister</div>
+    <div class="profile-hdr-avatar-row">
+      <div class="profile-avatar-wrap">
+        <div class="profile-avatar" id="profile-avatar-display">T</div>
+        <div class="avatar-upload-btn" onclick="document.getElementById('avatar-upload').click()">📷</div>
+        <div id="founding-badge" style="display:none;position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#b8860b,#D4A853);color:white;font-size:0.6rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px;white-space:nowrap;border:2px solid var(--deep-bg);">✦ Founding Sister</div>
+      </div>
+      <button class="profile-edit-btn" onclick="openEditProfileModal()">Edit Profile</button>
+    </div>
+    <div class="profile-hdr-info">
+      <div class="profile-name"></div>
+      <div class="profile-handle">@member</div>
+      <div class="profile-hdr-location" id="profile-display-location"></div>
+      <div class="profile-bio">Tell your sisters a little about yourself...</div>
+      <div class="profile-stats">
+        <div class="stat"><div class="stat-num" id="stat-posts">0</div><div class="stat-label">Posts</div></div>
+        <div class="stat"><div class="stat-num" id="stat-circles">0</div><div class="stat-label">Circles</div></div>
+        <div class="stat"><div class="stat-num" id="stat-events">0</div><div class="stat-label">Events</div></div>
+      </div>
     </div>
   </div>
-  <div class="profile-info">
-    <div class="profile-name"></div>
-    <div class="profile-handle">@member</div>
-    <div class="profile-bio">Tell your sisters a little about yourself...</div>
-    <div class="profile-stats">
-      <div class="stat"><div class="stat-num" id="stat-circles">0</div><div class="stat-label">Circles</div></div>
-      <div class="stat"><div class="stat-num" id="stat-events">0</div><div class="stat-label">Events</div></div>
-      <div class="stat"><div class="stat-num" id="stat-posts">0</div><div class="stat-label">Posts</div></div>
-    </div>
+
+  <!-- ── PROFILE TABS ── -->
+  <div class="profile-tabs">
+    <button class="profile-tab active" id="ptab-posts" onclick="switchProfileTab('posts')">Posts</button>
+    <button class="profile-tab" id="ptab-circles" onclick="switchProfileTab('circles')">Circles</button>
   </div>
-  <div class="profile-edit" style="padding:0 20px 40px">
-    <div class="profile-section-title" style="margin-bottom:20px">Edit Profile</div>
-    <div class="form-group"><label class="form-label">Display Name</label><input class="form-input" id="profile-name-input" type="text" placeholder="Your name"></div>
-    <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" id="profile-bio-input" rows="3" style="resize:vertical" placeholder="Tell your sisters about yourself..."></textarea></div>
-    <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="profile-location-input" type="text" placeholder="Where are you based?"></div>
-    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="profile-email-input" type="email" placeholder="your@email.com"></div>
-    <div class="form-group"><label class="form-label">Membership Plan</label><input class="form-input" id="profile-tier-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--gold);font-weight:600"></div>
-    <button class="save-btn" onclick="saveProfile()">Save Changes</button>
 
-    <div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(212,168,83,0.15);">
-      <div class="profile-section-title" style="margin-bottom:20px;">Change Password</div>
-      <div class="form-group">
-        <label class="form-label">New Password</label>
-        <input class="form-input" type="password" id="new-password-input" placeholder="Enter new password">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Confirm New Password</label>
-        <input class="form-input" type="password" id="confirm-password-input" placeholder="Confirm new password">
-      </div>
-      <button class="save-btn" onclick="changePassword()">Update Password</button>
+  <!-- ── TAB PANELS ── -->
+  <div id="profile-posts-panel" class="profile-tab-panel">
+    <div id="profile-posts-list"><div class="profile-empty">Loading posts...</div></div>
+  </div>
+  <div id="profile-circles-panel" class="profile-tab-panel" style="display:none">
+    <div id="profile-circles-list"><div class="profile-empty">Loading circles...</div></div>
+  </div>
+</div>
+
+<!-- ── EDIT PROFILE MODAL ── -->
+<div id="edit-profile-modal">
+  <div class="ep-sheet">
+    <div class="ep-drag"></div>
+    <div class="ep-hdr">
+      <div class="ep-title">Edit Profile</div>
+      <button class="ep-close" onclick="closeEditProfileModal()">✕</button>
     </div>
+    <div class="ep-body">
 
-    <div style="margin-top:32px;padding-top:28px;border-top:1px solid rgba(212,168,83,0.15);">
-      <div class="profile-section-title" style="margin-bottom:20px;">Account</div>
-      <button class="save-btn" onclick="signOut()" style="background:var(--deep-bg);margin-bottom:12px;width:100%;">Log Out</button>
-      <button onclick="confirmDeleteAccount()" style="width:100%;padding:14px;background:none;border:1.5px solid #cc3333;color:#cc3333;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;">Delete My Account</button>
-      <p style="font-size:0.78rem;color:var(--muted);margin-top:10px;line-height:1.6;">Deleting your account is permanent and cannot be undone. All your posts, circles, and profile data will be removed.</p>
+      <div class="ep-sec">
+        <div class="ep-sec-title">Your Info</div>
+        <div class="form-group"><label class="form-label">Display Name</label><input class="form-input" id="profile-name-input" type="text" placeholder="Your name"></div>
+        <div class="form-group"><label class="form-label">Bio</label><textarea class="form-input" id="profile-bio-input" rows="3" style="resize:vertical" placeholder="Tell your sisters about yourself..."></textarea></div>
+        <div class="form-group"><label class="form-label">Location</label><input class="form-input" id="profile-location-input" type="text" placeholder="Where are you based?"></div>
+        <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="profile-email-input" type="email" placeholder="your@email.com" readonly style="background:var(--cream);opacity:0.7"></div>
+        <div class="form-group"><label class="form-label">Membership</label><input class="form-input" id="profile-tier-input" type="text" value="Free Member" readonly style="background:var(--cream);color:var(--gold);font-weight:600"></div>
+        <button class="save-btn" style="width:100%" onclick="saveProfile()">Save Changes</button>
+      </div>
+
+      <div class="ep-sec">
+        <div class="ep-sec-title">Change Password</div>
+        <div class="form-group"><label class="form-label">New Password</label><input class="form-input" type="password" id="new-password-input" placeholder="Enter new password"></div>
+        <div class="form-group"><label class="form-label">Confirm New Password</label><input class="form-input" type="password" id="confirm-password-input" placeholder="Confirm new password"></div>
+        <button class="save-btn" style="width:100%" onclick="changePassword()">Update Password</button>
+      </div>
+
+      <div class="ep-sec">
+        <div class="ep-sec-title">Account</div>
+        <button class="save-btn" onclick="signOut()" style="background:var(--deep-bg);width:100%;margin-bottom:12px;">Log Out</button>
+        <button onclick="confirmDeleteAccount()" style="width:100%;padding:13px;background:none;border:1.5px solid rgba(204,51,51,0.5);color:#cc3333;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;cursor:pointer;">Delete My Account</button>
+        <p style="font-size:0.75rem;color:rgba(26,26,26,0.4);margin-top:10px;line-height:1.6;">Permanent and cannot be undone. All posts, circles, and profile data will be removed.</p>
+      </div>
+
     </div>
   </div>
 </div>
@@ -2093,6 +2179,11 @@ async function loadProfile() {
     document.querySelector('.profile-name').textContent = profile.name || 'Sister';
     document.querySelector('.profile-handle').textContent = profile.handle || '@member';
     document.querySelector('.profile-bio').textContent = profile.bio || 'Tell your sisters a little about yourself...';
+    const locEl = document.getElementById('profile-display-location');
+    if (locEl) { if (profile.location) { locEl.textContent = '📍 ' + profile.location; locEl.classList.add('visible'); } else { locEl.classList.remove('visible'); } }
+    // Reset and load feed tab
+    _profileTabLoaded = {posts: false, circles: false};
+    switchProfileTab('posts');
     const nameIn = document.getElementById('profile-name-input');
     const bioIn = document.getElementById('profile-bio-input');
     const locIn = document.getElementById('profile-location-input');
@@ -2134,6 +2225,7 @@ async function saveProfile() {
   const {error} = await _supabase.from('profiles').update({name, bio, location}).eq('id', currentUser.id);
   if (error) { showToast('Could not save: ' + error.message); return; }
   showToast('Profile saved ✦');
+  closeEditProfileModal();
   loadProfile();
 }
 
@@ -2148,6 +2240,78 @@ async function loadProfilePhotos() {
     const img = document.getElementById('profile-banner-img');
     if (img) { img.src = profile.banner_url; img.style.display = 'block'; }
   }
+}
+
+// ── EDIT PROFILE MODAL ──
+
+function openEditProfileModal() {
+  const modal = document.getElementById('edit-profile-modal');
+  if (!modal) return;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditProfileModal() {
+  const modal = document.getElementById('edit-profile-modal');
+  if (!modal) return;
+  modal.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close modal on backdrop click
+document.addEventListener('DOMContentLoaded', () => {
+  const modal = document.getElementById('edit-profile-modal');
+  if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeEditProfileModal(); });
+});
+
+// ── PROFILE FEED TABS ──
+
+let _profileTabLoaded = {posts: false, circles: false};
+
+function switchProfileTab(tab) {
+  document.getElementById('ptab-posts').classList.toggle('active', tab === 'posts');
+  document.getElementById('ptab-circles').classList.toggle('active', tab === 'circles');
+  document.getElementById('profile-posts-panel').style.display = tab === 'posts' ? '' : 'none';
+  document.getElementById('profile-circles-panel').style.display = tab === 'circles' ? '' : 'none';
+  if (!_profileTabLoaded[tab]) { _profileTabLoaded[tab] = true; tab === 'posts' ? loadProfilePosts() : loadProfileCircles(); }
+}
+
+async function loadProfilePosts() {
+  if (!currentUser) return;
+  const list = document.getElementById('profile-posts-list');
+  if (!list) return;
+  const {data:posts, error} = await _supabase.from('posts').select('*').eq('user_id', currentUser.id).order('created_at', {ascending: false}).limit(50);
+  if (error || !posts || posts.length === 0) {
+    list.innerHTML = '<div class="profile-empty">No posts yet ✦<p>When you share in a Circle or the community feed, your posts will appear here.</p></div>';
+    return;
+  }
+  const profileMap = {};
+  profileMap[currentUser.id] = window._currentUserProfile || {name: window._currentUserName || 'You', avatar_url: null};
+  list.innerHTML = '';
+  posts.forEach(post => { const card = buildPostCard(post, profileMap, false); if (card) list.appendChild(card); });
+}
+
+async function loadProfileCircles() {
+  if (!currentUser) return;
+  const list = document.getElementById('profile-circles-list');
+  if (!list) return;
+  const {data:memberships, error} = await _supabase.from('circle_members').select('circle_name,joined_at').eq('user_id', currentUser.id).order('joined_at', {ascending: false});
+  if (error || !memberships || memberships.length === 0) {
+    list.innerHTML = '<div class="profile-empty">No circles joined yet ✦<p>Join a Circle to connect with sisters around your passions.</p></div>';
+    return;
+  }
+  const grid = document.createElement('div');
+  grid.className = 'profile-circles-grid';
+  memberships.forEach(m => {
+    const info = (typeof circleInfo !== 'undefined' && circleInfo[m.circle_name]) || {icon: '✦', desc: ''};
+    const chip = document.createElement('div');
+    chip.className = 'pcc';
+    chip.onclick = () => { if (typeof openCircle === 'function') openCircle(m.circle_name); };
+    chip.innerHTML = '<div class="pcc-icon">' + info.icon + '</div><div><div class="pcc-name">' + m.circle_name + '</div><div class="pcc-meta">Joined ' + timeAgo(m.joined_at) + '</div></div>';
+    grid.appendChild(chip);
+  });
+  list.innerHTML = '';
+  list.appendChild(grid);
 }
 
 // ── AVATAR CROP ──
