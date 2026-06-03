@@ -241,7 +241,7 @@ input[type=“file”]{display:none}
 .guest-bar-text{font-size:0.88rem;color:rgba(251,247,240,0.75);line-height:1.5}
 .guest-bar-text strong{display:block;color:var(--cream);font-family:’Playfair Display’,serif;font-size:0.95rem;font-weight:700;margin-bottom:2px}
 .guest-bar-btns{display:flex;gap:10px;flex-shrink:0;flex-wrap:wrap}
-.guest-bar-btns button{padding:10px 20px;font-family:’DM Sans’,sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:2px;cursor:pointer;white-space:nowrap}
+.guest-bar-btns button{padding:10px 20px;font-family:’DM Sans’,sans-serif;font-size:0.8rem;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;border-radius:2px;cursor:pointer;white-space:nowrap;touch-action:manipulation}
 .guest-bar-join{background:var(--gold);color:white;border:none}
 .guest-bar-login{background:transparent;color:var(--gold);border:1px solid rgba(184,161,201,0.45)}
 .form-group{margin-bottom:20px}
@@ -254,7 +254,7 @@ input[type=“file”]{display:none}
 .mobile-nav-btn{background:none;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-family:’DM Sans’,sans-serif;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.06em;color:rgba(26,26,26,0.4);transition:all 0.2s;padding:6px 10px;border-radius:8px;min-width:54px;min-height:44px}
 .mobile-nav-btn.active{color:var(--gold);background:rgba(212,168,83,0.08)}
 .mobile-nav-btn span:first-child{font-size:1.4rem}
-.modal-overlay{position:fixed;inset:0;background:rgba(45,27,105,0.85);z-index:10100;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay{position:fixed;inset:0;background:rgba(45,27,105,0.85);z-index:20000;display:none;align-items:center;justify-content:center;padding:20px;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 .modal-overlay.open{display:flex}
 .modal{background:var(--warm-white);border-radius:6px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;padding:40px;box-shadow:0 20px 60px rgba(26,26,26,0.3)}
 .modal-title{font-family:‘Playfair Display’,serif;font-size:1.5rem;font-weight:700;margin-bottom:6px;color:var(--deep)}
@@ -277,7 +277,7 @@ input[type=“file”]{display:none}
 .auth-sub{font-size:0.85rem;color:var(--gold);margin-bottom:24px}
 .auth-switch{text-align:center;font-size:0.82rem;color:rgba(26,26,26,0.5);margin-top:16px}
 .auth-switch a{color:var(--gold)!important;text-decoration:none;font-weight:600}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--deep-bg);color:var(--cream);padding:12px 24px;border-radius:3px;font-size:0.85rem;opacity:0;transition:all 0.3s;pointer-events:none;z-index:10200;white-space:nowrap}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--deep-bg);color:var(--cream);padding:12px 24px;border-radius:3px;font-size:0.85rem;opacity:0;transition:all 0.3s;pointer-events:none;z-index:20100;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .mp-modal{max-width:520px;padding:0;overflow:hidden}
 .mp-banner{height:120px;background:linear-gradient(135deg,#2D1B69,#6B5BE8);position:relative;background-size:cover;background-position:center}
@@ -344,7 +344,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 .pcc-name{font-weight:600;font-size:0.9rem;color:var(--deep);font-family:'Playfair Display',serif;margin-bottom:2px}
 .pcc-meta{font-size:0.72rem;color:rgba(26,26,26,0.42)}
 /* Edit profile modal */
-#edit-profile-modal{position:fixed;inset:0;background:rgba(45,27,105,0.75);z-index:10500;display:none;align-items:flex-end;justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+#edit-profile-modal{position:fixed;inset:0;background:rgba(45,27,105,0.75);z-index:20500;display:none;align-items:flex-end;justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 #edit-profile-modal.open{display:flex}
 .ep-sheet{background:var(--warm-white);border-radius:16px 16px 0 0;width:100%;max-width:560px;max-height:90vh;overflow-y:auto}
 .ep-drag{width:36px;height:4px;border-radius:2px;background:rgba(26,26,26,0.15);margin:12px auto 0}
@@ -617,8 +617,14 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
         <div class="gif-search-bar"><input class="gif-search-input" id="circle-gif-search" placeholder="Search GIFs..." onkeydown="if(event.key==='Enter')searchCircleGifs()"><button class="gif-search-btn" onclick="searchCircleGifs()">Search</button></div>
         <div class="gif-grid" id="circle-gif-grid"><div class="gif-loading">Search for a GIF above ✦</div></div>
       </div>
+      <div id="circle-photo-preview" style="display:none;position:relative;margin:8px 0;">
+        <img id="circle-photo-preview-img" src="" alt="Photo preview" style="max-width:100%;max-height:200px;border-radius:6px;object-fit:cover;">
+        <button onclick="removeCirclePhoto()" style="position:absolute;top:6px;right:6px;background:rgba(45,27,105,0.7);color:white;border:none;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:0.9rem;">✕</button>
+      </div>
+      <input type="file" id="circle-photo-upload-input" accept="image/*" style="display:none" onchange="handleCirclePhotoSelect(this)">
       <div class="composer-actions">
         <div class="composer-tools">
+          <button class="tool-btn" onclick="document.getElementById('circle-photo-upload-input').click()">🖼 Photo</button>
           <button class="tool-btn" id="circle-gif-btn" onclick="toggleCircleGifPicker()">GIF 🎬</button>
           <button class="tool-btn" id="circle-question-btn" onclick="toggleCircleQuestionMode()">❓ Question</button>
         </div>
@@ -996,14 +1002,8 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     return window.Capacitor?.getPlatform() || 'web'; // 'ios' | 'android' | 'web'
   }
 
-  // Opens site-relative paths in the system browser when running in Capacitor,
-  // so local-bundle pages that don't exist in the bundle load from Vercel instead.
   function openPage(path) {
-    if (window.Capacitor) {
-      window.open('https://community.sisterhoodverb.com' + path, '_system');
-    } else {
-      window.location = path;
-    }
+    window.location = path;
   }
 const _supabase = window.supabase.createClient(
   'https://cqiymqekdtewnorojlus.supabase.co',
@@ -1019,6 +1019,7 @@ let currentUser = null;
 let selectedGifUrl = null;
 let selectedPhotoFile = null;
 let selectedCircleGifUrl = null;
+let selectedCirclePhotoFile = null;
 let isQuestionMode = false;
 let isCircleQuestionMode = false;
 let currentCircle = null;
@@ -1060,7 +1061,7 @@ if (session) {
     // Give Supabase 5s to restore session before deciding to show login
     setTimeout(() => {
       if (!currentUser) {
-        if (loader) { loader.style.opacity = '0'; loader.style.transition = 'opacity 0.5s'; setTimeout(() => loader.remove(), 500); }
+        if (loader) { loader.style.opacity = '0'; loader.style.pointerEvents = 'none'; loader.style.transition = 'opacity 0.5s'; setTimeout(() => loader.remove(), 500); }
         if (feed) feed.innerHTML = '';
         const guestBar = document.getElementById('guest-bar');
         if (guestBar) guestBar.style.display = 'flex';
@@ -1104,7 +1105,7 @@ if (session) {
 async function onLogin() {
   // Hide PWA loading screen
   const loader = document.getElementById('pwa-loading');
-  if (loader) { loader.style.opacity = '0'; loader.style.transition = 'opacity 0.5s'; setTimeout(() => loader.remove(), 500); }
+  if (loader) { loader.style.opacity = '0'; loader.style.pointerEvents = 'none'; loader.style.transition = 'opacity 0.5s'; setTimeout(() => loader.remove(), 500); }
   // Mark as returning visitor
   localStorage.setItem('sv_has_visited', '1');
   document.getElementById('logout-btn').style.display = 'block';
@@ -1374,7 +1375,7 @@ let gifHtml = '';
 let linkPreviewHtml = '';
 const gifMatch = textContent.match(/\[gif:(.*?)\]/);
 if (gifMatch) {
-  gifHtml = '<img src="' + gifMatch[1] + '" style="max-width:100%;border-radius:4px;margin-top:10px;max-height:200px;object-fit:cover" alt="GIF">';
+  gifHtml = '<img src="' + gifMatch[1] + '" style="display:block;max-width:100%;border-radius:4px;margin-top:10px;max-height:200px;object-fit:cover" alt="GIF">';
   textContent = textContent.replace(/\[gif:(.*?)\]/, '').trim();
 }
 const detectedUrl = extractUrl(textContent);
@@ -1411,7 +1412,8 @@ if (detectedUrl && !gifMatch) {
       '</div>' +
       (isCircle ? '' : tagHtml) +
     '</div>' +
-   '<div class="' + bodyClass + '" style="' + (post.circle === 'Speak Poet!' ? 'font-family:Playfair Display,Georgia,serif;font-style:italic;font-size:1rem;line-height:1.9;' : '') + '">' + textContent + 
+   '<div class="' + bodyClass + '" style="' + (post.circle === 'Speak Poet!' ? 'font-family:Playfair Display,Georgia,serif;font-style:italic;font-size:1rem;line-height:1.9;' : '') + '">' +
+'<div>' + textContent + '</div>' +
 (post.image_url ? '<img src="' + post.image_url + '" style="max-width:100%;border-radius:6px;margin-top:10px;max-height:400px;object-fit:cover;display:block;" alt="Post image">' : '') +
 gifHtml + linkPreviewHtml + '</div>' +
     '<div class="card-footer">' +
@@ -1999,16 +2001,19 @@ async function postToCircle() {
   if (!currentUser) { openAuthModal('login'); return; }
   const ta = document.getElementById('circle-composer-input');
   const text = ta.value.trim();
-  if (!text && !selectedCircleGifUrl) { showToast('Write something first ✦'); return; }
+  if (!text && !selectedCircleGifUrl && !selectedCirclePhotoFile) { showToast('Write something first ✦'); return; }
   const content = text + (selectedCircleGifUrl ? '\n[gif:' + selectedCircleGifUrl + ']' : '');
   const tag = isCircleQuestionMode ? 'Question' : currentCircle;
   showToast('Sharing... ✦');
-  const {error} = await _supabase.from('posts').insert({user_id: currentUser.id, content, circle: currentCircle, tag, likes: 0});
-  if (error) { showToast('Could not post: ' + error.message); return; }
-  ta.value = ''; removeCircleGif();
+  ta.value = ''; removeCircleGif(); removeCirclePhoto();
   if (isCircleQuestionMode) toggleCircleQuestionMode();
-  showToast('Shared with the circle ✦');
-  loadCircleFeed(currentCircle);
+  if (selectedCirclePhotoFile) {
+    const fileToUpload = selectedCirclePhotoFile;
+    selectedCirclePhotoFile = null;
+    uploadCirclePostPhoto(fileToUpload, content, tag);
+  } else {
+    saveCirclePost(content, tag, null);
+  }
 }
 
 // ── GIF PICKER ──
@@ -2101,6 +2106,51 @@ function removeCircleGif() {
   selectedCircleGifUrl = null;
   document.getElementById('circle-gif-preview').style.display = 'none';
   document.getElementById('circle-gif-preview-img').src = '';
+}
+
+function handleCirclePhotoSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Please select an image file'); input.value = ''; return; }
+  selectedCirclePhotoFile = file;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = document.getElementById('circle-photo-preview-img');
+    const preview = document.getElementById('circle-photo-preview');
+    if (img) img.src = e.target.result;
+    if (preview) preview.style.display = 'block';
+  };
+  reader.onerror = function() { selectedCirclePhotoFile = null; input.value = ''; showToast('Could not read photo — please try again'); };
+  reader.readAsDataURL(file);
+}
+
+function removeCirclePhoto() {
+  selectedCirclePhotoFile = null;
+  const img = document.getElementById('circle-photo-preview-img');
+  const preview = document.getElementById('circle-photo-preview');
+  const input = document.getElementById('circle-photo-upload-input');
+  if (img) img.src = '';
+  if (preview) preview.style.display = 'none';
+  if (input) input.value = '';
+}
+
+async function uploadCirclePostPhoto(file, content, tag) {
+  const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  const filePath = currentUser.id + '-circle-post-' + Date.now() + '.' + ext;
+  const {error} = await _supabase.storage.from('post-images').upload(filePath, file, {upsert: false});
+  if (error) { showToast('Photo upload failed — posting without image'); saveCirclePost(content, tag, null); return; }
+  const {data} = _supabase.storage.from('post-images').getPublicUrl(filePath);
+  saveCirclePost(content, tag, data.publicUrl);
+}
+
+async function saveCirclePost(content, tag, imageUrl) {
+  const {error} = await _supabase.from('posts').insert({
+    user_id: currentUser.id, content, circle: currentCircle, tag, likes: 0,
+    image_url: imageUrl || null
+  });
+  if (error) { showToast('Could not post: ' + error.message); return; }
+  showToast('Shared with the circle ✦');
+  loadCircleFeed(currentCircle);
 }
 
 // ── MEMBER PROFILE MODAL ──
@@ -2543,7 +2593,7 @@ async function showPaywall() {
 
   const modal = document.createElement('div');
   modal.id = 'rc-paywall-modal';
-  modal.style.cssText = 'position:fixed;inset:0;background:rgba(45,27,105,0.88);z-index:11000;display:flex;' + overlayAlign + 'justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(45,27,105,0.88);z-index:21000;display:flex;' + overlayAlign + 'justify-content:center;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);';
   modal.addEventListener('click', function(e) { if (e.target === modal) closePaywall(); });
   modal.innerHTML = `
     <div style="${sheetStyle}" onclick="event.stopPropagation()">
@@ -3657,7 +3707,7 @@ async function deletePodcastComment(commentId, episodeId) {
 
 <!-- ONBOARDING MODAL -->
 
-<div class="modal-overlay" id="onboarding-modal" style="z-index:10100;">
+<div class="modal-overlay" id="onboarding-modal" style="z-index:20000;">
   <div class="modal" style="max-width:480px;padding:0;overflow-y:auto;border-radius:8px;max-height:90vh;">
 
 ```
