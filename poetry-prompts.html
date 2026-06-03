@@ -243,13 +243,11 @@ const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','
 
 function getAprilDay() {
   const now = new Date();
-  // If it's April 2026, return the day of month (1-30)
-  // Otherwise for testing, you can adjust this
   if (now.getFullYear() === 2026 && now.getMonth() === 3) {
     return now.getDate(); // 1-30
   }
-  // Outside April — show last available prompt for preview
-  return Math.min(13, 30);
+  // April has passed — unlock all days
+  return 30;
 }
 
 function formatDate(day) {
@@ -258,29 +256,36 @@ function formatDate(day) {
 }
 
 function renderToday() {
+  const now = new Date();
+  const isApril = now.getFullYear() === 2026 && now.getMonth() === 3;
   const today = getAprilDay();
-  const prompt = PROMPTS[today - 1];
-  const todayNum = document.getElementById('today-num');
-  const todayDate = document.getElementById('today-date');
-  const todayPrompt = document.getElementById('today-prompt');
+  let displayDay = today;
+  let prompt = PROMPTS[today - 1];
 
-  document.getElementById('stat-revealed').textContent = Math.min(today, 13);
-  document.getElementById('stat-remaining').textContent = Math.max(30 - today, 0);
+  // If today's slot is null, find the last filled prompt
+  if (!prompt) {
+    for (let i = today - 2; i >= 0; i--) {
+      if (PROMPTS[i]) { displayDay = i + 1; prompt = PROMPTS[i]; break; }
+    }
+  }
 
-  todayNum.textContent = 'Day ' + today;
-  todayDate.textContent = formatDate(today);
+  const revealed = PROMPTS.filter(p => p !== null).length;
+  document.getElementById('stat-revealed').textContent = revealed;
+  document.getElementById('stat-remaining').textContent = isApril ? Math.max(30 - today, 0) : 0;
+
+  document.getElementById('today-num').textContent = 'Day ' + displayDay;
+  document.getElementById('today-date').textContent = formatDate(displayDay);
 
   if (prompt) {
-    todayPrompt.textContent = prompt;
+    document.getElementById('today-prompt').textContent = prompt;
     window._todayPrompt = prompt;
-    // Show countdown to tomorrow
-    const tomorrow = new Date(2026, 3, today + 1);
-    if (today < 30) {
+    window._todayDisplayDay = displayDay;
+    if (isApril && today < 30) {
       document.getElementById('coming-next').style.display = 'flex';
-      startCountdown(tomorrow);
+      startCountdown(new Date(2026, 3, today + 1));
     }
   } else {
-    todayPrompt.textContent = 'Today\'s prompt is coming soon — check back! ✦';
+    document.getElementById('today-prompt').textContent = 'All 30 prompts have been revealed ✦';
     window._todayPrompt = null;
   }
 }
@@ -301,6 +306,8 @@ function startCountdown(target) {
 }
 
 function renderGrid() {
+  const now = new Date();
+  const isApril = now.getFullYear() === 2026 && now.getMonth() === 3;
   const today = getAprilDay();
   const grid = document.getElementById('prompts-grid');
   grid.innerHTML = '';
@@ -308,8 +315,8 @@ function renderGrid() {
   for (let i = 0; i < 30; i++) {
     const day = i + 1;
     const prompt = PROMPTS[i];
-    const isToday = day === today;
-    const isUnlocked = day <= today && prompt !== null;
+    const isToday = isApril && day === today;
+    const isPast = day <= today;
     const card = document.createElement('div');
     card.style.animationDelay = (i * 0.03) + 's';
 
@@ -319,11 +326,16 @@ function renderGrid() {
         '<div class="today-pip"></div>' +
         '<div class="prompt-day-label today-lbl">Day ' + day + ' — Today ✦</div>' +
         '<div class="prompt-text">' + prompt + '</div>';
-    } else if (isUnlocked) {
+    } else if (isPast && prompt) {
       card.className = 'prompt-card';
       card.innerHTML =
         '<div class="prompt-day-label">Day ' + day + ' · ' + formatDate(day).split(',')[0] + '</div>' +
         '<div class="prompt-text">' + prompt + '</div>';
+    } else if (isPast && !prompt) {
+      card.className = 'prompt-card locked';
+      card.innerHTML =
+        '<div class="prompt-day-label" style="color:rgba(28,20,16,0.25);">Day ' + day + '</div>' +
+        '<div class="prompt-text locked-text" style="font-style:italic;color:rgba(28,20,16,0.3);">Prompt not yet added</div>';
     } else {
       card.className = 'prompt-card locked';
       card.innerHTML =
@@ -336,7 +348,8 @@ function renderGrid() {
 
 function copyPrompt() {
   if (!window._todayPrompt) return;
-  const text = 'Day ' + getAprilDay() + ' — National Poetry Month Prompt by COMMA:\n\n"' + window._todayPrompt + '"\n\nShare your response at community.sisterhoodverb.com';
+  const day = window._todayDisplayDay || getAprilDay();
+  const text = 'Day ' + day + ' — National Poetry Month Prompt by COMMA:\n\n"' + window._todayPrompt + '"\n\nShare your response at community.sisterhoodverb.com';
   navigator.clipboard.writeText(text).then(() => showToast('Prompt copied ✦'));
 }
 
