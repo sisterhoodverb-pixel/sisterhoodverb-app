@@ -2004,12 +2004,11 @@ async function postToCircle() {
   if (!text && !selectedCircleGifUrl && !selectedCirclePhotoFile) { showToast('Write something first ✦'); return; }
   const content = text + (selectedCircleGifUrl ? '\n[gif:' + selectedCircleGifUrl + ']' : '');
   const tag = isCircleQuestionMode ? 'Question' : currentCircle;
+  const fileToUpload = selectedCirclePhotoFile;
   showToast('Sharing... ✦');
   ta.value = ''; removeCircleGif(); removeCirclePhoto();
   if (isCircleQuestionMode) toggleCircleQuestionMode();
-  if (selectedCirclePhotoFile) {
-    const fileToUpload = selectedCirclePhotoFile;
-    selectedCirclePhotoFile = null;
+  if (fileToUpload) {
     uploadCirclePostPhoto(fileToUpload, content, tag);
   } else {
     saveCirclePost(content, tag, null);
