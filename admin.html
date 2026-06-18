@@ -424,7 +424,7 @@ async function loadOverviewStats() {
 }
 
 async function loadMembers() {
-  var r1 = await _sb.from('profiles').select('id,name,handle,membership_tier,created_at');
+  var r1 = await _sb.from('profiles').select('id,name,handle,membership_tier,android_beta,created_at');
   var r2 = await _sb.from('posts').select('user_id');
   var profiles = r1.data || [];
   var postCounts = {};
@@ -436,25 +436,28 @@ async function loadMembers() {
     ? '<tr><td colspan="5" style="text-align:center;padding:24px;color:rgba(28,20,16,0.4)">No members yet</td></tr>'
     : profiles.map(function(m){
         var tier=m.membership_tier||'free';
+        var androidBeta=m.android_beta||false;
         return '<tr>'+
           '<td><strong style="font-family:Playfair Display,serif">'+(m.name||'Sister')+'</strong><br>'+
           '<span style="font-size:0.72rem;color:rgba(28,20,16,0.4)">'+(m.handle||'')+'</span></td>'+
-          '<td><span class="badge badge-'+tier+'">'+tier+'</span></td>'+
+          '<td><span class="badge badge-'+tier+'">'+tier+'</span>'+(androidBeta?'<span class="badge badge-founding" style="margin-left:4px;font-size:0.6rem">Android</span>':'')+'</td>'+
           '<td style="font-size:0.8rem;color:rgba(28,20,16,0.5)">'+fmtDate(m.created_at)+'</td>'+
           '<td style="font-size:0.88rem;font-weight:600;color:var(--terra)">'+(postCounts[m.id]||0)+'</td>'+
-          '<td><button class="btn btn-secondary btn-sm" onclick="manageMember(\''+m.id+'\',\''+(m.name||'Sister').replace(/'/g,"\\'")+'\',\''+tier+'\')">Manage</button></td>'+
+          '<td><button class="btn btn-secondary btn-sm" onclick="manageMember(\''+m.id+'\',\''+(m.name||'Sister').replace(/'/g,"\\'")+'\',\''+tier+'\','+androidBeta+')">Manage</button></td>'+
         '</tr>';
       }).join('');
 }
 
-async function manageMember(id, name, tier) {
+async function manageMember(id, name, tier, androidBeta) {
   var newTier = prompt('Update tier for '+name+'\nCurrent: '+tier+'\n\nEnter new tier (free, founding, paid, founder):');
   if (!newTier) return;
   newTier = newTier.toLowerCase().trim();
   if (!['free','founding','paid','founder'].includes(newTier)) { alert('Invalid tier. Use: free, founding, paid, or founder'); return; }
-  var r = await _sb.from('profiles').update({membership_tier:newTier}).eq('id',id);
+  var newAndroid = confirm((androidBeta ? '✓ Android Founding Sister badge is ON' : '✗ Android Founding Sister badge is OFF')+'\n\nClick OK to toggle it, Cancel to keep as-is.');
+  var newAndroidBeta = newAndroid ? !androidBeta : androidBeta;
+  var r = await _sb.from('profiles').update({membership_tier:newTier, android_beta:newAndroidBeta}).eq('id',id);
   if (r.error) { alert('Error: '+r.error.message); return; }
-  alert(name+' updated to '+newTier+' ✦');
+  alert(name+' updated to '+newTier+(newAndroidBeta?' ✦ Android Founding Sister badge ON':' (no Android badge)')+' ✦');
   loadMembers();
 }
 

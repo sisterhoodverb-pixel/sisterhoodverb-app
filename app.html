@@ -319,7 +319,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 .profile-hdr-avatar-row{display:flex;align-items:flex-start;justify-content:space-between;padding:0 20px;margin-top:-46px;margin-bottom:10px}
 #view-profile .profile-avatar-wrap{margin-left:0;margin-bottom:0;flex-shrink:0}
 #view-profile .profile-avatar{width:92px;height:92px;border:4px solid var(--deep-bg);box-shadow:0 4px 24px rgba(0,0,0,0.35)}
-#view-profile #founding-badge{bottom:-12px;left:50%;transform:translateX(-50%)}
+#view-profile .profile-badge-stack{bottom:-12px;left:50%;transform:translateX(-50%)}
 .profile-edit-btn{background:none;border:1.5px solid rgba(212,168,83,0.45);color:var(--gold);padding:8px 18px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:54px}
 .profile-edit-btn:hover{background:var(--gold);color:white;border-color:var(--gold)}
 .profile-hdr-info{padding:0 20px}
@@ -899,7 +899,10 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
       <div class="profile-avatar-wrap">
         <div class="profile-avatar" id="profile-avatar-display">T</div>
         <div class="avatar-upload-btn" onclick="document.getElementById('avatar-upload').click()">📷</div>
-        <div id="founding-badge" style="display:none;position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg,#b8860b,#D4A853);color:white;font-size:0.6rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px;white-space:nowrap;border:2px solid var(--deep-bg);">✦ Founding Sister</div>
+        <div class="profile-badge-stack" style="position:absolute;bottom:-12px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div id="founding-badge" style="display:none;background:linear-gradient(135deg,#b8860b,#D4A853);color:white;font-size:0.6rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px;white-space:nowrap;border:2px solid var(--deep-bg);">✦ Founding Sister</div>
+          <div id="android-beta-badge" style="display:none;background:linear-gradient(135deg,#b8860b,#D4A853);color:white;font-size:0.6rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:3px 10px;border-radius:20px;white-space:nowrap;border:2px solid var(--deep-bg);">✦ Android Founding Sister</div>
+        </div>
       </div>
       <button class="profile-edit-btn" onclick="openEditProfileModal()">Edit Profile</button>
     </div>
@@ -1157,6 +1160,10 @@ async function onLogin() {
       } else {
         badge.style.display = 'none';
       }
+    }
+    const androidBadge = document.getElementById('android-beta-badge');
+    if (androidBadge) {
+      androidBadge.style.display = profile.android_beta ? 'flex' : 'none';
     }
   }
 
@@ -2258,6 +2265,10 @@ async function loadProfile() {
       } else {
         badge.style.display = 'none';
       }
+    }
+    const androidBadge = document.getElementById('android-beta-badge');
+    if (androidBadge) {
+      androidBadge.style.display = profile.android_beta ? 'flex' : 'none';
     }
     // Store tier globally for feature gating
     window._currentUserTier = profile.membership_tier;
