@@ -71,11 +71,11 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .onb-circle-item.joined{border-color:var(--gold);background:rgba(212,168,83,0.05)}
 .onb-circle-join{background:none;border:1.5px solid var(--gold);color:var(--gold);padding:5px 14px;border-radius:2px;font-family:‘DM Sans’,sans-serif;font-size:0.75rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap}
 .onb-circle-join.joined{background:var(--gold);color:white}
-.view{display:none;padding-top:72px;padding-bottom:calc(70px + env(safe-area-inset-bottom));min-height:100vh}
+.view{display:none;padding-top:72px;padding-bottom:calc(90px + env(safe-area-inset-bottom));min-height:100vh}
 .view.active{display:block}
 .cap-mode .view{padding-top:env(safe-area-inset-top)}
 .cap-mode #view-home{padding-top:0}
-#view-home{padding-top:0;padding-bottom:calc(70px + env(safe-area-inset-bottom))}
+#view-home{padding-top:0;padding-bottom:calc(90px + env(safe-area-inset-bottom))}
 .home-hero{background:var(--deep-bg);padding:152px 40px 80px;position:relative;overflow:hidden}
 .home-hero::after{content:’’;position:absolute;bottom:-2px;left:0;right:0;height:40px;background:var(--warm-white);clip-path:ellipse(55% 100% at 50% 100%)}
 .hero-greeting{font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
@@ -305,10 +305,17 @@ input[type=“file”]{display:none}
 nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:none}
 .home-hero,.feed-section,.circles-grid,.events-main,.events-sidebar,.resources-layout,.profile-info,.profile-avatar-wrap{padding-left:20px;padding-right:20px}
 .events-layout{grid-template-columns:1fr}.events-sidebar{display:none}
-.hero-accent{display:none}.view{padding-bottom:70px}
+.hero-accent{display:none}.view{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
 .feed-section{padding:28px 20px}
 .notif-wrap{display:block!important}
 }
+/* ── FLOATING PILL NAV ── */
+#cap-nav{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:420px;background:#fff;border-radius:30px;box-shadow:0 8px 32px rgba(45,27,105,0.2);display:flex;align-items:center;justify-content:space-around;padding:5px 6px;z-index:10001}
+.pill-btn{background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;padding:7px 8px;border-radius:22px;position:relative;color:rgba(45,27,105,0.38);flex:1;max-width:64px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.pill-btn.active{background:#2D1B69;color:#fff}
+.pill-btn .pill-icon{display:flex;align-items:center;justify-content:center;line-height:1}
+.pill-btn .pill-label{font-family:'Playfair Display',serif;font-size:0.52rem;font-weight:700;text-transform:capitalize;color:rgba(45,27,105,0.38);letter-spacing:0.01em;white-space:nowrap}
+.pill-btn.active .pill-label{color:#D4A853}
 /* ── PROFILE REDESIGN ── */
 #view-profile{padding-top:0}
 .profile-hdr{background:var(--deep-bg);padding-bottom:28px}
@@ -982,13 +989,32 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
 </div>
 
 <!-- MOBILE NAV: direct child of body, outside all .view divs -->
-<div id="cap-nav" style="position:fixed;bottom:0;left:0;width:100%;min-height:60px;background:#F0EDFF;display:flex;justify-content:space-around;align-items:center;z-index:10001;border-top:1px solid #eee;padding-bottom:env(safe-area-inset-bottom);">
-  <button id="mob-home" onclick="showView('home',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:#6B5BE8;cursor:pointer;padding:6px 10px;">🏠<span>Home</span></button>
-  <button id="mob-circles" onclick="showViewWithProfile('circles',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(26,26,26,0.4);cursor:pointer;padding:6px 10px;">⭕<span>Circles</span></button>
-  <button id="mob-events" onclick="showView('events',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(26,26,26,0.4);cursor:pointer;padding:6px 10px;">📅<span>Events</span></button>
-  <button id="mob-resources" onclick="showView('resources',this)" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(26,26,26,0.4);cursor:pointer;padding:6px 10px;">📚<span>Library</span></button>
-  <button id="mob-profile" onclick="showViewWithProfile('profile',this);loadProfile();loadProfilePhotos();" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(26,26,26,0.4);cursor:pointer;padding:6px 10px;">👤<span>Profile</span></button>
-  <button id="mob-notif" onclick="toggleNotifDropdown()" style="background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:0.6rem;color:rgba(26,26,26,0.4);cursor:pointer;padding:6px 10px;position:relative;">🔔<span id="mob-notif-badge" style="display:none;position:absolute;top:2px;right:6px;background:#e74c3c;color:white;border-radius:50%;width:16px;height:16px;font-size:0.55rem;font-weight:700;align-items:center;justify-content:center;border:2px solid white;">0</span><span>Alerts</span></button>
+<div id="cap-nav" style="display:none;">
+  <button id="mob-home" class="pill-btn active" onclick="showView('home',this)">
+    <span class="pill-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg></span>
+    <span class="pill-label">Home</span>
+  </button>
+  <button id="mob-circles" class="pill-btn" onclick="showViewWithProfile('circles',this)">
+    <span class="pill-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></span>
+    <span class="pill-label">Circles</span>
+  </button>
+  <button id="mob-events" class="pill-btn" onclick="showView('events',this)">
+    <span class="pill-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg></span>
+    <span class="pill-label">Events</span>
+  </button>
+  <button id="mob-resources" class="pill-btn" onclick="showView('resources',this)">
+    <span class="pill-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 4h5v8l-2.5-1.5L6 12V4z"/></svg></span>
+    <span class="pill-label">Library</span>
+  </button>
+  <button id="mob-profile" class="pill-btn" onclick="showViewWithProfile('profile',this);loadProfile();loadProfilePhotos();">
+    <span class="pill-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg></span>
+    <span class="pill-label">Profile</span>
+  </button>
+  <button id="mob-notif" class="pill-btn" onclick="toggleNotifDropdown()">
+    <span class="pill-icon"><svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg></span>
+    <span id="mob-notif-badge" style="display:none;position:absolute;top:4px;right:4px;background:#e74c3c;color:white;border-radius:50%;width:15px;height:15px;font-size:0.5rem;font-weight:700;align-items:center;justify-content:center;border:2px solid white;">0</span>
+    <span class="pill-label">Alerts</span>
+  </button>
 </div>
 
 <script>
@@ -2504,10 +2530,10 @@ function showView(name, el) {
   views.forEach(v => document.getElementById('view-' + v).classList.remove('active'));
   document.getElementById('view-' + name).classList.add('active');
   document.querySelectorAll('.nav-links a:not(.nav-cta)').forEach(a => a.classList.remove('active'));
-  // Update cap-nav active button color
+  // Update cap-nav active pill
   ['home','circles','events','resources','profile'].forEach(v => {
     const btn = document.getElementById('mob-' + v);
-    if (btn) btn.style.color = (v === name) ? 'var(--gold)' : '#333';
+    if (btn) btn.classList.toggle('active', v === name);
   });
   if (el && !el.classList.contains('nav-cta')) el.classList.add('active');
   window.scrollTo(0,0);
