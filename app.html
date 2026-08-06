@@ -1205,6 +1205,7 @@ async function onLogin() {
   }
 
   loginRevenueCat(currentUser.id);
+  initPushNotifications();
   applyResourceAccess();
   loadFeed();
   loadAnnouncement();
@@ -1712,6 +1713,14 @@ btn.disabled = false;
       const preview = (post.content || '').replace(/\[gif:.*?\]/, '').trim().slice(0, 40);
       const message = liker + ' loved your post' + (preview ? ': "' + preview + (preview.length >= 40 ? '...' : '') + '"' : '') + ' 🫸';
       await _supabase.from('notifications').insert({user_id: post.user_id, message, post_id: postId, read: false});
+      _supabase.functions.invoke('send-push-notification', {
+        body: {
+          user_id: post.user_id,
+          title: liker + ' liked your post 💜',
+          body: preview ? '"' + preview + (preview.length >= 40 ? '...' : '') + '"' : 'Tap to see your post',
+          data: { post_id: String(postId) }
+        }
+      }).catch(() => {});
     }
   }
 
@@ -2182,6 +2191,17 @@ async function saveCirclePost(content, tag, imageUrl) {
   });
   if (error) { showToast('Could not post: ' + error.message); return; }
   showToast('Shared with the circle ✦');
+  const poster = window._currentUserName || 'A sister';
+  const preview = content.replace(/\[gif:.*?\]/, '').trim().slice(0, 80);
+  _supabase.functions.invoke('send-push-notification', {
+    body: {
+      circle_name: currentCircle,
+      poster_id: currentUser.id,
+      title: poster + ' posted in ' + currentCircle,
+      body: preview || 'New post in your circle',
+      data: { circle: currentCircle }
+    }
+  }).catch(() => {});
   loadCircleFeed(currentCircle);
 }
 
@@ -2567,6 +2587,41 @@ function showViewWithProfile(name, el) {
 }
 
 // ── REVENUECAT ──
+
+let _pushInitialized = false;
+async function initPushNotifications() {
+  if (!window.Capacitor || _pushInitialized) return;
+  const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+  if (!PushNotifications) return;
+  _pushInitialized = true;
+
+  const { receive } = await PushNotifications.requestPermissions();
+  if (receive !== 'granted') return;
+
+  await PushNotifications.register();
+
+  PushNotifications.addListener('registration', async ({ value: token }) => {
+    if (!currentUser || !token) return;
+    const platform = getPlatform();
+    await _supabase.from('push_tokens').upsert(
+      { user_id: currentUser.id, token, platform, created_at: new Date().toISOString() },
+      { onConflict: 'user_id,token' }
+    );
+  });
+
+  PushNotifications.addListener('registrationError', (err) => {
+    console.warn('Push registration error', err);
+  });
+
+  PushNotifications.addListener('pushNotificationReceived', (notification) => {
+    showToast(notification.body || notification.title || 'New notification');
+  });
+
+  PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+    const data = action.notification?.data || {};
+    if (data.circle) openCircle(data.circle);
+  });
+}
 
 function initRevenueCat() {
   if (!window.Capacitor) return;
