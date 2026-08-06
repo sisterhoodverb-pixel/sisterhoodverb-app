@@ -1721,15 +1721,19 @@ btn.disabled = false;
       const liker = window._currentUserName || 'Someone';
       const preview = (post.content || '').replace(/\[gif:.*?\]/, '').trim().slice(0, 40);
       const message = liker + ' loved your post' + (preview ? ': "' + preview + (preview.length >= 40 ? '...' : '') + '"' : '') + ' 🫸';
-      await _supabase.from('notifications').insert({user_id: post.user_id, message, post_id: postId, read: false});
-      _supabase.functions.invoke('send-push-notification', {
+      const { error: notifError } = await _supabase.from('notifications').insert({user_id: post.user_id, message, post_id: postId, read: false});
+      if (notifError) console.error('[Like] notification insert failed:', notifError);
+      else console.log('[Like] in-app notification inserted for user', post.user_id);
+      const { error: fnError } = await _supabase.functions.invoke('send-push-notification', {
         body: {
           user_id: post.user_id,
           title: liker + ' liked your post 💜',
           body: preview ? '"' + preview + (preview.length >= 40 ? '...' : '') + '"' : 'Tap to see your post',
           data: { post_id: String(postId) }
         }
-      }).catch(() => {});
+      });
+      if (fnError) console.error('[Like] send-push-notification error:', fnError);
+      else console.log('[Like] push notification triggered');
     }
   }
 
@@ -2194,15 +2198,31 @@ async function uploadCirclePostPhoto(file, content, tag) {
 }
 
 async function saveCirclePost(content, tag, imageUrl) {
-  const {error} = await _supabase.from('posts').insert({
+  const {data: newPost, error} = await _supabase.from('posts').insert({
     user_id: currentUser.id, content, circle: currentCircle, tag, likes: 0,
     image_url: imageUrl || null
-  });
+  }).select('id').single();
   if (error) { showToast('Could not post: ' + error.message); return; }
   showToast('Shared with the circle ✦');
   const poster = window._currentUserName || 'A sister';
   const preview = content.replace(/\[gif:.*?\]/, '').trim().slice(0, 80);
-  _supabase.functions.invoke('send-push-notification', {
+
+  // In-app notifications for circle members
+  const { data: members } = await _supabase
+    .from('circle_members')
+    .select('user_id')
+    .eq('circle_name', currentCircle)
+    .neq('user_id', currentUser.id);
+  if (members?.length) {
+    const message = poster + ' posted in ' + currentCircle + (preview ? ': "' + preview.slice(0, 60) + (preview.length > 60 ? '...' : '') + '"' : '');
+    const notifRows = members.map(m => ({ user_id: m.user_id, message, post_id: newPost?.id || null, read: false }));
+    const { error: notifError } = await _supabase.from('notifications').insert(notifRows);
+    if (notifError) console.error('[CirclePost] notification insert failed:', notifError);
+    else console.log('[CirclePost] in-app notifications inserted for', members.length, 'members');
+  }
+
+  // Push notifications via edge function
+  const { error: fnError } = await _supabase.functions.invoke('send-push-notification', {
     body: {
       circle_name: currentCircle,
       poster_id: currentUser.id,
@@ -2210,7 +2230,10 @@ async function saveCirclePost(content, tag, imageUrl) {
       body: preview || 'New post in your circle',
       data: { circle: currentCircle }
     }
-  }).catch(() => {});
+  });
+  if (fnError) console.error('[CirclePost] send-push-notification error:', fnError);
+  else console.log('[CirclePost] push notification triggered for circle', currentCircle);
+
   loadCircleFeed(currentCircle);
 }
 
@@ -3150,7 +3173,7 @@ async function changePassword() {
       .limit(20);
 
     if (error) { console.error('[Notif] Fetch error:', error); return; }
-    console.log('[Notif] Fetched', notifs?.length ?? 0, 'notifications');
+    console.log('[Notif] Fetched', notifs?.length ?? 0, 'notifications; newest:', notifs?.[0]?.created_at ?? 'none');
     if (!notifs) return;
 
     const unread = notifs.filter(n => !n.read).length;
