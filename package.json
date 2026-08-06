@@ -12,6 +12,7 @@
     "deploy:android": "npm run sync && npx cap open android"
   },
   "dependencies": {
+    "@capacitor-firebase/messaging": "^8.3.0",
     "@capacitor/android": "^7.6.5",
     "@capacitor/app": "^7.1.2",
     "@capacitor/core": "^7.6.2",

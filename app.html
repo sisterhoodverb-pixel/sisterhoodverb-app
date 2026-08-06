@@ -1044,6 +1044,15 @@ const RC_API_KEY_ANDROID = 'PASTE_YOUR_GOOGLE_RC_KEY_HERE'; // get from RevenueC
 const RC_API_KEY = getPlatform() === 'android' ? RC_API_KEY_ANDROID : RC_API_KEY_IOS;
 const RC_MONTHLY_ID = 'com.sisterhoodverb.community.monthly';
 const RC_ANNUAL_ID = 'com.sisterhoodverb.community.annual';
+const FIREBASE_CONFIG = {
+  apiKey:            'AIzaSyAuSp0CiKdmAToPaH0LKtvxZSavbU8bYK8',
+  projectId:         'sisterhoodverb-70743',
+  storageBucket:     'sisterhoodverb-70743.firebasestorage.app',
+  messagingSenderId: '912057852489',
+  appId:             '1:912057852489:ios:50f7bfe45ae672cd5d5598',
+};
+// VAPID key for web push — find it in Firebase console → Project Settings → Cloud Messaging → Web configuration
+const FIREBASE_VAPID_KEY = 'YOUR_VAPID_KEY_HERE';
 let currentUser = null;
 let selectedGifUrl = null;
 let selectedPhotoFile = null;
@@ -2588,6 +2597,19 @@ function showViewWithProfile(name, el) {
 
 // ── REVENUECAT ──
 
+async function saveFcmToken(token) {
+  if (!currentUser) { console.warn('[Push] No currentUser — cannot save token'); return; }
+  if (!token) { console.log('[Push] token was empty — skipping save'); return; }
+  const platform = getPlatform();
+  console.log('[Push] Saving FCM token for user', currentUser.id, 'platform', platform);
+  const { error } = await _supabase.from('push_tokens').upsert(
+    { user_id: currentUser.id, token, platform, created_at: new Date().toISOString() },
+    { onConflict: 'user_id,token' }
+  );
+  if (error) console.error('[Push] Failed to save token:', error);
+  else console.log('[Push] Token saved successfully');
+}
+
 let _pushInitialized = false;
 async function initPushNotifications() {
   if (!window.Capacitor) { console.log('[Push] Not in Capacitor — skipping'); return; }
@@ -2601,19 +2623,13 @@ async function initPushNotifications() {
   console.log('[Push] Permission result:', receive);
   if (receive !== 'granted') { console.warn('[Push] Permission not granted:', receive); return; }
 
-  // Listeners must be added BEFORE register() so the registration event isn't missed
+  // Registration listener — Capacitor delivers the APNs token on iOS; Firebase iOS SDK
+  // should swizzle it into an FCM token, but if it arrives empty we skip and rely on
+  // the explicit getToken() calls below.
   PushNotifications.addListener('registration', async ({ value: token }) => {
-    console.log('[Push] Got FCM token:', token);
-    if (!currentUser) { console.warn('[Push] No currentUser when token arrived'); return; }
-    if (!token) { console.warn('[Push] Token is empty'); return; }
-    const platform = getPlatform();
-    console.log('[Push] Saving token for user', currentUser.id, 'platform', platform);
-    const { data, error } = await _supabase.from('push_tokens').upsert(
-      { user_id: currentUser.id, token, platform, created_at: new Date().toISOString() },
-      { onConflict: 'user_id,token' }
-    );
-    if (error) console.error('[Push] Failed to save token:', error);
-    else console.log('[Push] Token saved successfully', data);
+    console.log('[Push] registration event token:', token || '(empty)');
+    if (!token) { console.log('[Push] token was empty — skipping save'); return; }
+    await saveFcmToken(token);
   });
 
   PushNotifications.addListener('registrationError', (err) => {
@@ -2632,6 +2648,44 @@ async function initPushNotifications() {
   console.log('[Push] Calling register()…');
   await PushNotifications.register();
   console.log('[Push] register() call completed');
+
+  // ── Native FCM token via @capacitor-firebase/messaging plugin ──
+  // This plugin (if installed) calls Messaging.messaging().token() natively and returns
+  // the real FCM token regardless of whether the registration event delivered it.
+  const FirebaseMessaging = window.Capacitor?.Plugins?.FirebaseMessaging;
+  if (FirebaseMessaging?.getToken) {
+    console.log('[Push] Trying FirebaseMessaging.getToken() (native)…');
+    try {
+      const { token } = await FirebaseMessaging.getToken({});
+      console.log('[Push] FirebaseMessaging.getToken() returned:', token || '(empty)');
+      if (token) { await saveFcmToken(token); return; }
+      console.warn('[Push] Native getToken() returned empty token');
+    } catch (e) {
+      console.warn('[Push] FirebaseMessaging.getToken() failed:', e);
+    }
+  } else {
+    console.log('[Push] FirebaseMessaging native plugin not available');
+  }
+
+  // ── Firebase JS SDK fallback (web / non-native contexts only) ──
+  // getToken() with a VAPID key works in browsers via service workers; it will not
+  // produce a usable FCM token inside a native iOS WebView, so this path is a no-op
+  // on device but left here for web testing builds.
+  if (!window.Capacitor?.isNativePlatform?.()) {
+    console.log('[Push] Trying Firebase JS SDK getToken()…');
+    try {
+      const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js');
+      const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js');
+      const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+      const messaging = getMessaging(fbApp);
+      const token = await getToken(messaging, { vapidKey: FIREBASE_VAPID_KEY });
+      console.log('[Push] Firebase JS SDK token:', token || '(empty)');
+      if (token) await saveFcmToken(token);
+      else console.warn('[Push] Firebase JS SDK returned empty token — set FIREBASE_VAPID_KEY from Firebase console');
+    } catch (e) {
+      console.warn('[Push] Firebase JS SDK getToken() failed:', e);
+    }
+  }
 }
 
 function initRevenueCat() {
