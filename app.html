@@ -2590,27 +2590,34 @@ function showViewWithProfile(name, el) {
 
 let _pushInitialized = false;
 async function initPushNotifications() {
-  if (!window.Capacitor || _pushInitialized) return;
+  if (!window.Capacitor) { console.log('[Push] Not in Capacitor — skipping'); return; }
+  if (_pushInitialized) { console.log('[Push] Already initialized'); return; }
   const PushNotifications = window.Capacitor.Plugins.PushNotifications;
-  if (!PushNotifications) return;
+  if (!PushNotifications) { console.warn('[Push] PushNotifications plugin not found'); return; }
   _pushInitialized = true;
 
+  console.log('[Push] Requesting permissions…');
   const { receive } = await PushNotifications.requestPermissions();
-  if (receive !== 'granted') return;
+  console.log('[Push] Permission result:', receive);
+  if (receive !== 'granted') { console.warn('[Push] Permission not granted:', receive); return; }
 
-  await PushNotifications.register();
-
+  // Listeners must be added BEFORE register() so the registration event isn't missed
   PushNotifications.addListener('registration', async ({ value: token }) => {
-    if (!currentUser || !token) return;
+    console.log('[Push] Got FCM token:', token);
+    if (!currentUser) { console.warn('[Push] No currentUser when token arrived'); return; }
+    if (!token) { console.warn('[Push] Token is empty'); return; }
     const platform = getPlatform();
-    await _supabase.from('push_tokens').upsert(
+    console.log('[Push] Saving token for user', currentUser.id, 'platform', platform);
+    const { data, error } = await _supabase.from('push_tokens').upsert(
       { user_id: currentUser.id, token, platform, created_at: new Date().toISOString() },
       { onConflict: 'user_id,token' }
     );
+    if (error) console.error('[Push] Failed to save token:', error);
+    else console.log('[Push] Token saved successfully', data);
   });
 
   PushNotifications.addListener('registrationError', (err) => {
-    console.warn('Push registration error', err);
+    console.error('[Push] Registration error:', err);
   });
 
   PushNotifications.addListener('pushNotificationReceived', (notification) => {
@@ -2621,6 +2628,10 @@ async function initPushNotifications() {
     const data = action.notification?.data || {};
     if (data.circle) openCircle(data.circle);
   });
+
+  console.log('[Push] Calling register()…');
+  await PushNotifications.register();
+  console.log('[Push] register() call completed');
 }
 
 function initRevenueCat() {
@@ -3075,14 +3086,17 @@ async function changePassword() {
   let notifInterval = null;
 
   async function loadNotifications() {
-    if (!currentUser) return;
-    const {data: notifs} = await _supabase
+    if (!currentUser) { console.log('[Notif] No currentUser, skipping'); return; }
+    console.log('[Notif] Fetching notifications for user', currentUser.id);
+    const { data: notifs, error } = await _supabase
       .from('notifications')
       .select('*')
       .eq('user_id', currentUser.id)
       .order('created_at', {ascending: false})
       .limit(20);
 
+    if (error) { console.error('[Notif] Fetch error:', error); return; }
+    console.log('[Notif] Fetched', notifs?.length ?? 0, 'notifications');
     if (!notifs) return;
 
     const unread = notifs.filter(n => !n.read).length;
@@ -3123,6 +3137,7 @@ async function changePassword() {
     if (!dropdown) return;
     const isOpen = dropdown.style.display !== 'none';
     dropdown.style.display = isOpen ? 'none' : 'block';
+    // Refresh every time the panel opens
     if (!isOpen) loadNotifications();
   }
 
