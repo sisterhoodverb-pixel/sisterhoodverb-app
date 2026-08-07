@@ -2637,78 +2637,41 @@ let _pushInitialized = false;
 async function initPushNotifications() {
   if (!window.Capacitor) { console.log('[Push] Not in Capacitor — skipping'); return; }
   if (_pushInitialized) { console.log('[Push] Already initialized'); return; }
-  const PushNotifications = window.Capacitor.Plugins.PushNotifications;
-  if (!PushNotifications) { console.warn('[Push] PushNotifications plugin not found'); return; }
+
+  const FirebaseMessaging = window.Capacitor?.Plugins?.FirebaseMessaging;
+  if (!FirebaseMessaging) {
+    console.warn('[Push] FirebaseMessaging plugin not found — @capacitor-firebase/messaging must be installed');
+    return;
+  }
   _pushInitialized = true;
 
   console.log('[Push] Requesting permissions…');
-  const { receive } = await PushNotifications.requestPermissions();
+  const { receive } = await FirebaseMessaging.requestPermissions();
   console.log('[Push] Permission result:', receive);
   if (receive !== 'granted') { console.warn('[Push] Permission not granted:', receive); return; }
 
-  // Registration listener — Capacitor delivers the APNs token on iOS; Firebase iOS SDK
-  // should swizzle it into an FCM token, but if it arrives empty we skip and rely on
-  // the explicit getToken() calls below.
-  PushNotifications.addListener('registration', async ({ value: token }) => {
-    console.log('[Push] registration event token:', token || '(empty)');
-    if (!token) { console.log('[Push] token was empty — skipping save'); return; }
+  // Get the FCM token directly — FirebaseMessaging.getToken() calls
+  // Messaging.messaging().token() on the native side and returns a proper
+  // FCM registration token, not the raw APNs device token.
+  console.log('[Push] Getting FCM token…');
+  try {
+    const { token } = await FirebaseMessaging.getToken();
+    console.log('[Push] FCM token:', token ? token.slice(0, 20) + '…' : '(empty)');
     await saveFcmToken(token);
+  } catch (e) {
+    console.error('[Push] getToken() failed:', e);
+  }
+
+  // Show a toast when a push arrives while the app is foregrounded
+  FirebaseMessaging.addListener('notificationReceived', ({ notification }) => {
+    showToast(notification?.body || notification?.title || 'New notification');
   });
 
-  PushNotifications.addListener('registrationError', (err) => {
-    console.error('[Push] Registration error:', err);
-  });
-
-  PushNotifications.addListener('pushNotificationReceived', (notification) => {
-    showToast(notification.body || notification.title || 'New notification');
-  });
-
-  PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-    const data = action.notification?.data || {};
+  // Deep-link when the user taps a notification
+  FirebaseMessaging.addListener('notificationActionPerformed', ({ notification }) => {
+    const data = notification?.data || {};
     if (data.circle) openCircle(data.circle);
   });
-
-  console.log('[Push] Calling register()…');
-  await PushNotifications.register();
-  console.log('[Push] register() call completed');
-
-  // ── Native FCM token via @capacitor-firebase/messaging plugin ──
-  // This plugin (if installed) calls Messaging.messaging().token() natively and returns
-  // the real FCM token regardless of whether the registration event delivered it.
-  const FirebaseMessaging = window.Capacitor?.Plugins?.FirebaseMessaging;
-  if (FirebaseMessaging?.getToken) {
-    console.log('[Push] Trying FirebaseMessaging.getToken() (native)…');
-    try {
-      const { token } = await FirebaseMessaging.getToken({});
-      console.log('[Push] FirebaseMessaging.getToken() returned:', token || '(empty)');
-      if (token) { await saveFcmToken(token); return; }
-      console.warn('[Push] Native getToken() returned empty token');
-    } catch (e) {
-      console.warn('[Push] FirebaseMessaging.getToken() failed:', e);
-    }
-  } else {
-    console.log('[Push] FirebaseMessaging native plugin not available');
-  }
-
-  // ── Firebase JS SDK fallback (web / non-native contexts only) ──
-  // getToken() with a VAPID key works in browsers via service workers; it will not
-  // produce a usable FCM token inside a native iOS WebView, so this path is a no-op
-  // on device but left here for web testing builds.
-  if (!window.Capacitor?.isNativePlatform?.()) {
-    console.log('[Push] Trying Firebase JS SDK getToken()…');
-    try {
-      const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js');
-      const { getMessaging, getToken } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging.js');
-      const fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
-      const messaging = getMessaging(fbApp);
-      const token = await getToken(messaging, { vapidKey: FIREBASE_VAPID_KEY });
-      console.log('[Push] Firebase JS SDK token:', token || '(empty)');
-      if (token) await saveFcmToken(token);
-      else console.warn('[Push] Firebase JS SDK returned empty token — set FIREBASE_VAPID_KEY from Firebase console');
-    } catch (e) {
-      console.warn('[Push] Firebase JS SDK getToken() failed:', e);
-    }
-  }
 }
 
 function initRevenueCat() {
