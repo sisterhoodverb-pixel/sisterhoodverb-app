@@ -1141,6 +1141,7 @@ if (session) {
 }
 
 async function onLogin() {
+  console.log('[Login] onLogin called');
   // Hide PWA loading screen
   const loader = document.getElementById('pwa-loading');
   if (loader) { loader.style.opacity = '0'; loader.style.pointerEvents = 'none'; loader.style.transition = 'opacity 0.5s'; setTimeout(() => loader.remove(), 500); }
@@ -1214,7 +1215,7 @@ async function onLogin() {
   }
 
   loginRevenueCat(currentUser.id);
-  initPushNotifications();
+  setTimeout(() => { initPushNotifications(); }, 1000);
   applyResourceAccess();
   loadFeed();
   loadAnnouncement();
@@ -2635,43 +2636,48 @@ async function saveFcmToken(token) {
 
 let _pushInitialized = false;
 async function initPushNotifications() {
-  if (!window.Capacitor) { console.log('[Push] Not in Capacitor — skipping'); return; }
-  if (_pushInitialized) { console.log('[Push] Already initialized'); return; }
-
-  const FirebaseMessaging = window.Capacitor?.Plugins?.FirebaseMessaging;
-  if (!FirebaseMessaging) {
-    console.warn('[Push] FirebaseMessaging plugin not found — @capacitor-firebase/messaging must be installed');
-    return;
-  }
-  _pushInitialized = true;
-
-  console.log('[Push] Requesting permissions…');
-  const { receive } = await FirebaseMessaging.requestPermissions();
-  console.log('[Push] Permission result:', receive);
-  if (receive !== 'granted') { console.warn('[Push] Permission not granted:', receive); return; }
-
-  // Get the FCM token directly — FirebaseMessaging.getToken() calls
-  // Messaging.messaging().token() on the native side and returns a proper
-  // FCM registration token, not the raw APNs device token.
-  console.log('[Push] Getting FCM token…');
   try {
-    const { token } = await FirebaseMessaging.getToken();
-    console.log('[Push] FCM token:', token ? token.slice(0, 20) + '…' : '(empty)');
-    await saveFcmToken(token);
+    console.log('[Push] initPushNotifications called');
+    if (!window.Capacitor) { console.log('[Push] Not in Capacitor — skipping'); return; }
+
+    const FirebaseMessaging = window.Capacitor?.Plugins?.FirebaseMessaging;
+    if (!FirebaseMessaging) {
+      console.warn('[Push] FirebaseMessaging plugin NOT found — @capacitor-firebase/messaging must be installed');
+      console.log('[Push] Available Capacitor plugins:', Object.keys(window.Capacitor?.Plugins || {}));
+      return;
+    }
+    console.log('[Push] FirebaseMessaging plugin found');
+
+    console.log('[Push] Requesting permissions…');
+    const { receive } = await FirebaseMessaging.requestPermissions();
+    console.log('[Push] Permission result:', receive);
+    if (receive !== 'granted') { console.warn('[Push] Permission not granted:', receive); return; }
+
+    console.log('[Push] Getting FCM token…');
+    try {
+      const result = await FirebaseMessaging.getToken();
+      console.log('[Push] getToken() raw result:', JSON.stringify(result));
+      const token = result?.token;
+      console.log('[Push] FCM token (full):', token || '(empty)');
+      await saveFcmToken(token);
+    } catch (e) {
+      console.error('[Push] getToken() failed:', e);
+    }
+
+    if (!_pushInitialized) {
+      _pushInitialized = true;
+      FirebaseMessaging.addListener('notificationReceived', ({ notification }) => {
+        showToast(notification?.body || notification?.title || 'New notification');
+      });
+
+      FirebaseMessaging.addListener('notificationActionPerformed', ({ notification }) => {
+        const data = notification?.data || {};
+        if (data.circle) openCircle(data.circle);
+      });
+    }
   } catch (e) {
-    console.error('[Push] getToken() failed:', e);
+    console.error('[Push] ERROR:', e?.message || e);
   }
-
-  // Show a toast when a push arrives while the app is foregrounded
-  FirebaseMessaging.addListener('notificationReceived', ({ notification }) => {
-    showToast(notification?.body || notification?.title || 'New notification');
-  });
-
-  // Deep-link when the user taps a notification
-  FirebaseMessaging.addListener('notificationActionPerformed', ({ notification }) => {
-    const data = notification?.data || {};
-    if (data.circle) openCircle(data.circle);
-  });
 }
 
 function initRevenueCat() {
