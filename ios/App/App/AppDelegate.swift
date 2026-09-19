@@ -4,14 +4,25 @@ import FirebaseCore
 import FirebaseMessaging
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate {
 
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-       // Override point for customization after application launch.
         FirebaseApp.configure()
+        Messaging.messaging().delegate = self
+        UIApplication.shared.registerForRemoteNotifications()
         return true
+    }
+
+    func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        guard let token = fcmToken else { return }
+        DispatchQueue.main.async {
+            guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                  let bridgeVC = scene.windows.first?.rootViewController as? CAPBridgeViewController else { return }
+            let js = "window.dispatchEvent(new CustomEvent('fcmTokenReceived', { detail: { token: '\(token)' } }))"
+            bridgeVC.bridge?.webView?.evaluateJavaScript(js, completionHandler: nil)
+        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
@@ -38,6 +49,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         Messaging.messaging().apnsToken = deviceToken
+        Messaging.messaging().token { token, error in
+            if let error = error {
+                print("[FCM] token fetch error after APNs set: \(error)")
+            } else if let token = token {
+                print("[FCM] token after APNs set: \(token)")
+            }
+        }
     }
 
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {

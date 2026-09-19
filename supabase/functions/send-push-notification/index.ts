@@ -4,6 +4,26 @@ const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!
 
+function pemToArrayBuffer(pem: string): ArrayBuffer {
+  const pemBody = pem
+    .replace(/-----BEGIN PRIVATE KEY-----/, '')
+    .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\s+/g, '')
+  const binary = atob(pemBody)
+  const bytes = new Uint8Array(binary.length)
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i)
+  }
+  return bytes.buffer
+}
+
+const base64url = (input: string | Uint8Array): string => {
+  const bytes = typeof input === 'string' ? new TextEncoder().encode(input) : input
+  let binary = ''
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i])
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
+}
+
 async function getFCMAccessToken(): Promise<string> {
   const raw = Deno.env.get('FIREBASE_SERVICE_ACCOUNT_JSON')
   if (!raw) throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON secret not set')
@@ -16,84 +36,66 @@ async function getFCMAccessToken(): Promise<string> {
   }
   if (!sa.client_email) throw new Error('Service account JSON missing client_email')
   if (!sa.private_key) throw new Error('Service account JSON missing private_key')
-  console.log('[Auth] Building service-account JWT for', sa.client_email)
+  console.log('[Auth] Building JWT for:', sa.client_email)
 
   const now = Math.floor(Date.now() / 1000)
-
-  // Base64url-encode a plain object
-  const b64url = (obj: object): string =>
-    btoa(JSON.stringify(obj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
-
-  const header  = b64url({ alg: 'RS256', typ: 'JWT' })
-  const payload = b64url({
+  const header  = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }))
+  const payload = base64url(JSON.stringify({
     iss:   sa.client_email,
     scope: 'https://www.googleapis.com/auth/firebase.messaging',
     aud:   'https://oauth2.googleapis.com/token',
     iat:   now,
     exp:   now + 3600,
-  })
+  }))
   const signingInput = `${header}.${payload}`
 
-  // Strip PEM armor explicitly so stray whitespace inside the key body can't corrupt the base64
-  const pemBody = sa.private_key
-    .replace(/-----BEGIN PRIVATE KEY-----/g, '')
-    .replace(/-----END PRIVATE KEY-----/g, '')
-    .replace(/\r?\n|\r/g, '')   // real newlines from JSON.parse
-    .replace(/\\n/g, '')        // literal \n if the secret was double-escaped
-    .trim()
-
-  let keyBytes: Uint8Array
-  try {
-    keyBytes = Uint8Array.from(atob(pemBody), c => c.charCodeAt(0))
-  } catch (e) {
-    throw new Error('Failed to base64-decode private key — PEM body may be malformed: ' + e)
-  }
-  console.log('[Auth] Private key decoded:', keyBytes.length, 'bytes (expect ~1218 for RSA-2048 PKCS8)')
+  const keyData = pemToArrayBuffer(sa.private_key)
+  console.log('[Auth] Private key decoded:', keyData.byteLength, 'bytes (expect ~1218 for RSA-2048 PKCS8)')
 
   const cryptoKey = await crypto.subtle.importKey(
-    'pkcs8', keyBytes,
+    'pkcs8',
+    keyData,
     { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
-    false, ['sign'],
+    false,
+    ['sign'],
   )
+  console.log('[Auth] CryptoKey imported successfully')
 
   const sigBuffer = await crypto.subtle.sign(
     'RSASSA-PKCS1-v1_5', cryptoKey,
     new TextEncoder().encode(signingInput),
   )
 
-  // Encode signature as base64url using a loop (avoids call-stack limits on large arrays)
-  const sigBytes = new Uint8Array(sigBuffer)
-  let binary = ''
-  for (let i = 0; i < sigBytes.length; i++) binary += String.fromCharCode(sigBytes[i])
-  const signature = btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '')
-
-  const jwt = `${signingInput}.${signature}`
+  const jwt = `${signingInput}.${base64url(new Uint8Array(sigBuffer))}`
   console.log('[Auth] JWT assembled, exchanging for OAuth2 access token…')
 
   const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    // URLSearchParams encodes the URN grant_type value safely
     body: new URLSearchParams({
       grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
       assertion: jwt,
     }),
   })
+
   const tokenJson = await tokenRes.json()
   if (!tokenRes.ok || !tokenJson.access_token) {
-    console.error('[Auth] Token exchange failed — status:', tokenRes.status, 'response:', JSON.stringify(tokenJson))
+    console.error('[Auth] Google OAuth error — HTTP', tokenRes.status, '— full response:', JSON.stringify(tokenJson))
     throw new Error('Token exchange failed: ' + JSON.stringify(tokenJson))
   }
   console.log('[Auth] Access token obtained (type:', tokenJson.token_type, 'expires_in:', tokenJson.expires_in, ')')
   return tokenJson.access_token
 }
 
-async function sendFCM(
+function isLegacyToken(token: string): boolean {
+  return token.includes(':APA91b')
+}
+
+async function sendFCMv1(
   token: string,
   title: string,
   body: string,
   data: Record<string, string>,
-  projectId: string,
   accessToken: string,
 ): Promise<{ ok: boolean; unregistered: boolean }> {
   const payload = {
@@ -104,32 +106,73 @@ async function sendFCM(
       data,
     },
   }
-  console.log('[FCM] Sending to token:', token.slice(0, 20) + '…', 'payload:', JSON.stringify(payload))
+  const FCM_URL = 'https://fcm.googleapis.com/v1/projects/sisterhoodverb-70743/messages:send'
+  console.log('[FCM-v1] Sending to token:', token.slice(0, 20) + '…')
 
-  const res = await fetch(
-    `https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
+  const res = await fetch(FCM_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
     },
-  )
+    body: JSON.stringify(payload),
+  })
 
   if (res.ok) {
     const responseBody = await res.json().catch(() => ({}))
-    console.log('[FCM] Success for token:', token.slice(0, 20) + '…', 'response:', JSON.stringify(responseBody))
+    console.log('[FCM-v1] Success for token:', token.slice(0, 20) + '…', 'response:', JSON.stringify(responseBody))
     return { ok: true, unregistered: false }
   }
 
   const err = await res.json().catch(() => ({}))
-  console.error('[FCM] Error for token:', token.slice(0, 20) + '…', 'status:', res.status, 'error:', JSON.stringify(err))
+  console.error('[FCM-v1] Error for token:', token.slice(0, 20) + '…', 'status:', res.status, 'error:', JSON.stringify(err))
   const unregistered = err?.error?.details?.some(
     (d: any) => d.errorCode === 'UNREGISTERED',
   ) ?? false
   return { ok: false, unregistered }
+}
+
+async function sendFCMLegacy(
+  token: string,
+  title: string,
+  body: string,
+  data: Record<string, string>,
+): Promise<{ ok: boolean; unregistered: boolean }> {
+  const serverKey = Deno.env.get('FCM_SERVER_KEY')
+  if (!serverKey) throw new Error('FCM_SERVER_KEY secret not set')
+
+  const payload = {
+    to: token,
+    notification: { title, body, sound: 'default', badge: '1' },
+    data,
+  }
+  console.log('[FCM-Legacy] Sending to token:', token.slice(0, 20) + '…')
+
+  const res = await fetch('https://fcm.googleapis.com/fcm/send', {
+    method: 'POST',
+    headers: {
+      Authorization: `key=${serverKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  })
+
+  const json = await res.json().catch(() => ({}))
+  console.log('[FCM-Legacy] Response status:', res.status, 'body:', JSON.stringify(json))
+
+  if (!res.ok) {
+    return { ok: false, unregistered: false }
+  }
+
+  const result = json?.results?.[0]
+  if (result?.error) {
+    const unregistered = result.error === 'NotRegistered' || result.error === 'InvalidRegistration'
+    console.error('[FCM-Legacy] Error:', result.error, 'for token:', token.slice(0, 20) + '…')
+    return { ok: false, unregistered }
+  }
+
+  console.log('[FCM-Legacy] Success for token:', token.slice(0, 20) + '…')
+  return { ok: true, unregistered: false }
 }
 
 Deno.serve(async (req) => {
@@ -206,23 +249,30 @@ Deno.serve(async (req) => {
       })
     }
 
-    const sa = JSON.parse(Deno.env.get('FIREBASE_SERVICE_ACCOUNT_JSON')!)
-    console.log('[Auth] Getting FCM access token for project:', sa.project_id)
-    const accessToken = await getFCMAccessToken()
-    console.log('[Auth] FCM access token obtained')
-
     const stringData = Object.fromEntries(
       Object.entries(data).map(([k, v]) => [k, String(v)])
     )
+
+    const legacyTokenRows = tokenRows.filter((r: any) => isLegacyToken(r.token))
+    const v1TokenRows = tokenRows.filter((r: any) => !isLegacyToken(r.token))
+    console.log(`[Tokens] ${legacyTokenRows.length} legacy APNs token(s), ${v1TokenRows.length} FCM v1 token(s)`)
+
+    let accessToken: string | null = null
+    if (v1TokenRows.length > 0) {
+      console.log('[Auth] Getting FCM access token…')
+      accessToken = await getFCMAccessToken()
+      console.log('[Auth] FCM access token obtained')
+    }
 
     let sent = 0
     const staleTokens: string[] = []
 
     for (const { token, user_id: tokenUserId } of tokenRows) {
-      console.log('[FCM] Dispatching to user:', tokenUserId)
-      const { ok, unregistered } = await sendFCM(
-        token, title, body, stringData, sa.project_id, accessToken,
-      )
+      const legacy = isLegacyToken(token)
+      console.log('[FCM] Dispatching to user:', tokenUserId, legacy ? '(legacy APNs)' : '(FCM v1)')
+      const { ok, unregistered } = legacy
+        ? await sendFCMLegacy(token, title, body, stringData)
+        : await sendFCMv1(token, title, body, stringData, accessToken!)
       if (ok) sent++
       else if (unregistered) {
         console.warn('[FCM] Token unregistered, will prune:', token.slice(0, 20) + '…')
