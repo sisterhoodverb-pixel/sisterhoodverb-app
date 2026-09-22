@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mount Holyoke Community Circle — Sisterhood(verb)</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--deep-bg:#2D1B69;--gold:#D4A853;--sage:#7A8C6E;--cream:#FBF7F0;--deep:#1A1A1A;--warm:#FBF7F2;--terra:#C4622D}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--warm);color:var(--deep);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4}
+
+nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:rgba(251,247,242,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(45,27,105,0.12);z-index:100}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--deep-bg)}
+.nav-logo span{font-style:italic;font-weight:400}
+.nav-back{background:none;border:1.5px solid rgba(45,27,105,0.3);color:var(--deep-bg);padding:6px 16px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.nav-back:hover{background:var(--deep-bg);color:white}
+
+.hero{background:var(--deep-bg);padding:120px 40px 64px;position:relative;overflow:hidden;text-align:center}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(212,168,83,0.15),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(122,140,110,0.1),transparent 60%)}
+.hero::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:40px;background:var(--warm);clip-path:ellipse(55% 100% at 50% 100%)}
+.hero-label{font-size:0.68rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;position:relative;z-index:1}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.2rem);color:var(--cream);line-height:1.2;margin-bottom:16px;position:relative;z-index:1}
+.hero-title em{color:var(--gold);font-style:italic}
+.hero-sub{color:rgba(251,247,240,0.65);font-size:0.95rem;line-height:1.8;max-width:520px;margin:0 auto;position:relative;z-index:1}
+
+.main{max-width:860px;margin:0 auto;padding:56px 40px 80px}
+
+.welcome-section{background:white;border:1px solid rgba(212,168,83,0.12);border-radius:4px;padding:32px;box-shadow:0 2px 16px rgba(26,26,26,0.05);margin-bottom:40px}
+.welcome-text{font-size:0.95rem;color:rgba(26,26,26,0.75);line-height:1.9}
+
+.section-header{display:flex;align-items:center;gap:16px;margin-bottom:28px}
+.section-header h2{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--deep);white-space:nowrap}
+.section-line{flex:1;height:1px;background:rgba(45,27,105,0.15)}
+
+.resources-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
+.resource-card{background:white;border:1px solid rgba(212,168,83,0.1);border-radius:4px;overflow:hidden;box-shadow:0 1px 12px rgba(26,26,26,0.04);transition:transform 0.2s,box-shadow 0.2s;text-decoration:none;color:inherit;display:block}
+.resource-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(26,26,26,0.09)}
+.resource-card.featured{grid-column:1/-1}
+.resource-thumb{height:100px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;position:relative}
+.resource-type{position:absolute;top:10px;right:10px;font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;padding:3px 8px;border-radius:10px;font-weight:600;background:rgba(255,255,255,0.9)}
+.resource-body{padding:16px}
+.resource-title{font-family:'Playfair Display',serif;font-size:0.95rem;font-weight:700;margin-bottom:6px}
+.resource-desc{font-size:0.8rem;color:rgba(26,26,26,0.6);line-height:1.6;margin-bottom:12px}
+.resource-footer{display:flex;justify-content:space-between;align-items:center}
+.resource-author{font-size:0.72rem;color:rgba(26,26,26,0.45)}
+
+.denied{text-align:center;padding:120px 40px 80px;max-width:480px;margin:0 auto}
+.denied-icon{font-size:2.5rem;margin-bottom:20px}
+.denied-title{font-family:'Playfair Display',serif;font-size:1.4rem;color:var(--deep);margin-bottom:12px}
+.denied-sub{font-size:0.9rem;color:rgba(26,26,26,0.55);line-height:1.8}
+
+@media(max-width:768px){
+  nav{padding:14px 20px}
+  .hero{padding:100px 20px 56px}
+  .main{padding:40px 20px 60px}
+  .welcome-section{padding:24px 20px}
+  .resources-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Sisterhood<span>(verb)</span></div>
+  <a href="#" class="nav-back" onclick="history.back(); return false;">← Back to Community</a>
+</nav>
+
+<div id="access-denied" style="display:none">
+  <div class="denied">
+    <div class="denied-icon">✦</div>
+    <div class="denied-title">This page isn't available</div>
+    <p class="denied-sub">The Mount Holyoke Community Circle is a private space for @mtholyoke.edu community members and Sisterhood(verb) founders. If you believe this is a mistake, reach out at community.sisterhoodverb.com.</p>
+  </div>
+</div>
+
+<div id="page-content" style="display:none">
+
+<div class="hero">
+  <div class="hero-label">Mount Holyoke Community Circle ✦</div>
+  <h1 class="hero-title">Your <em>Community</em>,<br>Close to Home</h1>
+  <p class="hero-sub">Connecting Mount Holyoke community members to the people, resources, and spaces that made MHC feel like home.</p>
+</div>
+
+<div class="main">
+
+  <div class="welcome-section">
+    <p class="welcome-text">Welcome to the Mount Holyoke Community Circle. Whether you're a current student or an alum, this space is here to keep you connected to the people, resources, and spaces that made Mount Holyoke feel like home. Below, you'll find the college's own cultural and community centers — spaces built to support you in exactly who you are.</p>
+  </div>
+
+  <div class="section-header">
+    <h2>Cultural &amp; Community Centers</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="resources-grid">
+
+    <a class="resource-card featured" href="https://www.mtholyoke.edu/student-experience/community-and-belonging/cultural-centers" target="_blank" rel="noopener">
+      <div class="resource-thumb" style="background:linear-gradient(135deg,var(--deep-bg),var(--sage))">
+        🏛️<span class="resource-type" style="color:var(--deep-bg);">Directory</span>
+      </div>
+      <div class="resource-body">
+        <div class="resource-title">Explore All Cultural Centers →</div>
+        <div class="resource-desc">A full directory of Mount Holyoke's cultural and community centers — your starting point for finding your people and your space on campus.</div>
+        <div class="resource-footer"><span class="resource-author">Mount Holyoke College</span></div>
+      </div>
+    </a>
+
+    <a class="resource-card" href="https://www.mtholyoke.edu/student-experience/community-and-belonging/cultural-centers/asian-center-empowerment" target="_blank" rel="noopener">
+      <div class="resource-thumb" style="background:linear-gradient(135deg,#c4622d,#e8c4a0)">
+        🌸<span class="resource-type" style="color:var(--terra);">Center</span>
+      </div>
+      <div class="resource-body">
+        <div class="resource-title">Asian Center for Empowerment</div>
+        <div class="resource-desc">Support, education, community, and a meeting spot for students within the Asian diaspora.</div>
+        <div class="resource-footer"><span class="resource-author">Mount Holyoke College</span></div>
+      </div>
+    </a>
+
+    <a class="resource-card" href="https://www.mtholyoke.edu/student-experience/community-and-belonging/cultural-centers/betty-shabazz-cultural-center" target="_blank" rel="noopener">
+      <div class="resource-thumb" style="background:linear-gradient(135deg,#1a1a1a,#2D1B69)">
+        ✊🏾<span class="resource-type" style="color:var(--gold);">Center</span>
+      </div>
+      <div class="resource-body">
+        <div class="resource-title">Betty Shabazz Cultural Center</div>
+        <div class="resource-desc">Assists and supports students who identify within the African diaspora.</div>
+        <div class="resource-footer"><span class="resource-author">Mount Holyoke College</span></div>
+      </div>
+    </a>
+
+    <a class="resource-card" href="https://www.mtholyoke.edu/student-experience/community-and-belonging/cultural-centers/eliana-ortega-cultural-center" target="_blank" rel="noopener">
+      <div class="resource-thumb" style="background:linear-gradient(135deg,#c4622d,#7A8C6E)">
+        🌺<span class="resource-type" style="color:white;">Center</span>
+      </div>
+      <div class="resource-body">
+        <div class="resource-title">Eliana Ortega Cultural Center</div>
+        <div class="resource-desc">A home away from home for students within the Latinx diaspora.</div>
+        <div class="resource-footer"><span class="resource-author">Mount Holyoke College</span></div>
+      </div>
+    </a>
+
+    <a class="resource-card" href="https://www.mtholyoke.edu/student-experience/community-and-belonging/cultural-centers/jeannette-marks-cultural-center" target="_blank" rel="noopener">
+      <div class="resource-thumb" style="background:linear-gradient(135deg,#2D1B69,#b8860b)">
+        🏳️‍🌈<span class="resource-type" style="color:var(--gold);">Center</span>
+      </div>
+      <div class="resource-body">
+        <div class="resource-title">Jeannette Marks Cultural Center</div>
+        <div class="resource-desc">Support, resources, and programming for LGBTQIA+ students and their allies.</div>
+        <div class="resource-footer"><span class="resource-author">Mount Holyoke College</span></div>
+      </div>
+    </a>
+
+    <a class="resource-card" href="https://www.mtholyoke.edu/student-experience/community-and-belonging/cultural-centers/zowie-banteah-cultural-center" target="_blank" rel="noopener">
+      <div class="resource-thumb" style="background:linear-gradient(135deg,#4a3010,#7A8C6E)">
+        🦅<span class="resource-type" style="color:var(--sage);">Center</span>
+      </div>
+      <div class="resource-body">
+        <div class="resource-title">Zowie Banteah Cultural Center</div>
+        <div class="resource-desc">Visibility and empowerment for Native American students and communities of Indigenous people.</div>
+        <div class="resource-footer"><span class="resource-author">Mount Holyoke College</span></div>
+      </div>
+    </a>
+
+    <a class="resource-card" href="https://www.mtholyoke.edu/student-experience/community-and-belonging/religion-and-spirituality" target="_blank" rel="noopener">
+      <div class="resource-thumb" style="background:linear-gradient(135deg,#2D1B69,#c4622d)">
+        🙏🏾<span class="resource-type" style="color:var(--cream);">Center</span>
+      </div>
+      <div class="resource-body">
+        <div class="resource-title">Religion and Spirituality</div>
+        <div class="resource-desc">Engage with, participate in, and explore a vibrant and diverse spiritual community.</div>
+        <div class="resource-footer"><span class="resource-author">Mount Holyoke College</span></div>
+      </div>
+    </a>
+
+    <a class="resource-card" href="https://www.mtholyoke.edu/student-experience/community-and-belonging/cultural-centers/unity-center" target="_blank" rel="noopener">
+      <div class="resource-thumb" style="background:linear-gradient(135deg,#D4A853,#c4622d)">
+        🤝🏾<span class="resource-type" style="color:white;">Center</span>
+      </div>
+      <div class="resource-body">
+        <div class="resource-title">Unity Center</div>
+        <div class="resource-desc">A gathering place where all can celebrate and engage in conversations and experiences across our differences.</div>
+        <div class="resource-footer"><span class="resource-author">Mount Holyoke College</span></div>
+      </div>
+    </a>
+
+  </div>
+
+</div>
+</div>
+
+<script>
+const _supabase = window.supabase.createClient(
+  'https://cqiymqekdtewnorojlus.supabase.co',
+  'sb_publishable_O6SSVjUn5CKomSZXi5U67g_Yd1J9381'
+);
+
+async function init() {
+  const {data:{session}} = await _supabase.auth.getSession();
+  if (session) {
+    const email = (session.user.email || '').toLowerCase();
+    const {data: profile} = await _supabase.from('profiles').select('membership_tier').eq('id', session.user.id).single();
+    if (email.endsWith('@mtholyoke.edu') || profile?.membership_tier === 'founder') {
+      document.getElementById('page-content').style.display = '';
+      return;
+    }
+  }
+  document.getElementById('access-denied').style.display = '';
+}
+
+init();
+</script>
+</body>
+</html>
