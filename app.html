@@ -1290,6 +1290,7 @@ async function signUp(email, password, name) {
 }
     // Check if founding member link was used
     const isFoundingLink = window._foundingMode === true;
+    const isMHC = email.toLowerCase().endsWith('@mtholyoke.edu');
     let tier = 'free';
     if (isFoundingLink) {
       // Check count hasn't exceeded 50
@@ -1297,6 +1298,9 @@ async function signUp(email, password, name) {
       if ((countData || 0) < 50) {
         tier = 'founding';
       }
+    }
+    if (tier === 'free' && isMHC) {
+      tier = 'paid';
     }
     await _supabase.from('profiles').insert({id:data.user.id, name, handle:'@'+email.split('@')[0], membership_tier: tier});
     if (tier === 'founding') {
