@@ -87,10 +87,6 @@ async function getFCMAccessToken(): Promise<string> {
   return tokenJson.access_token
 }
 
-function isLegacyToken(token: string): boolean {
-  return token.includes(':APA91b')
-}
-
 async function sendFCMv1(
   token: string,
   title: string,
@@ -130,49 +126,6 @@ async function sendFCMv1(
     (d: any) => d.errorCode === 'UNREGISTERED',
   ) ?? false
   return { ok: false, unregistered }
-}
-
-async function sendFCMLegacy(
-  token: string,
-  title: string,
-  body: string,
-  data: Record<string, string>,
-): Promise<{ ok: boolean; unregistered: boolean }> {
-  const serverKey = Deno.env.get('FCM_SERVER_KEY')
-  if (!serverKey) throw new Error('FCM_SERVER_KEY secret not set')
-
-  const payload = {
-    to: token,
-    notification: { title, body, sound: 'default', badge: '1' },
-    data,
-  }
-  console.log('[FCM-Legacy] Sending to token:', token.slice(0, 20) + '…')
-
-  const res = await fetch('https://fcm.googleapis.com/fcm/send', {
-    method: 'POST',
-    headers: {
-      Authorization: `key=${serverKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  })
-
-  const json = await res.json().catch(() => ({}))
-  console.log('[FCM-Legacy] Response status:', res.status, 'body:', JSON.stringify(json))
-
-  if (!res.ok) {
-    return { ok: false, unregistered: false }
-  }
-
-  const result = json?.results?.[0]
-  if (result?.error) {
-    const unregistered = result.error === 'NotRegistered' || result.error === 'InvalidRegistration'
-    console.error('[FCM-Legacy] Error:', result.error, 'for token:', token.slice(0, 20) + '…')
-    return { ok: false, unregistered }
-  }
-
-  console.log('[FCM-Legacy] Success for token:', token.slice(0, 20) + '…')
-  return { ok: true, unregistered: false }
 }
 
 Deno.serve(async (req) => {
@@ -253,26 +206,18 @@ Deno.serve(async (req) => {
       Object.entries(data).map(([k, v]) => [k, String(v)])
     )
 
-    const legacyTokenRows = tokenRows.filter((r: any) => isLegacyToken(r.token))
-    const v1TokenRows = tokenRows.filter((r: any) => !isLegacyToken(r.token))
-    console.log(`[Tokens] ${legacyTokenRows.length} legacy APNs token(s), ${v1TokenRows.length} FCM v1 token(s)`)
+    console.log(`[Tokens] ${tokenRows.length} FCM v1 token(s)`)
 
-    let accessToken: string | null = null
-    if (v1TokenRows.length > 0) {
-      console.log('[Auth] Getting FCM access token…')
-      accessToken = await getFCMAccessToken()
-      console.log('[Auth] FCM access token obtained')
-    }
+    console.log('[Auth] Getting FCM access token…')
+    const accessToken = await getFCMAccessToken()
+    console.log('[Auth] FCM access token obtained')
 
     let sent = 0
     const staleTokens: string[] = []
 
     for (const { token, user_id: tokenUserId } of tokenRows) {
-      const legacy = isLegacyToken(token)
-      console.log('[FCM] Dispatching to user:', tokenUserId, legacy ? '(legacy APNs)' : '(FCM v1)')
-      const { ok, unregistered } = legacy
-        ? await sendFCMLegacy(token, title, body, stringData)
-        : await sendFCMv1(token, title, body, stringData, accessToken!)
+      console.log('[FCM] Dispatching to user:', tokenUserId)
+      const { ok, unregistered } = await sendFCMv1(token, title, body, stringData, accessToken)
       if (ok) sent++
       else if (unregistered) {
         console.warn('[FCM] Token unregistered, will prune:', token.slice(0, 20) + '…')
