@@ -7,23 +7,23 @@
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--deep-bg:#2D1B69;--gold:#D4A853;--sage:#7A8C6E;--cream:#FBF7F0;--deep:#1A1A1A;--warm:#FBF7F2;--terra:#C4622D}
+:root{--deep-bg:#231F20;--gold:#D4A853;--sage:#7A8C6E;--cream:#FBF7F0;--deep:#1A1A1A;--warm:#FBF7F2;--terra:#C4622D;--mhc-blue:#83C2EC}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'DM Sans',sans-serif;background:var(--warm);color:var(--deep);min-height:100vh}
 body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4}
 
-nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:rgba(251,247,242,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(45,27,105,0.12);z-index:100}
+nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:rgba(251,247,242,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(131,194,236,0.3);z-index:100}
 .nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--deep-bg)}
 .nav-logo span{font-style:italic;font-weight:400}
-.nav-back{background:none;border:1.5px solid rgba(45,27,105,0.3);color:var(--deep-bg);padding:6px 16px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.nav-back{background:none;border:1.5px solid rgba(35,31,32,0.3);color:var(--deep-bg);padding:6px 16px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
 .nav-back:hover{background:var(--deep-bg);color:white}
 
 .hero{background:var(--deep-bg);padding:120px 40px 64px;position:relative;overflow:hidden;text-align:center}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(212,168,83,0.15),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(122,140,110,0.1),transparent 60%)}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(131,194,236,0.25),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(131,194,236,0.12),transparent 60%)}
 .hero::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:40px;background:var(--warm);clip-path:ellipse(55% 100% at 50% 100%)}
-.hero-label{font-size:0.68rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;position:relative;z-index:1}
+.hero-label{font-size:0.68rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--mhc-blue);margin-bottom:16px;position:relative;z-index:1}
 .hero-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,5vw,3.2rem);color:var(--cream);line-height:1.2;margin-bottom:16px;position:relative;z-index:1}
-.hero-title em{color:var(--gold);font-style:italic}
+.hero-title em{color:var(--mhc-blue);font-style:italic}
 .hero-sub{color:rgba(251,247,240,0.65);font-size:0.95rem;line-height:1.8;max-width:520px;margin:0 auto;position:relative;z-index:1}
 
 .main{max-width:860px;margin:0 auto;padding:56px 40px 80px}
@@ -33,7 +33,7 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 
 .section-header{display:flex;align-items:center;gap:16px;margin-bottom:28px}
 .section-header h2{font-family:'Playfair Display',serif;font-size:1.4rem;font-weight:700;color:var(--deep);white-space:nowrap}
-.section-line{flex:1;height:1px;background:rgba(45,27,105,0.15)}
+.section-line{flex:1;height:1px;background:rgba(131,194,236,0.4)}
 
 .resources-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px}
 .resource-card{background:white;border:1px solid rgba(212,168,83,0.1);border-radius:4px;overflow:hidden;box-shadow:0 1px 12px rgba(26,26,26,0.04);transition:transform 0.2s,box-shadow 0.2s;text-decoration:none;color:inherit;display:block}
@@ -98,7 +98,7 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
   <div class="resources-grid">
 
     <a class="resource-card featured" href="https://www.mtholyoke.edu/student-experience/community-and-belonging/cultural-centers" target="_blank" rel="noopener">
-      <div class="resource-thumb" style="background:linear-gradient(135deg,var(--deep-bg),var(--sage))">
+      <div class="resource-thumb" style="background:linear-gradient(135deg,#83C2EC,#231F20)">
         🏛️<span class="resource-type" style="color:var(--deep-bg);">Directory</span>
       </div>
       <div class="resource-body">
