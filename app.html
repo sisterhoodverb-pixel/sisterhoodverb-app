@@ -76,13 +76,13 @@ nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-
 .cap-mode .view{padding-top:env(safe-area-inset-top)}
 .cap-mode #view-home{padding-top:0}
 #view-home{padding-top:0;padding-bottom:calc(90px + env(safe-area-inset-bottom))}
-.home-hero{background:var(--deep-bg);padding:152px 40px 80px;position:relative;overflow:hidden}
+.home-hero{background:linear-gradient(rgba(45,27,105,0.78),rgba(45,27,105,0.85)),url('assets/hero-bg.jpg') center/cover no-repeat;padding:152px 40px 80px;position:relative;overflow:hidden}
 .home-hero::after{content:’’;position:absolute;bottom:-2px;left:0;right:0;height:40px;background:var(--warm-white);clip-path:ellipse(55% 100% at 50% 100%)}
 .hero-greeting{font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
 .hero-title{font-family:‘Playfair Display’,serif;font-size:clamp(2rem,5vw,3.5rem);color:var(--cream);line-height:1.15;max-width:600px;margin-bottom:20px}
 .hero-title em{color:var(--gold);font-style:italic}
 .hero-sub{color:rgba(251,247,240,0.85);font-size:0.95rem;max-width:480px;line-height:1.7}
-.hero-accent{position:absolute;right:40px;top:50%;transform:translateY(-50%);width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(107,91,232,0.3),transparent 70%);border:1px solid rgba(184,161,201,0.2)}
+
 .feed-section{padding:48px 40px;max-width:900px;margin:0 auto}
 .section-label{font-size:0.7rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--lavender);margin-bottom:24px;display:flex;align-items:center;gap:12px}
 .section-label::after{content:’’;flex:1;height:1px;background:rgba(184,161,201,0.2)}
@@ -305,7 +305,7 @@ input[type=“file”]{display:none}
 nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:none}
 .home-hero,.feed-section,.circles-grid,.events-main,.events-sidebar,.resources-layout,.profile-info,.profile-avatar-wrap{padding-left:20px;padding-right:20px}
 .events-layout{grid-template-columns:1fr}.events-sidebar{display:none}
-.hero-accent{display:none}.view{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+.view{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
 .feed-section{padding:28px 20px}
 .notif-wrap{display:block!important}
 }
@@ -479,7 +479,7 @@ nav{padding:calc(14px + env(safe-area-inset-top)) 20px 14px}.nav-links{display:n
     <div class="hero-greeting">Welcome home, Sister ✦</div>
     <h1 class="hero-title">Welcome home, <em>sis</em></h1>
     <p class="hero-sub">A space to be seen, speak freely, and practice sisterhood — not just talk about it.</p>
-    <div class="hero-accent"></div>
+
   </div>
   <div class="membership-banner" id="founding-banner" style="display:none;background:linear-gradient(135deg,#b8860b,var(--gold));">
     <div class="membership-text">
