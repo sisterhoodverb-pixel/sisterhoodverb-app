@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Reset — Sisterhood(verb)</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--terra:#C4622D;--deep:#1C1410;--deep-bg:#2D1B69;--cream:#F5EFE6;--gold:#D4A853;--sage:#7A8C6E;--blush:#E8C4A0;--warm:#FBF7F2}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'DM Sans',sans-serif;background:var(--warm);color:var(--deep);min-height:100vh}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");pointer-events:none;z-index:1000;opacity:0.4}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:16px 40px;background:rgba(251,247,242,0.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(196,98,45,0.12);z-index:100}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--terra)}
+.nav-logo span{font-style:italic;font-weight:400}
+.nav-back{background:none;border:1.5px solid rgba(196,98,45,0.3);color:var(--terra);padding:6px 16px;border-radius:2px;font-family:'DM Sans',sans-serif;font-size:0.78rem;font-weight:500;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.nav-back:hover{background:var(--terra);color:white}
+
+/* HERO */
+.hero{background:var(--deep-bg);padding:120px 40px 64px;position:relative;overflow:hidden;text-align:center}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(122,140,110,0.18),transparent 60%),radial-gradient(ellipse at 70% 50%,rgba(212,168,83,0.12),transparent 60%)}
+.hero::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:40px;background:var(--warm);clip-path:ellipse(55% 100% at 50% 100%)}
+.hero-label{font-size:0.68rem;letter-spacing:0.25em;text-transform:uppercase;color:var(--gold);margin-bottom:16px;position:relative;z-index:1}
+.hero-title{font-family:'Playfair Display',serif;font-size:clamp(1.8rem,4.5vw,2.8rem);color:var(--cream);line-height:1.25;margin-bottom:16px;position:relative;z-index:1}
+.hero-title em{color:var(--gold);font-style:italic}
+.hero-sub{color:rgba(245,239,230,0.65);font-size:0.95rem;line-height:1.8;max-width:480px;margin:0 auto;position:relative;z-index:1}
+
+/* MAIN LAYOUT */
+.main{max-width:760px;margin:0 auto;padding:56px 40px 80px}
+
+/* PAUSE GRAPHIC */
+.pause-graphic{width:100%;max-width:600px;display:block;margin:0 auto 48px;border-radius:6px;box-shadow:0 4px 24px rgba(28,20,16,0.1)}
+
+/* RESOURCE LINK CARD */
+.link-card{display:flex;align-items:flex-start;gap:20px;background:white;border:1px solid rgba(196,98,45,0.1);border-radius:4px;padding:24px;box-shadow:0 2px 16px rgba(28,20,16,0.05);text-decoration:none;color:inherit;transition:transform 0.2s,box-shadow 0.2s}
+.link-card:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(28,20,16,0.09)}
+.link-icon{width:48px;height:48px;border-radius:4px;background:linear-gradient(135deg,var(--deep-bg),var(--sage));display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0}
+.link-body{flex:1}
+.link-label{font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--terra);font-weight:600;margin-bottom:6px}
+.link-title{font-family:'Playfair Display',serif;font-size:1rem;font-weight:700;color:var(--deep);line-height:1.4;margin-bottom:6px}
+.link-desc{font-size:0.84rem;color:rgba(28,20,16,0.55);line-height:1.7}
+.link-arrow{font-size:0.82rem;color:var(--sage);font-weight:600;white-space:nowrap;align-self:center;padding-left:8px}
+
+@media(max-width:768px){
+  nav{padding:14px 20px}
+  .hero{padding:100px 20px 56px}
+  .main{padding:40px 20px 60px}
+  .link-card{flex-direction:column;gap:14px}
+  .link-arrow{align-self:flex-start}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Sisterhood<span>(verb)</span></div>
+  <a href="#" class="nav-back" onclick="history.back(); return false;">← Back to Community</a>
+</nav>
+
+<div class="hero">
+  <div class="hero-label">Wellness Toolkit ✦</div>
+  <h1 class="hero-title">Click here if you need to<br><em>Reset</em></h1>
+  <p class="hero-sub">A quick pause-and-regulate toolkit for when things get heavy. You don't have to push through.</p>
+</div>
+
+<div class="main">
+
+  <img
+    src="assets/pause-graphic.png"
+    alt="P.A.U.S.E. framework: Pause, Action, Until, Sensations, Exit — a five-step self-regulation tool"
+    class="pause-graphic"
+  >
+
+  <a href="https://www.youtube.com/watch?v=xZcmDOukLwY" target="_blank" rel="noopener" class="link-card">
+    <div class="link-icon">▶</div>
+    <div class="link-body">
+      <div class="link-label">Video Resource</div>
+      <div class="link-title">EFT Tapping: Emotional Freedom Technique</div>
+      <div class="link-desc">A self-help acupressure method that involves tapping on specific meridian points of the body to calm the nervous system and release emotional heaviness.</div>
+    </div>
+    <div class="link-arrow">Watch →</div>
+  </a>
+
+</div>
+
+</body>
+</html>
